@@ -1,0 +1,268 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/ibm-plex-sans';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * FlowPay design tokens. See docs/design-system.md for the rationale.
+ *
+ * Raw values live on :root/.dark. Tailwind utilities read them through @theme,
+ * so components only ever use semantic names (bg-surface, text-ink-2, ...).
+ * Never use Tailwind's stock palette (gray-500, blue-600) in components.
+ */
+:root {
+  /* Paper: warm neutrals, the UI is mostly ink on paper. */
+  --canvas: #f6f5f1;
+  --surface: #ffffff;
+  --surface-sunken: #efede7;
+  --surface-hover: #f3f1ec;
+  --line: #e3e0d8;
+  --line-strong: #cfcac0;
+
+  --ink: #1b1a17;
+  --ink-2: #57534b;
+  --ink-3: #8a857a;
+  --ink-inverse: #f6f5f1;
+
+  /* Accent: used for focus, links, current-nav marker. Not for decoration. */
+  --accent: #2c46c9;
+  --accent-soft: #e8ebfb;
+
+  /* Simulator marker: the one warm colour, reserved for "this is not real money". */
+  --sim: #f2a33a;
+  --sim-ink: #7a4a00;
+
+  /* Status tones. fg = text/dot, bg = badge fill. */
+  --tone-success-fg: #17704a;
+  --tone-success-bg: #e6f3ec;
+  --tone-danger-fg: #b8321f;
+  --tone-danger-bg: #fbebe7;
+  --tone-warning-fg: #935600;
+  --tone-warning-bg: #fcf1dd;
+  --tone-refund-fg: #5a45b0;
+  --tone-refund-bg: #efecfa;
+  --tone-progress-fg: #2c46c9;
+  --tone-progress-bg: #e8ebfb;
+  --tone-neutral-fg: #5f5a51;
+  --tone-neutral-bg: #edebe5;
+
+  --shadow-pop: 0 1px 2px rgb(27 26 23 / 0.06), 0 8px 24px -6px rgb(27 26 23 / 0.14);
+}
+
+.dark {
+  --canvas: #121211;
+  --surface: #1a1a18;
+  --surface-sunken: #0d0d0c;
+  --surface-hover: #22221f;
+  --line: #2b2a27;
+  --line-strong: #3b3935;
+
+  --ink: #ecebe6;
+  --ink-2: #a9a59c;
+  --ink-3: #77736b;
+  --ink-inverse: #121211;
+
+  --accent: #8b9bff;
+  --accent-soft: #23284a;
+
+  --sim: #e59a33;
+  --sim-ink: #f4c27d;
+
+  --tone-success-fg: #5fc896;
+  --tone-success-bg: #15291f;
+  --tone-danger-fg: #f2836f;
+  --tone-danger-bg: #331a15;
+  --tone-warning-fg: #edb35b;
+  --tone-warning-bg: #312411;
+  --tone-refund-fg: #ad9cf4;
+  --tone-refund-bg: #241e3b;
+  --tone-progress-fg: #8b9bff;
+  --tone-progress-bg: #1f2444;
+  --tone-neutral-fg: #a9a59c;
+  --tone-neutral-bg: #262522;
+
+  --shadow-pop: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -8px rgb(0 0 0 / 0.6);
+}
+
+@theme inline {
+  --font-sans: 'IBM Plex Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-hover: var(--surface-hover);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-inverse: var(--ink-inverse);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-sim: var(--sim);
+  --color-sim-ink: var(--sim-ink);
+
+  --color-success: var(--tone-success-fg);
+  --color-success-soft: var(--tone-success-bg);
+  --color-danger: var(--tone-danger-fg);
+  --color-danger-soft: var(--tone-danger-bg);
+  --color-warning: var(--tone-warning-fg);
+  --color-warning-soft: var(--tone-warning-bg);
+  --color-refund: var(--tone-refund-fg);
+  --color-refund-soft: var(--tone-refund-bg);
+  --color-progress: var(--tone-progress-fg);
+  --color-progress-soft: var(--tone-progress-bg);
+  --color-neutral: var(--tone-neutral-fg);
+  --color-neutral-soft: var(--tone-neutral-bg);
+
+  --shadow-pop: var(--shadow-pop);
+
+  /* Deliberately small radii: this is a tool, not a toy. */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  /* Dense dashboard type scale (px): 11 / 12 / 13 / 14 / 16 / 20 / 28 / 36 */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.1rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.875rem;
+  --text-base--line-height: 1.4rem;
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-canvas font-sans text-base text-ink;
+    font-feature-settings: 'ss02' 1; /* Plex: single-storey g reads calmer in dense UI. */
+  }
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  * {
+    @apply border-line;
+  }
+}
+
+@layer utilities {
+  /* Every number a merchant compares must line up. */
+  .num {
+    font-variant-numeric: tabular-nums slashed-zero;
+    font-feature-settings:
+      'tnum' 1,
+      'zero' 1;
+  }
+  /* Diagonal hatch used only for the simulator marker. */
+  .hatch-sim {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      var(--sim) 0 6px,
+      color-mix(in oklab, var(--sim) 35%, transparent) 6px 12px
+    );
+  }
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--surface-sunken) 0%,
+      var(--surface-hover) 50%,
+      var(--surface-sunken) 100%
+    );
+    background-size: 200% 100%;
+    @apply animate-shimmer rounded-sm;
+  }
+}
+
+/*
+ * Motion: short, decelerating, never bouncy. Enter 140–260ms, exit faster.
+ * Radix sets data-state on overlays; tooltips use delayed-open/instant-open.
+ */
+@layer components {
+  .fp-fade:not([data-state='closed']) {
+    animation: fp-fade-in 140ms var(--ease-out-quint);
+  }
+  .fp-fade[data-state='closed'] {
+    animation: fp-fade-out 90ms ease-in forwards;
+  }
+  .fp-pop:not([data-state='closed']) {
+    animation: fp-pop-in 200ms var(--ease-out-quint);
+  }
+  .fp-pop[data-state='closed'] {
+    animation: fp-pop-out 100ms ease-in forwards;
+  }
+  .fp-slide-in:not([data-state='closed']) {
+    animation: fp-slide-in 280ms var(--ease-out-quint);
+  }
+  .fp-slide-in[data-state='closed'] {
+    animation: fp-slide-out 160ms ease-in forwards;
+  }
+}
+
+@keyframes fp-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fp-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes fp-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+}
+@keyframes fp-pop-out {
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+@keyframes fp-slide-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+@keyframes fp-slide-out {
+  to {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

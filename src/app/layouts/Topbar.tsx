@@ -1,0 +1,100 @@
+import {
+  ListIcon,
+  MagnifyingGlassIcon,
+  MoonIcon,
+  SignOutIcon,
+  SunIcon,
+  UserIcon,
+} from '@phosphor-icons/react'
+import { useNavigate } from 'react-router'
+import { Button } from '@/components/ui/button'
+import { Kbd } from '@/components/ui/kbd'
+import { Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger } from '@/components/ui/menu'
+import { Tooltip } from '@/components/ui/tooltip'
+import { logout, useSession } from '@/features/auth'
+import { keyPrefix, useTestKey } from '@/features/test-mode'
+import { useTheme } from '@/lib/theme'
+import { signOutLocally } from '../http-setup'
+
+export function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onOpenSearch: () => void }) {
+  const user = useSession((s) => s.user)
+  const testKey = useTestKey((s) => s.key)
+  const toggleTheme = useTheme((s) => s.toggle)
+  const navigate = useNavigate()
+  const isMac = /Mac|iPhone|iPad/.test(navigator.userAgent)
+
+  async function signOut() {
+    await logout().catch(() => undefined)
+    signOutLocally()
+    navigate('/login', { replace: true })
+  }
+
+  return (
+    <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-line bg-canvas/85 px-4 backdrop-blur-sm lg:px-6">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="lg:hidden"
+        onClick={onOpenNav}
+        aria-label="Open navigation"
+      >
+        <ListIcon />
+      </Button>
+
+      <button
+        type="button"
+        onClick={onOpenSearch}
+        className="flex h-8 w-full max-w-72 items-center gap-2 rounded-md border border-line bg-surface px-2.5 text-sm text-ink-3 hover:border-line-strong"
+      >
+        <MagnifyingGlassIcon className="size-4" />
+        <span className="flex-1 text-left">Jump to…</span>
+        <Kbd>{isMac ? '⌘' : 'Ctrl'}</Kbd>
+        <Kbd>K</Kbd>
+      </button>
+
+      <div className="ml-auto flex items-center gap-1.5">
+        <Tooltip
+          content={
+            testKey
+              ? `Payments are read with ${keyPrefix(testKey)}. Outcomes come from the simulator.`
+              : 'All payments go to the simulator. No real money moves.'
+          }
+        >
+          <span className="hidden items-center gap-1.5 rounded-sm border border-sim/50 bg-sim/10 px-2 py-0.5 text-xs font-medium text-sim-ink sm:inline-flex">
+            <span className="hatch-sim size-2 rounded-[2px]" />
+            Test mode
+          </span>
+        </Tooltip>
+
+        <Tooltip content="Toggle theme (⇧D)">
+          <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
+            <SunIcon className="hidden dark:block" />
+            <MoonIcon className="dark:hidden" />
+          </Button>
+        </Tooltip>
+
+        <Menu>
+          <MenuTrigger asChild>
+            <Button variant="ghost" size="icon" aria-label="Account">
+              <UserIcon />
+            </Button>
+          </MenuTrigger>
+          <MenuContent>
+            <MenuLabel>
+              <span className="block truncate text-sm text-ink">{user?.email ?? user?.id}</span>
+            </MenuLabel>
+            <MenuSeparator />
+            <MenuItem onSelect={() => navigate('/settings')}>
+              <UserIcon />
+              Settings
+            </MenuItem>
+            <MenuItem onSelect={signOut}>
+              <SignOutIcon />
+              Sign out
+            </MenuItem>
+          </MenuContent>
+        </Menu>
+      </div>
+    </header>
+  )
+}

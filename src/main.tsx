@@ -1,0 +1,20 @@
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { restoreSession, startProactiveRefresh } from '@/features/auth'
+import { watchSystemTheme } from '@/lib/theme'
+import { App } from './app/App'
+import { setupHttp } from './app/http-setup'
+import './styles/globals.css'
+
+setupHttp()
+watchSystemTheme()
+startProactiveRefresh()
+// Outside React on purpose: StrictMode double-runs effects, and two concurrent
+// refreshes would race on the rotating refresh cookie.
+void restoreSession()
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
