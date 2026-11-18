@@ -151,6 +151,10 @@ Each run creates a separate merchant, so it is safe to run again. The local
 receiver uses port `4242` (`SEED_RECEIVER_PORT`); other options are listed at
 the top of `scripts/seed.ts`.
 
+`npm run test:contract` uses the same stack: it registers its own merchant and
+checks every endpoint the dashboard calls against the frontend types in about
+5 seconds. Point it elsewhere with `CONTRACT_API_URL`.
+
 ## 6. Simulator outcomes
 
 In the `dev` profile, **the amount picks the outcome**: amounts ending in these

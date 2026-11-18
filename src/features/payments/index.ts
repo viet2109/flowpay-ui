@@ -4,4 +4,11 @@ export { PaymentsTable } from './components/PaymentsTable'
 export { MerchantApiError } from './components/MerchantApiError'
 export { usePayments, usePaymentStatusCounts } from './queries'
 export { paymentStatus } from './status'
-export type { PaymentIntent, PaymentStatus } from './types'
+export type {
+  ConfirmResult,
+  CreatedPaymentIntent,
+  PaymentIntent,
+  PaymentStatus,
+  PaymentTransaction,
+  Refund,
+} from './types'

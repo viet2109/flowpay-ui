@@ -30,11 +30,11 @@ const payment = {
   updatedAt: now,
 }
 const delivery = {
-  id: 'whd_1',
+  id: 'wdl_1',
   endpointId: 'wep_1',
   eventId: 'evt_1',
   eventType: 'payment.succeeded',
-  resourceType: 'PAYMENT',
+  resourceType: 'PAYMENT_INTENT',
   resourceId: payment.id,
   status: 'DEAD',
   attemptCount: 6,

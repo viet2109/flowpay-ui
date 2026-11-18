@@ -38,6 +38,7 @@ First run:
 | `npm run typecheck` / `lint` / `format` | Static checks                                                                         |
 | `npm test` / `npm run test:run`         | Vitest (watch / once)                                                                 |
 | `npm run seed`                          | Fill a new demo merchant with every UI state ([how](docs/local-stack.md#5-seed-data)) |
+| `npm run test:contract`                 | Check every endpoint and type against the running backend (needs the local stack)     |
 
 ## Stack
 

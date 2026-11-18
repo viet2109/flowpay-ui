@@ -39,7 +39,8 @@ export interface WebhookDelivery {
   endpointId: string
   eventId: string
   eventType: EventType
-  resourceType: 'PAYMENT' | 'REFUND'
+  /** Backend WebhookResourceType: PAYMENT_INTENT (pi_…) or REFUND (re_…). */
+  resourceType: 'PAYMENT_INTENT' | 'REFUND'
   resourceId: string
   status: DeliveryStatus
   attemptCount: number

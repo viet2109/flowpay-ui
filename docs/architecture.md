@@ -135,7 +135,7 @@ Amounts are integer **minor units** end to end (BR-MONEY-001). `lib/money.ts`:
 ## 6. URL state
 
 Filters, pagination and an open delivery sheet live in search params
-(`?status=DEAD&delivery=whd_…`) so views are shareable and survive reload.
+(`?status=DEAD&delivery=wdl_…`) so views are shareable and survive reload.
 One hook per list owns the URL format (`use-payment-filters.ts`, `DeliveriesView`).
 
 ## 7. Code conventions
@@ -159,6 +159,13 @@ One hook per list owns the URL format (`use-payment-filters.ts`, `DeliveriesView
 - Unit-test pure logic that protects money or security (`money.test.ts`, `http.test.ts`).
 - `app/app.smoke.test.tsx` renders every route against a fake backend that
   follows the API contract; extend its route table when adding pages.
+- `contract/` (`npm run test:contract`) calls every endpoint the dashboard uses
+  on a **real** backend (docs/local-stack.md). `contract/schemas.ts` holds strict
+  zod mirrors of the API types; `api.contract.ts` asserts at compile time that
+  each one infers exactly the frontend type, so a backend change fails the run
+  and a drifting `types.ts` fails typecheck. When you add or change an endpoint
+  or a type, update both. It also pins status codes, idempotency headers and
+  every Problem Details `code` (must be listed in `SERVER_ERROR_CODES`).
 
 ## 9. Adding a feature (checklist)
 

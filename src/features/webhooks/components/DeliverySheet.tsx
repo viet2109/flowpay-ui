@@ -102,7 +102,7 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
               {
                 label: 'Resource',
                 value:
-                  data.resourceType === 'PAYMENT' ? (
+                  data.resourceType === 'PAYMENT_INTENT' ? (
                     <Link
                       to={`/payments/${data.resourceId}`}
                       className="font-mono text-xs text-accent hover:underline"

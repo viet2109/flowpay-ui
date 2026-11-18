@@ -2,6 +2,7 @@ import { request, requestPage } from '@/lib/api/http'
 import type { PageParams } from '@/lib/api/types'
 import type {
   ConfirmResult,
+  CreatedPaymentIntent,
   CreatePaymentInput,
   CreateRefundInput,
   PaymentFilters,
@@ -33,7 +34,7 @@ export const paymentsApi = {
 
   /** 201 Created. A replay returns the same payment with `replayed: true`. */
   create: (input: CreatePaymentInput, idempotencyKey: string) =>
-    request<PaymentIntent>('/payment-intents', { auth, method: 'POST', body: input, idempotencyKey }),
+    request<CreatedPaymentIntent>('/payment-intents', { auth, method: 'POST', body: input, idempotencyKey }),
 
   /** 200 = final outcome (SUCCEEDED or FAILED), 202 = provider outcome UNKNOWN. */
   confirm: (id: string, idempotencyKey: string) =>

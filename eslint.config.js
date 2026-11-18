@@ -25,6 +25,6 @@ export default tseslint.config(
       ],
     },
   },
-  // Dev scripts run on Node (type stripping), not in the browser.
-  { files: ['scripts/**/*.ts'], languageOptions: { globals: globals.node } },
+  // Dev scripts and contract tests run on Node, not in the browser.
+  { files: ['scripts/**/*.ts', 'contract/**/*.ts'], languageOptions: { globals: globals.node } },
 )

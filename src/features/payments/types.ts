@@ -25,8 +25,11 @@ export interface PaymentIntent {
   refundedAmount: number
   refundableAmount: number
   createdAt: Instant
-  updatedAt?: Instant
+  updatedAt: Instant
 }
+
+/** The create response (and its replay) has no `updatedAt` (CreatePaymentIntentResponse). */
+export type CreatedPaymentIntent = Omit<PaymentIntent, 'updatedAt'>
 
 export interface PaymentTransaction {
   id: string

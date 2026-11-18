@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:contract": "vitest run --config vitest.contract.config.ts",
     "seed": "node scripts/seed.ts"
   },
   "dependencies": {
