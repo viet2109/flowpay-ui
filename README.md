@@ -14,6 +14,8 @@ npm run dev        # http://localhost:5173, proxies /api to the backend
 ```
 
 Point the proxy elsewhere with `FLOWPAY_API_TARGET` (see `.env.example`).
+Full setup with Docker, the backend's environment and simulator outcomes:
+[docs/local-stack.md](docs/local-stack.md).
 
 First run:
 
