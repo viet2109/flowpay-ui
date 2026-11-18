@@ -31,7 +31,7 @@ export function Segmented<T extends string>({
           value={option.value}
           className={cn(
             'flex h-6.5 items-center gap-1.5 rounded-[5px] px-2.5 text-sm whitespace-nowrap text-ink-2 transition-colors',
-            'hover:text-ink data-[state=on]:bg-surface data-[state=on]:text-ink data-[state=on]:shadow-[0_1px_2px_rgb(0_0_0/0.08)]',
+            'hover:text-ink data-[state=on]:bg-surface data-[state=on]:text-ink data-[state=on]:ring-1 data-[state=on]:ring-line',
           )}
         >
           {option.label}

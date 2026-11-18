@@ -122,6 +122,14 @@ describe('app routes', () => {
     expect(await screen.findByText('HTTP 500')).toBeInTheDocument()
   })
 
+  it('dev UI gallery renders every primitive section', async () => {
+    render(<App />)
+    await visit('/dev/ui')
+    expect(await screen.findByRole('heading', { level: 1, name: 'UI gallery' })).toBeInTheDocument()
+    for (const section of ['Button', 'Text fields', 'Choice', 'Callout', 'Overlays'])
+      expect(screen.getByRole('region', { name: section })).toBeInTheDocument()
+  })
+
   it('unknown route shows not found', async () => {
     render(<App />)
     await visit('/nope')

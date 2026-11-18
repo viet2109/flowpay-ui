@@ -7,8 +7,10 @@ export function Checkbox({ className, ...props }: ComponentProps<typeof Checkbox
   return (
     <CheckboxPrimitive.Root
       className={cn(
-        'flex size-4 shrink-0 items-center justify-center rounded-sm border border-line-strong bg-surface',
-        'transition-colors data-[state=checked]:border-ink data-[state=checked]:bg-ink data-[state=checked]:text-ink-inverse',
+        'flex size-4 shrink-0 items-center justify-center rounded-sm border border-line-control bg-surface',
+        'transition-colors hover:border-ink-2 aria-invalid:border-danger',
+        'data-[state=checked]:border-ink data-[state=checked]:bg-ink data-[state=checked]:text-ink-inverse',
+        'disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}
       {...props}

@@ -20,6 +20,8 @@
   --surface-hover: #f3f1ec;
   --line: #e3e0d8;
   --line-strong: #cfcac0;
+  /* Boundary of inputs and checkboxes: 3:1 on every background (WCAG 1.4.11). */
+  --line-control: #8b877e;
 
   --ink: #1b1a17;
   --ink-2: #57534b;
@@ -58,6 +60,7 @@
   --surface-hover: #22221f;
   --line: #2b2a27;
   --line-strong: #3b3935;
+  --line-control: #706d66;
 
   --ink: #ecebe6;
   --ink-2: #a9a59c;
@@ -96,6 +99,7 @@
   --color-surface-hover: var(--surface-hover);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
+  --color-line-control: var(--line-control);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);

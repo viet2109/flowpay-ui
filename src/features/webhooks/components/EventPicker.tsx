@@ -27,7 +27,7 @@ export function EventPicker({ value, onChange, invalid }: Props) {
 
   return (
     <div
-      className={cn('overflow-hidden rounded-md border', invalid ? 'border-danger' : 'border-line-strong')}
+      className={cn('overflow-hidden rounded-md border', invalid ? 'border-danger' : 'border-line-control')}
     >
       <div className="grid grid-cols-[6rem_repeat(3,1fr)] border-b border-line bg-surface-sunken text-xs text-ink-3">
         <button

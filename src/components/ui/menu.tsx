@@ -35,7 +35,7 @@ export function MenuItem({
       className={cn(
         'flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none select-none',
         'data-disabled:opacity-50 data-highlighted:bg-surface-hover [&_svg]:size-4 [&_svg]:text-ink-3',
-        tone === 'danger' && 'text-danger [&_svg]:text-danger',
+        tone === 'danger' && 'text-danger data-highlighted:bg-danger-soft [&_svg]:text-danger',
         className,
       )}
       {...props}

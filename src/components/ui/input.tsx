@@ -1,12 +1,16 @@
 import type { ComponentProps, ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
+/**
+ * States, in priority order: invalid (danger border, kept on hover and focus),
+ * focus (accent border + ring), hover (darker border), disabled (sunken, muted).
+ */
 const fieldBase = [
-  'w-full rounded-md border border-line-strong bg-surface px-2.5 text-sm text-ink placeholder:text-ink-3',
+  'w-full rounded-md border border-line-control bg-surface px-2.5 text-sm text-ink placeholder:text-ink-3',
   'transition-[border-color,box-shadow] duration-150',
-  'hover:border-ink-3 focus-visible:border-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-accent/15',
-  'aria-invalid:border-danger aria-invalid:focus-visible:ring-danger/15',
-  'disabled:cursor-not-allowed disabled:bg-surface-sunken disabled:opacity-70',
+  'hover:border-ink-2 focus-visible:border-accent focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-accent/15',
+  'aria-invalid:border-danger aria-invalid:hover:border-danger aria-invalid:focus-visible:border-danger aria-invalid:focus-visible:ring-danger/15',
+  'disabled:cursor-not-allowed disabled:border-line-strong disabled:bg-surface-sunken disabled:text-ink-3',
 ].join(' ')
 
 interface InputProps extends ComponentProps<'input'> {

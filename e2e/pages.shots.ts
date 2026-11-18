@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { capture, VARIANTS, variantId, type ShotTarget } from './shots'
 
 /**
@@ -27,11 +27,78 @@ const TARGETS: ShotTarget[] = [
       await expect(page.getByText('ORD-1012').first()).toBeVisible()
     },
   },
+  ...galleryTargets(),
 ]
+
+/**
+ * /dev/ui (P1-T02): every primitive in every prop state, plus the states that
+ * need interaction. English only until the gallery is translated (P1-T06).
+ */
+function galleryTargets(): ShotTarget[] {
+  const gallery = { path: '/dev/ui', auth: false, locales: ['en' as const] }
+  const loaded = (page: Page) =>
+    expect(page.getByRole('heading', { level: 1, name: 'UI gallery' })).toBeVisible()
+  const interaction = (name: string, act: (page: Page) => Promise<void>): ShotTarget => ({
+    ...gallery,
+    name: `ui-${name}`,
+    fullPage: false,
+    ready: async (page) => {
+      await loaded(page)
+      await act(page)
+    },
+  })
+  // Chromium shows :focus-visible on programmatic focus only after keyboard input.
+  const keyboardFocus = async (page: Page, target: ReturnType<Page['getByRole']>) => {
+    await page.keyboard.press('Tab')
+    await target.focus()
+  }
+  return [
+    { ...gallery, name: 'ui-gallery', ready: loaded },
+    interaction('focus-input', async (page) => {
+      await page.getByLabel('Filled', { exact: true }).focus()
+      await page.getByRole('button', { name: 'Edit endpoint' }).hover()
+    }),
+    interaction('focus-invalid', async (page) => {
+      await page.getByRole('region', { name: 'Text fields' }).getByLabel('Invalid', { exact: true }).focus()
+    }),
+    interaction('focus-button', async (page) => {
+      const button = page
+        .getByRole('region', { name: 'Button' })
+        .getByRole('button', { name: 'Revoke key' })
+        .first()
+      await keyboardFocus(page, button)
+    }),
+    interaction('focus-checkbox', async (page) => {
+      await keyboardFocus(page, page.getByRole('checkbox', { name: 'Checked', exact: true }))
+    }),
+    interaction('menu', async (page) => {
+      await page.getByRole('button', { name: 'Open menu' }).click()
+      await page.keyboard.press('ArrowDown')
+      await page.keyboard.press('ArrowDown')
+      await expect(page.getByRole('menuitem', { name: 'Disable endpoint' })).toBeFocused()
+    }),
+    interaction('dialog', async (page) => {
+      await page.getByRole('button', { name: 'Open dialog' }).click()
+      await expect(page.getByRole('dialog')).toBeVisible()
+    }),
+    interaction('confirm', async (page) => {
+      await page.getByRole('button', { name: 'Open confirm' }).click()
+      await expect(page.getByRole('alertdialog')).toBeVisible()
+    }),
+    interaction('sheet', async (page) => {
+      await page.getByRole('button', { name: 'Open sheet' }).click()
+      await expect(page.getByRole('dialog')).toBeVisible()
+    }),
+    interaction('tooltip', async (page) => {
+      await page.getByRole('button', { name: 'Hover for tooltip' }).hover()
+      await expect(page.getByRole('tooltip')).toBeVisible()
+    }),
+  ]
+}
 
 for (const target of TARGETS) {
   test.describe(target.name, () => {
-    for (const variant of VARIANTS) {
+    for (const variant of VARIANTS.filter((v) => !target.locales || target.locales.includes(v.locale))) {
       test(variantId(variant), async ({ browser, baseURL }) => {
         await capture(browser, baseURL!, target, variant)
       })

@@ -60,7 +60,8 @@ stock palette.
 | ---------------------------------------------- | -------------------------------------------------------------- |
 | `canvas`                                       | App background (warm paper)                                    |
 | `surface` / `surface-sunken` / `surface-hover` | Panels / wells, code, inputs groups / row hover                |
-| `line` / `line-strong`                         | Hairlines between things / control borders                     |
+| `line` / `line-strong`                         | Hairlines between things / button and kbd borders              |
+| `line-control`                                 | Border of inputs, selects, textareas, checkboxes (3:1)         |
 | `ink` / `ink-2` / `ink-3`                      | Primary text / secondary text / labels, metadata, placeholders |
 | `accent` / `accent-soft`                       | Focus ring, links, active nav marker. Never decoration         |
 | `sim` / `sim-ink`                              | Simulator ("test mode") marker only                            |
@@ -132,6 +133,10 @@ background.
 | `neutral` on `surface`               | Status text, field errors      |  6.85 |  7.10 | 4.5:1 |
 | `accent` on `canvas`                 | Focus ring, active nav marker  |  6.81 |  7.35 |   3:1 |
 | `accent` on `surface`                | Focus ring, active nav marker  |  7.43 |  6.83 |   3:1 |
+| `line-control` on `canvas`           | Input and checkbox border      |  3.28 |  3.63 |   3:1 |
+| `line-control` on `surface`          | Input and checkbox border      |  3.58 |  3.38 |   3:1 |
+| `line-control` on `surface-sunken`   | Input and checkbox border      |  3.06 |  3.77 |   3:1 |
+| `line-control` on `surface-hover`    | Input and checkbox border      |  3.17 |  3.09 |   3:1 |
 
 <!-- contrast:end -->
 
@@ -141,9 +146,9 @@ background.
 - Text on colour uses tokens too: the danger button is `text-ink-inverse`, never `text-white`.
 - A panel that is always dark regardless of theme (the sign-in aside) adds the
   `dark` class to its root, so it reuses the dark tokens instead of raw values.
-- Known gap: control borders (`line-strong`) are 1.5–1.6:1 against `surface`,
-  below 3:1 for component boundaries (WCAG 1.4.11). Inputs are identified by
-  their labels today; fixed with the input states in P1-T02.
+- Inputs, selects, textareas and checkboxes are identified by their border, so it
+  uses `line-control` (3:1). Buttons are identified by their label, so they and
+  hairlines keep the lighter `line-strong` / `line`.
 
 ### 4.2 Typography
 
@@ -202,6 +207,10 @@ background.
 
 Primitives (`src/components/ui`) are thin wrappers over Radix with FlowPay
 styling. Composites (`src/components`) encode FlowPay concepts.
+
+Every primitive and its states are on the dev-only gallery at **`/dev/ui`**
+(`src/app/dev/UiGalleryPage.tsx`). Change a primitive there first, then run
+`npm run shots -- -g ui-` to review all its states in both themes and widths.
 
 | Need                         | Use                                                                                                     |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------- |

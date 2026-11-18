@@ -27,8 +27,12 @@ export interface ShotTarget {
   name: string
   path: string
   auth: boolean
-  /** Resolves once the page shows its real content (not a skeleton). */
+  /** Resolves once the page shows its real content (not a skeleton), then sets up any state to capture. */
   ready: (page: Page) => Promise<void>
+  /** Default true. Interaction shots (focus, open menu) capture the viewport around the element instead. */
+  fullPage?: boolean
+  /** Restrict locales, e.g. for copy that is not translated yet. Default: all. */
+  locales?: Variant['locale'][]
 }
 
 /**
@@ -56,7 +60,7 @@ export async function capture(browser: Browser, baseURL: string, target: ShotTar
     await page.evaluate(() => document.fonts.ready)
     await page.screenshot({
       path: `shots/${target.name}/${variantId(variant)}.png`,
-      fullPage: true,
+      fullPage: target.fullPage ?? true,
       animations: 'disabled',
     })
   } finally {

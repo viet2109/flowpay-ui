@@ -14,10 +14,21 @@ import { NotFoundPage, RouteErrorPage } from './RouteErrorPage'
 const payments = () => import('@/features/payments')
 const webhooks = () => import('@/features/webhooks')
 
+/** Development-only routes; the DEV branch is removed from production builds. */
+const devRoutes = import.meta.env.DEV
+  ? [
+      {
+        path: '/dev/ui',
+        lazy: async () => ({ Component: (await import('./dev/UiGalleryPage')).UiGalleryPage }),
+      },
+    ]
+  : []
+
 export const router = createBrowserRouter([
   {
     errorElement: <RouteErrorPage />,
     children: [
+      ...devRoutes,
       {
         element: <GuestOnly />,
         children: [

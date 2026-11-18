@@ -49,6 +49,9 @@ const PAIRS: Pair[] = [
   ]),
   { fg: 'accent', bg: 'canvas', use: 'Focus ring, active nav marker', min: 3 },
   { fg: 'accent', bg: 'surface', use: 'Focus ring, active nav marker', min: 3 },
+  ...['canvas', 'surface', 'surface-sunken', 'surface-hover'].map(
+    (bg) => ({ fg: 'line-control', bg, use: 'Input and checkbox border', min: 3 }) as const,
+  ),
 ]
 
 function readTheme(selector: string): Record<string, string> {

@@ -30,7 +30,7 @@ export function Callout({ tone, title, children, action, className }: CalloutPro
       <Icon className="mt-0.5 size-4 shrink-0" />
       <div className="min-w-0 flex-1">
         {title && <div className="font-medium">{title}</div>}
-        {children && <div className={cn(title && 'mt-0.5 opacity-90')}>{children}</div>}
+        {children && <div className={cn(title && 'mt-0.5')}>{children}</div>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
     </div>
