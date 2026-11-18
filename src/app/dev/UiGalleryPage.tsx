@@ -20,7 +20,7 @@ import { useTheme } from '@/lib/theme'
 /**
  * Dev-only catalogue of every primitive in every state it can be put in by
  * props. Hover, focus and open overlays are produced by `e2e/pages.shots.ts`.
- * Composites (Money, StatusBadge, LifecycleRail…) are added in P1-T03.
+ * Composites (Money, StatusBadge, LifecycleRail…) are not catalogued yet.
  */
 export function UiGalleryPage() {
   const toggleTheme = useTheme((s) => s.toggle)

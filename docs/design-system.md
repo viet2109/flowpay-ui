@@ -140,8 +140,8 @@ background.
 
 <!-- contrast:end -->
 
-- `ink-3` is the floor for text. In v0 it measured 3.1–4.1:1; P1-T01 darkened it
-  (light) and lightened it (dark) to pass. Do not move it toward the background.
+- `ink-3` is the floor for text. It once measured 3.1–4.1:1 and was darkened
+  (light) and lightened (dark) to pass. Do not move it toward the background.
   Disabled controls (`opacity-50`) are exempt by WCAG.
 - Text on colour uses tokens too: the danger button is `text-ink-inverse`, never `text-white`.
 - A panel that is always dark regardless of theme (the sign-in aside) adds the

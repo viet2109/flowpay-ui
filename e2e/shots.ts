@@ -2,8 +2,7 @@ import type { Browser, Page } from '@playwright/test'
 import { signIn } from './fixtures'
 
 /**
- * Screenshot review matrix (docs/task-roadmap.md working agreement): every UI
- * task ships each affected page in {light, dark} × {375, 1280} × {en, vi}.
+ * Screenshot review matrix: every UI change is reviewed on each affected page in {light, dark} × {375, 1280} × {en, vi}.
  * Screenshots are review artifacts written to shots/, not visual baselines.
  */
 export const THEMES = ['light', 'dark'] as const
@@ -38,7 +37,7 @@ export interface ShotTarget {
 /**
  * Opens `target` in a fresh context for `variant` and writes
  * shots/<name>/<width>-<theme>-<locale>.png. The browser locale is set now;
- * the UI language follows it once i18n lands (P1-T04).
+ * the UI language follows it once the UI is translated.
  */
 export async function capture(browser: Browser, baseURL: string, target: ShotTarget, variant: Variant) {
   const context = await browser.newContext({

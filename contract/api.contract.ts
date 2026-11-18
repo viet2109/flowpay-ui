@@ -255,7 +255,7 @@ describe('webhook endpoints', () => {
   it('URL policy rejections are 400 VALIDATION_ERROR without field errors', async () => {
     // The URL policy answers with one generic problem and no `errors[]`, so the
     // dialog cannot map it to the URL field: validate on the client and show the
-    // server's rejection as a form-level message (P4-T02).
+    // server's rejection as a form-level message.
     for (const url of ['ftp://example.com/hook', 'https://10.0.0.1/hook', 'http://example.com/hook']) {
       const res = problem(
         await call('POST', '/merchant/webhook-endpoints', {

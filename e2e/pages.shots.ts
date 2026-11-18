@@ -31,8 +31,8 @@ const TARGETS: ShotTarget[] = [
 ]
 
 /**
- * /dev/ui (P1-T02): every primitive in every prop state, plus the states that
- * need interaction. English only until the gallery is translated (P1-T06).
+ * /dev/ui: every primitive in every prop state, plus the states that
+ * need interaction. English only until the gallery is translated.
  */
 function galleryTargets(): ShotTarget[] {
   const gallery = { path: '/dev/ui', auth: false, locales: ['en' as const] }

@@ -114,8 +114,8 @@ npm run dev
 1. Open <http://localhost:5173>. You are sent to the sign-in page.
 2. **Create account**, then sign in with it. You land on Overview.
 3. **Developers → API keys → Create key** with "Use in dashboard" checked.
-   Payments are read with an API key until the backend dashboard API exists
-   (roadmap P3); a dashboard token on `/payment-intents` returns `401`.
+   Payments are read with an API key until the backend has dashboard
+   endpoints for them; a dashboard token on `/payment-intents` returns `401`.
 4. **Payments → New test payment.** With the default simulator outcome it ends
    `Succeeded`; an amount ending in `901` ends `Failed` (section 6).
 
@@ -166,8 +166,8 @@ npm run shots -- -g login    # only the pages whose name matches
 Both start Vite if it is not running, seed a fresh merchant once per run, and
 sign each test in through the API. Screenshots land in
 `shots/<page>/<width>-<theme>-<locale>.png` (git-ignored); add the pages a UI
-task touches to `e2e/pages.shots.ts`. The `vi` variants only differ once i18n
-lands (roadmap P1-T04).
+task touches to `e2e/pages.shots.ts`. The `vi` variants only differ once the UI
+is translated.
 
 The browser is Playwright's Chromium if `npx playwright install chromium`
 succeeded, otherwise the system Microsoft Edge; force one with

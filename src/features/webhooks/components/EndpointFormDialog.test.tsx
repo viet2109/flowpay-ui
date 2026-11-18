@@ -100,7 +100,7 @@ describe('EndpointFormDialog', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
-  it('shows a rejection without field errors in the callout (F10)', async () => {
+  it('shows a URL-policy rejection without field errors in the callout', async () => {
     reply = { status: 400, body: { status: 400, code: 'VALIDATION_ERROR', requestId: 'req_2' } }
     const user = open()
     await user.type(urlInput(), 'https://localhost/hooks')

@@ -107,7 +107,7 @@ export function EndpointFormDialog({ open, onOpenChange, endpoint }: Props) {
   }
 
   // Field-level server errors are shown on their field; anything else (including
-  // URL-policy rejections without `errors[]`, F10) goes in the callout.
+  // URL-policy rejections, which carry no `errors[]`) goes in the callout.
   const showCallout = mutation.isError && !errors.url && !errors.events
 
   return (

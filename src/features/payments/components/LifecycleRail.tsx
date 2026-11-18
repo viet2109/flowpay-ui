@@ -5,7 +5,7 @@ import { formatShortDate } from '@/lib/format'
 import type { PaymentStatus } from '../types'
 
 /**
- * The PaymentIntent state machine drawn as a rail (AGENTS.md §6):
+ * The PaymentIntent state machine drawn as a rail (backend payment state rules):
  *   CREATED -> PROCESSING -> SUCCEEDED -> PARTIALLY_REFUNDED -> REFUNDED
  *                         -> FAILED
  * Merchants see where the payment is and what can still happen to it.

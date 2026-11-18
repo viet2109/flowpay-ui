@@ -64,7 +64,6 @@ First run:
 
 - [Architecture & conventions](docs/architecture.md): structure, auth, data flow, idempotency, adding a feature.
 - [Design system](docs/design-system.md): principles, tokens, components, states, copy.
-- [AGENTS.md](AGENTS.md): rules for coding agents; skills in `.claude/skills/`.
 
 ## Deploying
 
