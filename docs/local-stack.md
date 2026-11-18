@@ -227,5 +227,5 @@ docker compose -f docker-compose.yaml down -v     # wipe Postgres and RabbitMQ d
 | Webhook endpoint rejected for an `http://localhost` URL | The backend was started without `WEBHOOK_ALLOW_INSECURE_LOCALHOST=true`.                                                                        |
 | New endpoint shows no deliveries for older payments     | Subscriptions are snapshotted when an event is first materialized; only events after the endpoint was created are delivered to it.              |
 | Payment confirm outcome is not the one you wanted       | The amount ends in 901/902/903 (section 6), or the default outcome was set at backend startup.                                                  |
-| `npm run seed` says the simulator ignored the trigger   | The backend is not on the `dev` profile, or it predates the amount triggers (backend commit `a15bdda`).                                         |
+| `npm run seed` says the simulator ignored the trigger   | The backend is not on the `dev` profile, or it predates the amount triggers (backend commit `176b51b`).                                         |
 | No `429` locally                                        | Rate limits live in the production NGINX edge, not in the backend, so the dev stack never returns `RATE_LIMIT_EXCEEDED`.                        |
