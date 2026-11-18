@@ -26,7 +26,8 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       globals: false,
       setupFiles: ['./src/test/setup.ts'],
-      css: false,
+      // Components never need real CSS in jsdom; the token contrast test reads globals.css as text.
+      css: { include: [/globals\.css/] },
     },
   }
 })

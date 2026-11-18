@@ -44,6 +44,9 @@ export async function capture(browser: Browser, baseURL: string, target: ShotTar
     colorScheme: variant.theme,
     locale: variant.locale === 'vi' ? 'vi-VN' : 'en-US',
     timezoneId: 'Asia/Ho_Chi_Minh',
+    // `animations: 'disabled'` below only stops CSS; reduced motion also makes the
+    // JS fills (motion) render their final value, so bars are never caught mid-way.
+    reducedMotion: 'reduce',
   })
   try {
     const page = await context.newPage()

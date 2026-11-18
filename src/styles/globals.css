@@ -23,7 +23,7 @@
 
   --ink: #1b1a17;
   --ink-2: #57534b;
-  --ink-3: #8a857a;
+  --ink-3: #6e6a61; /* Floor for text: 4.6:1 on surface-sunken (contrast.test.ts). */
   --ink-inverse: #f6f5f1;
 
   /* Accent: used for focus, links, current-nav marker. Not for decoration. */
@@ -61,7 +61,7 @@
 
   --ink: #ecebe6;
   --ink-2: #a9a59c;
-  --ink-3: #77736b;
+  --ink-3: #8e8a81; /* 4.6:1 on surface-hover, the lightest dark background. */
   --ink-inverse: #121211;
 
   --accent: #8b9bff;

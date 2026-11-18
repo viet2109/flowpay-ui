@@ -85,8 +85,65 @@ Rules:
   `catalog.ts`). Never inline a tone in a page.
 - Never communicate status by colour alone: the badge always has a label.
 
-Dark mode redefines the same tokens under `.dark`. Both themes must pass WCAG AA
-for text (`ink-3` on `surface` is the floor; do not go lighter).
+Dark mode redefines the same tokens under `.dark`.
+
+#### Contrast
+
+Both themes meet WCAG 2.2 AA: **4.5:1 for all text** (the dashboard has no large
+display text to exempt) and **3:1 for indicators** such as the focus ring.
+`src/styles/contrast.test.ts` reads the tokens from `globals.css`, checks every
+pair below and fails when this table is out of date, so a token change and its
+numbers land together. Add a pair there when a component puts text on a new
+background.
+
+<!-- contrast:start -->
+
+| Pair                                 | Used for                       | Light |  Dark |   Min |
+| ------------------------------------ | ------------------------------ | ----: | ----: | ----: |
+| `ink` on `canvas`                    | Primary text                   | 15.95 | 15.70 | 4.5:1 |
+| `ink` on `surface`                   | Primary text                   | 17.40 | 14.60 | 4.5:1 |
+| `ink` on `surface-sunken`            | Primary text                   | 14.86 | 16.29 | 4.5:1 |
+| `ink` on `surface-hover`             | Primary text                   | 15.42 | 13.36 | 4.5:1 |
+| `ink-2` on `canvas`                  | Secondary text                 |  7.01 |  7.63 | 4.5:1 |
+| `ink-2` on `surface`                 | Secondary text                 |  7.65 |  7.10 | 4.5:1 |
+| `ink-2` on `surface-sunken`          | Secondary text                 |  6.54 |  7.92 | 4.5:1 |
+| `ink-2` on `surface-hover`           | Secondary text                 |  6.78 |  6.49 | 4.5:1 |
+| `ink-3` on `canvas`                  | Labels, metadata, placeholders |  4.94 |  5.45 | 4.5:1 |
+| `ink-3` on `surface`                 | Labels, metadata, placeholders |  5.39 |  5.06 | 4.5:1 |
+| `ink-3` on `surface-sunken`          | Labels, metadata, placeholders |  4.60 |  5.65 | 4.5:1 |
+| `ink-3` on `surface-hover`           | Labels, metadata, placeholders |  4.77 |  4.64 | 4.5:1 |
+| `accent` on `canvas`                 | Links                          |  6.81 |  7.35 | 4.5:1 |
+| `accent` on `surface`                | Links                          |  7.43 |  6.83 | 4.5:1 |
+| `ink` on `accent-soft`               | Selected text                  | 14.67 | 11.94 | 4.5:1 |
+| `ink-inverse` on `ink`               | Primary button                 | 15.95 | 15.70 | 4.5:1 |
+| `ink-inverse` on `danger`            | Danger button                  |  5.48 |  7.37 | 4.5:1 |
+| `sim-ink` on `sim` 10% over `canvas` | Test mode badge                |  6.43 |  9.90 | 4.5:1 |
+| `success` on `success-soft`          | Status badge                   |  5.33 |  7.44 | 4.5:1 |
+| `success` on `surface`               | Status text, field errors      |  6.08 |  8.46 | 4.5:1 |
+| `danger` on `danger-soft`            | Status badge                   |  5.16 |  6.35 | 4.5:1 |
+| `danger` on `surface`                | Status text, field errors      |  5.98 |  6.85 | 4.5:1 |
+| `warning` on `warning-soft`          | Status badge                   |  5.25 |  8.05 | 4.5:1 |
+| `warning` on `surface`               | Status text, field errors      |  5.88 |  9.30 | 4.5:1 |
+| `refund` on `refund-soft`            | Status badge                   |  6.20 |  6.68 | 4.5:1 |
+| `refund` on `surface`                | Status text, field errors      |  7.21 |  7.34 | 4.5:1 |
+| `progress` on `progress-soft`        | Status badge                   |  6.26 |  5.90 | 4.5:1 |
+| `progress` on `surface`              | Status text, field errors      |  7.43 |  6.83 | 4.5:1 |
+| `neutral` on `neutral-soft`          | Status badge                   |  5.74 |  6.24 | 4.5:1 |
+| `neutral` on `surface`               | Status text, field errors      |  6.85 |  7.10 | 4.5:1 |
+| `accent` on `canvas`                 | Focus ring, active nav marker  |  6.81 |  7.35 |   3:1 |
+| `accent` on `surface`                | Focus ring, active nav marker  |  7.43 |  6.83 |   3:1 |
+
+<!-- contrast:end -->
+
+- `ink-3` is the floor for text. In v0 it measured 3.1–4.1:1; P1-T01 darkened it
+  (light) and lightened it (dark) to pass. Do not move it toward the background.
+  Disabled controls (`opacity-50`) are exempt by WCAG.
+- Text on colour uses tokens too: the danger button is `text-ink-inverse`, never `text-white`.
+- A panel that is always dark regardless of theme (the sign-in aside) adds the
+  `dark` class to its root, so it reuses the dark tokens instead of raw values.
+- Known gap: control borders (`line-strong`) are 1.5–1.6:1 against `surface`,
+  below 3:1 for component boundaries (WCAG 1.4.11). Inputs are identified by
+  their labels today; fixed with the input states in P1-T02.
 
 ### 4.2 Typography
 
@@ -122,7 +179,9 @@ for text (`ink-3` on `surface` is the floor; do not go lighter).
 
 - CSS classes `fp-fade`, `fp-pop`, `fp-slide-in` animate Radix overlays.
 - JS animation uses `m.*` from `motion/react` inside `LazyMotion` (bundle size).
-- `prefers-reduced-motion` disables all of it globally.
+- `prefers-reduced-motion` disables all of it: a global CSS rule for keyframes and
+  transitions, `MotionConfig skipAnimations` (`app/App.tsx`) for `m.*`, which then
+  renders final values. Review screenshots run with reduced motion for the same reason.
 - Animate **meaning** (a bar filling to its value), not decoration.
 
 ## 5. Signature patterns
