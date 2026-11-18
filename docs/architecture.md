@@ -166,6 +166,13 @@ One hook per list owns the URL format (`use-payment-filters.ts`, `DeliveriesView
   and a drifting `types.ts` fails typecheck. When you add or change an endpoint
   or a type, update both. It also pins status codes, idempotency headers and
   every Problem Details `code` (must be listed in `SERVER_ERROR_CODES`).
+- `e2e/` (Playwright, real backend): `*.e2e.ts` for behaviour (`npm run e2e`),
+  `pages.shots.ts` for the review screenshot matrix (`npm run shots`). The global
+  setup seeds a merchant (`scripts/seed.ts`); tests use the `authedPage` fixture,
+  which logs each browser context in through the API. Never share one storage
+  state between tests: refresh tokens rotate and would revoke each other. jsdom
+  hides real-browser behaviour (a Promise from `scrollTo()` crashed every
+  authenticated page while the smoke test stayed green), so UI tasks run both.
 
 ## 9. Adding a feature (checklist)
 

@@ -39,6 +39,7 @@ First run:
 | `npm test` / `npm run test:run`         | Vitest (watch / once)                                                                 |
 | `npm run seed`                          | Fill a new demo merchant with every UI state ([how](docs/local-stack.md#5-seed-data)) |
 | `npm run test:contract`                 | Check every endpoint and type against the running backend (needs the local stack)     |
+| `npm run e2e` / `npm run shots`         | Playwright behaviour tests / review screenshots in `shots/` (needs the local stack)   |
 
 ## Stack
 

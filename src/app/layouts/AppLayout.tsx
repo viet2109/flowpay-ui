@@ -12,8 +12,13 @@ export function AppLayout() {
   const location = useLocation()
   useGlobalShortcuts(() => setSearchOpen((o) => !o))
 
-  // Each page starts at the top, like a real navigation.
-  useEffect(() => window.scrollTo(0, 0), [location.pathname])
+  // Each page starts at the top, like a real navigation. Block body on purpose:
+  // current Chromium returns a Promise from scrollTo(), and an effect must
+  // return nothing or a cleanup function (React crashes with "destroy is not a
+  // function" otherwise). jsdom returns undefined, so only E2E caught this.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [location.pathname])
 
   return (
     <div className="min-h-dvh">

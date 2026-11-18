@@ -8,6 +8,10 @@ import { useTheme } from '@/lib/theme'
 import { queryClient } from './query-client'
 import { router } from './router'
 
+// Dev only, and hidden when a test browser drives the page (Playwright sets
+// navigator.webdriver): its floating button covers content in review screenshots.
+const showQueryDevtools = import.meta.env.DEV && typeof navigator !== 'undefined' && !navigator.webdriver
+
 export function App() {
   const preference = useTheme((s) => s.preference)
   return (
@@ -29,7 +33,7 @@ export function App() {
           />
         </TooltipProvider>
       </LazyMotion>
-      {import.meta.env.DEV && <ReactQueryDevtools buttonPosition="bottom-left" />}
+      {showQueryDevtools && <ReactQueryDevtools buttonPosition="bottom-left" />}
     </QueryClientProvider>
   )
 }

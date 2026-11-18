@@ -16,12 +16,28 @@
  *   SEED_RECEIVER_PORT  local webhook receiver port, default 4242
  */
 import { createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
+import { pathToFileURL } from 'node:url'
 
 const API = (process.env.SEED_API_URL ?? 'http://localhost:8080').replace(/\/$/, '')
-const RUN = Date.now().toString(36)
-const EMAIL = process.env.SEED_EMAIL ?? `demo+${RUN}@example.com`
 const PASSWORD = process.env.SEED_PASSWORD ?? 'FlowPay-demo-2026'
-const RECEIVER_PORT = Number(process.env.SEED_RECEIVER_PORT ?? 4242)
+
+export interface SeedOptions {
+  /** No progress output or summary (used by the Playwright global setup). */
+  quiet?: boolean
+  /** 0 picks a free port. Default SEED_RECEIVER_PORT or 4242. */
+  receiverPort?: number
+}
+
+export interface SeedResult {
+  email: string
+  password: string
+  merchantName: string
+  /** Raw test key of the active API key; local simulator only. */
+  apiKey: string
+}
+
+let quietMode = false
 
 type PaymentStatus = 'CREATED' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED' | 'PARTIALLY_REFUNDED' | 'REFUNDED'
 type RefundStatus = 'CREATED' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED'
@@ -104,7 +120,7 @@ function expect(actual: unknown, expected: unknown, what: string): void {
 }
 
 function step(message: string): void {
-  console.log(`  - ${message}`)
+  if (!quietMode) console.log(`  - ${message}`)
 }
 
 async function waitFor<T>(what: string, probe: () => Promise<T | undefined>, timeoutMs = 60_000): Promise<T> {
@@ -118,7 +134,7 @@ async function waitFor<T>(what: string, probe: () => Promise<T | undefined>, tim
 }
 
 /** Local receiver: /ok acknowledges, anything else fails with 500. */
-function startReceiver() {
+function startReceiver(port: number) {
   const counts = { ok: 0, failed: 0 }
   const server = createServer((req, res) => {
     req.resume()
@@ -130,15 +146,20 @@ function startReceiver() {
       res.writeHead(500).end()
     }
   })
-  const ready = new Promise<void>((resolve, reject) => {
-    server.once('error', (e) => reject(new Error(`Receiver port ${RECEIVER_PORT}: ${e.message}`)))
-    server.listen(RECEIVER_PORT, resolve)
+  /** Resolves to the port actually bound (matters when `port` is 0). */
+  const ready = new Promise<number>((resolve, reject) => {
+    server.once('error', (e) => reject(new Error(`Receiver port ${port}: ${e.message}`)))
+    server.listen(port, () => resolve((server.address() as AddressInfo).port))
   })
   return { counts, ready, close: () => new Promise<void>((r) => server.close(() => r())) }
 }
 
-async function main() {
-  console.log(`Seeding ${API}`)
+export async function seed(options: SeedOptions = {}): Promise<SeedResult> {
+  quietMode = options.quiet ?? false
+  const RUN = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
+  const EMAIL = process.env.SEED_EMAIL ?? `demo+${RUN}@example.com`
+  const MERCHANT = 'Cửa hàng Ánh Dương'
+  if (!quietMode) console.log(`Seeding ${API}`)
 
   // --- Merchant and dashboard session -------------------------------------
   await call('POST', '/auth/register', {
@@ -147,7 +168,7 @@ async function main() {
       password: PASSWORD,
       firstName: 'Ánh',
       lastName: 'Dương',
-      merchantName: 'Cửa hàng Ánh Dương',
+      merchantName: MERCHANT,
     },
   })
   const login = await call<{ accessToken: string }>('POST', '/auth/login', {
@@ -170,9 +191,8 @@ async function main() {
   step('API keys: 1 active, 1 revoked')
 
   // --- Webhook endpoints, created before any event (subscriptions are snapshotted)
-  const receiver = startReceiver()
-  await receiver.ready
-  const base = `http://localhost:${RECEIVER_PORT}`
+  const receiver = startReceiver(options.receiverPort ?? Number(process.env.SEED_RECEIVER_PORT ?? 4242))
+  const base = `http://localhost:${await receiver.ready}`
   const healthy = await call<Endpoint>('POST', '/merchant/webhook-endpoints', {
     token: jwt,
     body: {
@@ -331,6 +351,9 @@ async function main() {
     `webhook deliveries: DELIVERED, RETRYING, DEAD (receiver got ${receiver.counts.ok} ok, ${receiver.counts.failed} failed)`,
   )
 
+  const result: SeedResult = { email: EMAIL, password: PASSWORD, merchantName: MERCHANT, apiKey }
+  if (quietMode) return result
+
   // --- Summary -------------------------------------------------------------------
   const count = async (path: string, token: string, status: string) =>
     (await call<unknown[]>('GET', path, { token, query: { status, size: 1 } })).meta?.totalElements ?? 0
@@ -359,9 +382,13 @@ Test API key for "Connect a test key" (shown once, local simulator only):
 The failing endpoint keeps retrying on the backend's schedule (10s … 1h) and
 becomes DEAD, with a manual retry available, about 75 minutes from now. Start
 the backend with WEBHOOK_DELIVERY_RETRY_DELAYS=2s,2s,2s,2s,2s to get there in seconds.`)
+  return result
 }
 
-main().catch((error: unknown) => {
-  console.error(`\nSeed failed: ${error instanceof Error ? error.message : String(error)}`)
-  process.exit(1)
-})
+// Run as a CLI (`npm run seed`); importing the module only exposes `seed()`.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  seed().catch((error: unknown) => {
+    console.error(`\nSeed failed: ${error instanceof Error ? error.message : String(error)}`)
+    process.exit(1)
+  })
+}

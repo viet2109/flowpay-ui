@@ -5,7 +5,7 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage'] },
+  { ignores: ['dist', 'coverage', 'test-results', 'playwright-report', 'shots'] },
   {
     files: ['**/*.{ts,tsx}'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
@@ -23,8 +23,22 @@ export default tseslint.config(
           patterns: [{ group: ['@/features/*/*'], message: 'Import a feature through its top-level files.' }],
         },
       ],
+      // An effect may only return a cleanup function. Expression bodies return
+      // whatever the call returns (window.scrollTo returns a Promise in Chromium),
+      // which crashes React at unmount with "destroy is not a function".
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'CallExpression[callee.name=/^use(Layout|Insertion)?Effect$/] > ArrowFunctionExpression[expression=true]',
+          message: 'Give effects a block body: `useEffect(() => { doThing() }, deps)`.',
+        },
+      ],
     },
   },
   // Dev scripts and contract tests run on Node, not in the browser.
-  { files: ['scripts/**/*.ts', 'contract/**/*.ts'], languageOptions: { globals: globals.node } },
+  {
+    files: ['scripts/**/*.ts', 'contract/**/*.ts', 'e2e/**/*.ts', 'playwright.config.ts'],
+    languageOptions: { globals: globals.node },
+  },
 )

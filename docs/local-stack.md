@@ -155,6 +155,24 @@ the top of `scripts/seed.ts`.
 checks every endpoint the dashboard calls against the frontend types in about
 5 seconds. Point it elsewhere with `CONTRACT_API_URL`.
 
+### E2E and review screenshots
+
+```sh
+npm run e2e                  # behaviour tests in a real browser (e2e/*.e2e.ts)
+npm run shots                # every page in shots/ in {light,dark} × {375,1280} × {en,vi}
+npm run shots -- -g login    # only the pages whose name matches
+```
+
+Both start Vite if it is not running, seed a fresh merchant once per run, and
+sign each test in through the API. Screenshots land in
+`shots/<page>/<width>-<theme>-<locale>.png` (git-ignored); add the pages a UI
+task touches to `e2e/pages.shots.ts`. The `vi` variants only differ once i18n
+lands (roadmap P1-T04).
+
+The browser is Playwright's Chromium if `npx playwright install chromium`
+succeeded, otherwise the system Microsoft Edge; force one with
+`E2E_BROWSER_CHANNEL=chromium|msedge|chrome`.
+
 ## 6. Simulator outcomes
 
 In the `dev` profile, **the amount picks the outcome**: amounts ending in these
