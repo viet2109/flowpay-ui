@@ -117,7 +117,9 @@ npm run dev
    Payments are read with an API key until the backend dashboard API exists
    (roadmap P3); a dashboard token on `/payment-intents` returns `401`.
 4. **Payments → New test payment.** With the default simulator outcome it ends
-   `Succeeded`.
+   `Succeeded`; an amount ending in `901` ends `Failed` (section 6).
+
+Or skip the manual steps and load a full dataset with `npm run seed` (section 5).
 
 The same flow from a shell, through the proxy (useful when the UI misbehaves):
 
@@ -128,11 +130,43 @@ curl -i -H 'Content-Type: application/json' -H 'X-FlowPay-CSRF: 1' \
 # 200, body has accessToken, Set-Cookie: flowpay_refresh=…; Path=/api/v1/auth; HttpOnly
 ```
 
-## 5. Simulator outcomes
+## 5. Seed data
 
-The provider outcome is **one global setting per backend process, read at
-startup**. To get a different outcome, stop the backend, set the variable and
-start it again.
+With the stack running:
+
+```sh
+npm run seed
+```
+
+In about 10 seconds it registers a new merchant (`demo+<id>@example.com`) and
+fills it, through the public API only, with every state the dashboard renders:
+payments in all six statuses across two list pages (VND and USD, Vietnamese
+descriptions, one without an order ID), refunds succeeded/failed/processing,
+one active and one revoked API key, three webhook endpoints (healthy, failing,
+disabled) and deliveries DELIVERED/RETRYING/DEAD. It checks each state as it
+goes and stops with the request ID on the first surprise. At the end it prints
+the sign-in details and the test API key to connect in the dashboard.
+
+Each run creates a separate merchant, so it is safe to run again. The local
+receiver uses port `4242` (`SEED_RECEIVER_PORT`); other options are listed at
+the top of `scripts/seed.ts`.
+
+## 6. Simulator outcomes
+
+In the `dev` profile, **the amount picks the outcome**: amounts ending in these
+digits (minor units) force a non-success outcome, for payment confirm and refunds
+alike. Any other amount uses the default outcome below.
+
+| Amount ends in | Example      | Payment confirm                        | Refund                      |
+| -------------- | ------------ | -------------------------------------- | --------------------------- |
+| `901`          | 250,901 VND  | `200`, `FAILED` (declined)             | `201`, `FAILED` (declined)  |
+| `902`          | 1,009.02 USD | `202`, `PROCESSING`, attempt `UNKNOWN` | `202`, `PROCESSING`         |
+| `903`          | 120,903 VND  | `200`, `FAILED` (technical failure)    | `201`, `FAILED` (technical) |
+
+The default outcome is **one global setting per backend process, read at
+startup**. To change it, stop the backend, set the variable and start it again.
+Set `PAYMENT_SIMULATOR_AMOUNT_TRIGGERS_ENABLED=false` (or the `REFUND_` one) to
+turn the amount triggers off.
 
 | Variable                            | Value               | Result                                                 |
 | ----------------------------------- | ------------------- | ------------------------------------------------------ |
@@ -151,7 +185,7 @@ refund stays `PROCESSING`.
 Webhook retries default to `10s,30s,2m,10m,1h`. To reach `DEAD` quickly while
 testing, start the backend with e.g. `WEBHOOK_DELIVERY_RETRY_DELAYS=2s,2s,2s,2s,2s`.
 
-## 6. Stop and reset
+## 7. Stop and reset
 
 ```sh
 # Ctrl+C in the backend and dashboard terminals, then:
@@ -160,7 +194,7 @@ docker compose -f docker-compose.yaml down        # keep data
 docker compose -f docker-compose.yaml down -v     # wipe Postgres and RabbitMQ data
 ```
 
-## 7. Things that surprise people
+## 8. Things that surprise people
 
 | Symptom                                                 | Cause                                                                                                                                           |
 | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -170,5 +204,6 @@ docker compose -f docker-compose.yaml down -v     # wipe Postgres and RabbitMQ d
 | `401` on payments with a dashboard token                | Expected today: payment and refund APIs accept merchant API keys only.                                                                          |
 | Webhook endpoint rejected for an `http://localhost` URL | The backend was started without `WEBHOOK_ALLOW_INSECURE_LOCALHOST=true`.                                                                        |
 | New endpoint shows no deliveries for older payments     | Subscriptions are snapshotted when an event is first materialized; only events after the endpoint was created are delivered to it.              |
-| Payment confirm outcome is not the one you wanted       | The simulator outcome is fixed at backend startup (section 5).                                                                                  |
+| Payment confirm outcome is not the one you wanted       | The amount ends in 901/902/903 (section 6), or the default outcome was set at backend startup.                                                  |
+| `npm run seed` says the simulator ignored the trigger   | The backend is not on the `dev` profile, or it predates the amount triggers (backend commit `a15bdda`).                                         |
 | No `429` locally                                        | Rate limits live in the production NGINX edge, not in the backend, so the dev stack never returns `RATE_LIMIT_EXCEEDED`.                        |
