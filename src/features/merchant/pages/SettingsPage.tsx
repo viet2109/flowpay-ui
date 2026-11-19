@@ -16,9 +16,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useSession } from '@/features/auth'
 import { keyPrefix, useTestKey } from '@/features/test-mode'
 import { errorMessage } from '@/lib/api/errors'
-import { formatDateTime, humanize } from '@/lib/format'
+import { humanize } from '@/lib/format'
 import { LANGUAGE_NAMES, LANGUAGES, setLanguage, useLanguage, type Language } from '@/i18n'
 import { useTheme, type ThemePreference } from '@/lib/theme'
+import { useFormat } from '@/i18n'
 import { useMerchant, useUpdateMerchant } from '../queries'
 import { merchantStatus } from '../status'
 
@@ -38,6 +39,7 @@ export function SettingsPage() {
 }
 
 function BusinessPanel() {
+  const fmt = useFormat()
   const { data, isPending, error, refetch } = useMerchant()
   const update = useUpdateMerchant()
   const [name, setName] = useState<string | null>(null)
@@ -91,7 +93,7 @@ function BusinessPanel() {
             items={[
               { label: 'Merchant ID', value: <CopyableId value={data.id} truncate={false} /> },
               { label: 'Status', value: <StatusBadge {...merchantStatus[data.status]} /> },
-              { label: 'Created', value: formatDateTime(data.createdAt) },
+              { label: 'Created', value: fmt.dateTime(data.createdAt) },
             ]}
           />
         </div>

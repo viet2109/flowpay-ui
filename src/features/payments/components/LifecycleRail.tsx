@@ -1,7 +1,7 @@
 import { m } from 'motion/react'
 import { EASE_OUT } from '@/lib/motion'
 import { cn } from '@/lib/cn'
-import { formatShortDate } from '@/lib/format'
+import { useFormat } from '@/i18n'
 import type { PaymentStatus } from '../types'
 
 /**
@@ -69,6 +69,7 @@ const toneText = {
 }
 
 export function LifecycleRail(props: Props) {
+  const fmt = useFormat()
   const steps = buildSteps(props)
 
   return (
@@ -120,7 +121,7 @@ export function LifecycleRail(props: Props) {
             >
               {step.label}
             </div>
-            <div className="num text-xs text-ink-3">{step.at ? formatShortDate(step.at) : ' '}</div>
+            <div className="num text-xs text-ink-3">{step.at ? fmt.shortDate(step.at) : ' '}</div>
           </li>
         )
       })}

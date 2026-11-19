@@ -1,13 +1,14 @@
 import { CopyableId } from '@/components/copyable-id'
 import { StatusBadge } from '@/components/status-badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatDateTime, formatDuration } from '@/lib/format'
+import { useFormat } from '@/i18n'
 import { usePaymentTransactions } from '../queries'
 import { transactionStatus } from '../status'
 import { MerchantApiError } from './MerchantApiError'
 
 /** Provider attempts (PaymentTransaction). One payment may have several. */
 export function AttemptsList({ paymentId }: { paymentId: string }) {
+  const fmt = useFormat()
   const { data, isPending, error, refetch } = usePaymentTransactions(paymentId)
 
   if (isPending) return <Skeleton className="m-4 h-12" />
@@ -46,8 +47,8 @@ export function AttemptsList({ paymentId }: { paymentId: string }) {
               </div>
             </div>
             <div className="num text-right text-xs text-ink-3">
-              <div>{formatDateTime(txn.startedAt)}</div>
-              <div>{txn.completedAt ? formatDuration(duration) : 'no response'}</div>
+              <div>{fmt.dateTime(txn.startedAt)}</div>
+              <div>{txn.completedAt ? fmt.duration(duration) : 'no response'}</div>
             </div>
           </li>
         )

@@ -11,7 +11,7 @@ import { Sheet } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { errorMessage } from '@/lib/api/errors'
 import { cn } from '@/lib/cn'
-import { formatDateTime, formatDuration } from '@/lib/format'
+import { useFormat } from '@/i18n'
 import { deliveryStatus, EVENT_INFO } from '../catalog'
 import { useDelivery, useEndpoints, useRetryDelivery } from '../queries'
 import type { DeliveryAttempt } from '../types'
@@ -19,6 +19,7 @@ import { HttpResult } from './DeliveriesTable'
 import { RetryTrack } from './RetryTrack'
 
 export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | null; onClose: () => void }) {
+  const fmt = useFormat()
   const { data, isPending, error, refetch } = useDelivery(deliveryId)
   const endpoints = useEndpoints()
   const retry = useRetryDelivery()
@@ -125,11 +126,11 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
                   </Link>
                 ),
               },
-              { label: 'Created', value: formatDateTime(data.createdAt) },
-              { label: 'Delivered', value: formatDateTime(data.deliveredAt), hidden: !data.deliveredAt },
+              { label: 'Created', value: fmt.dateTime(data.createdAt) },
+              { label: 'Delivered', value: fmt.dateTime(data.deliveredAt), hidden: !data.deliveredAt },
               {
                 label: 'Next attempt',
-                value: formatDateTime(data.nextAttemptAt),
+                value: fmt.dateTime(data.nextAttemptAt),
                 hidden: !data.nextAttemptAt,
               },
             ]}
@@ -141,6 +142,7 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
 }
 
 function AttemptRow({ attempt }: { attempt: DeliveryAttempt }) {
+  const fmt = useFormat()
   const ok = attempt.httpStatus !== null && attempt.httpStatus >= 200 && attempt.httpStatus < 300
   return (
     <li className="relative pb-4 last:pb-0">
@@ -154,12 +156,12 @@ function AttemptRow({ attempt }: { attempt: DeliveryAttempt }) {
         <span className="text-sm">
           Attempt <span className="num">#{attempt.attemptNo}</span>
         </span>
-        <span className="num text-xs text-ink-3">{formatDateTime(attempt.startedAt)}</span>
+        <span className="num text-xs text-ink-3">{fmt.dateTime(attempt.startedAt)}</span>
       </div>
       <div className="mt-0.5 flex items-center gap-2 text-xs text-ink-3">
         <HttpResult status={attempt.httpStatus} />
         <span>·</span>
-        <span className="num">{formatDuration(attempt.durationMs)}</span>
+        <span className="num">{fmt.duration(attempt.durationMs)}</span>
       </div>
       {attempt.errorMessage && (
         <p className="mt-1 font-mono text-xs break-all text-danger">{attempt.errorMessage}</p>

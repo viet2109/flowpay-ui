@@ -1,6 +1,6 @@
 import { m } from 'motion/react'
 import { EASE_OUT } from '@/lib/motion'
-import { formatMinor } from '@/lib/money'
+import { useFormat } from '@/i18n'
 import type { PaymentIntent } from '../types'
 
 /**
@@ -9,6 +9,7 @@ import type { PaymentIntent } from '../types'
  * "In flight" is derived: refunds created but not yet settled hold capacity.
  */
 export function RefundCapacity({ payment }: { payment: PaymentIntent }) {
+  const fmt = useFormat()
   const { amount, refundedAmount: refunded, refundableAmount: refundable, currency } = payment
   const settled =
     payment.status === 'SUCCEEDED' || payment.status === 'PARTIALLY_REFUNDED' || payment.status === 'REFUNDED'
@@ -39,14 +40,14 @@ export function RefundCapacity({ payment }: { payment: PaymentIntent }) {
         ))}
       </div>
       <dl className="num mt-3 grid grid-cols-3 gap-4 text-sm">
-        <Legend dot="bg-refund" label="Refunded" value={formatMinor(refunded, currency)} />
+        <Legend dot="bg-refund" label="Refunded" value={fmt.money(refunded, currency)} />
         <Legend
           dot="hatch text-warning"
           label="In flight"
-          value={formatMinor(reserved, currency)}
+          value={fmt.money(reserved, currency)}
           muted={reserved === 0}
         />
-        <Legend dot="bg-success" label="Refundable" value={formatMinor(refundable, currency)} />
+        <Legend dot="bg-success" label="Refundable" value={fmt.money(refundable, currency)} />
       </dl>
     </div>
   )

@@ -1,9 +1,10 @@
+import { useFormat } from '@/i18n'
 import { useEffect, useState } from 'react'
-import { formatDateTime, formatRelative } from '@/lib/format'
 import { Tooltip } from './ui/tooltip'
 
 /** "3 min ago" with the exact timestamp on hover. Re-renders every 30s. */
 export function RelativeTime({ value, className }: { value: string | null | undefined; className?: string }) {
+  const fmt = useFormat()
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
@@ -13,9 +14,9 @@ export function RelativeTime({ value, className }: { value: string | null | unde
 
   if (!value) return <span className="text-ink-3">—</span>
   return (
-    <Tooltip content={formatDateTime(value)}>
+    <Tooltip content={fmt.dateTime(value)}>
       <time dateTime={value} className={className}>
-        {formatRelative(value, now)}
+        {fmt.relative(value, now)}
       </time>
     </Tooltip>
   )

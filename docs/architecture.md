@@ -129,8 +129,14 @@ to the person ("Replayed: no second payment was created").
 
 Amounts are integer **minor units** end to end (BR-MONEY-001). `lib/money.ts`:
 
-- `formatMinor(500000, 'VND')` → `500,000`; `formatMinor(12345, 'USD')` → `123.45`;
-- `parseToMinor('0.29', 'USD')` → `29` using string math (never `parseFloat * 100`);
+- `formatMinor(500000, 'VND')` → `500,000` (English) / `500.000` (Vietnamese);
+  `formatMinor(12345, 'USD')` → `123.45` / `123,45`. The currency code is always shown.
+- `parseToMinor(text, currency)` uses string math (never `parseFloat * 100`) and the
+  separators of the UI language: `1,250.50` in English, `1.250,50` in Vietnamese.
+  A grouping separator is only valid before exactly three digits, so an ambiguous
+  input such as `12,50` in English is **rejected**, never read as 1,250. Forms show
+  how the input was read (`= 1.250,50 USD · 125.050 minor units`) before sending.
+- `minorToInput` pre-fills an input with the locale's decimal separator, no grouping.
 - currency decimals come from `Intl` (VND 0, USD 2, KWD 3).
 
 ## 6. URL state
@@ -168,7 +174,15 @@ The dashboard ships in Vietnamese and English (`i18next` + `react-i18next`).
 - Language: stored choice (`localStorage` `flowpay.language`), else the browser
   language, else English. `setLanguage()` switches without a reload and updates
   `<html lang>`. Language names are always shown in their own language.
-- Tests run in English (`src/test/setup.ts`).
+- Numbers and dates follow the language (`lib/locale.ts`): Vietnamese `500.000`,
+  `19/11/2026 14:05`; English `500,000`, `19 Nov 2026, 14:05`. Components format
+  through `useFormat()` (`fmt.money`, `fmt.dateTime`, `fmt.relative`, `fmt.number`…),
+  which re-renders them when the language changes; ESLint forbids importing the
+  display formatters from `lib/format` and `lib/money` elsewhere.
+- Validation messages are keys, translated when shown: schemas use
+  `vmsg('tooLong', { max: 255 })`, fields render `fieldError(errors.x?.message, params)`
+  from `useFieldError()`. Server field errors pass through unchanged.
+- Tests run in English (`src/test/setup.ts`) with `TZ=Asia/Ho_Chi_Minh`.
 
 ## 8. Testing
 

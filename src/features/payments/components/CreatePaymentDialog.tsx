@@ -9,26 +9,31 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
 import { Input, NativeSelect } from '@/components/ui/input'
+import { useFieldError, useFormat, vmsg } from '@/i18n'
 import { errorMessage } from '@/lib/api/errors'
 import { applyServerErrors } from '@/lib/form'
 import { useIdempotencyKey } from '@/lib/idempotency'
-import { COMMON_CURRENCIES, formatMinor, parseToMinor } from '@/lib/money'
+import { COMMON_CURRENCIES, currencyDigits, parseToMinor } from '@/lib/money'
 import { useCreatePayment } from '../queries'
 
 const schema = z
   .object({
-    currency: z.string().length(3),
-    amount: z.string().trim().min(1, 'Enter an amount.'),
-    orderId: z.string().trim().max(255),
-    description: z.string().trim().max(500),
+    currency: z.string().length(3, vmsg('currency')),
+    amount: z.string().trim().min(1, vmsg('amountRequired')),
+    orderId: z
+      .string()
+      .trim()
+      .max(255, vmsg('tooLong', { max: 255 })),
+    description: z
+      .string()
+      .trim()
+      .max(500, vmsg('tooLong', { max: 500 })),
     confirmNow: z.boolean(),
   })
   .superRefine((v, ctx) => {
     const minor = parseToMinor(v.amount, v.currency)
-    if (minor === null)
-      ctx.addIssue({ code: 'custom', path: ['amount'], message: `Not a valid ${v.currency} amount.` })
-    else if (minor <= 0)
-      ctx.addIssue({ code: 'custom', path: ['amount'], message: 'Amount must be greater than zero.' })
+    if (minor === null) ctx.addIssue({ code: 'custom', path: ['amount'], message: vmsg('amountInvalid') })
+    else if (minor <= 0) ctx.addIssue({ code: 'custom', path: ['amount'], message: vmsg('amountPositive') })
   })
 
 type Values = z.infer<typeof schema>
@@ -63,7 +68,9 @@ export function CreatePaymentDialog({
   const currency = useWatch({ control: form.control, name: 'currency' })
   const amount = useWatch({ control: form.control, name: 'amount' })
   const confirmNow = useWatch({ control: form.control, name: 'confirmNow' })
-  const preview = parseToMinor(amount ?? '', currency ?? 'VND')
+  const fmt = useFormat()
+  const fieldError = useFieldError()
+  const preview = parseToMinor(amount ?? '', currency ?? 'VND', fmt.locale)
 
   function close(next: boolean) {
     if (mutation.isPending) return
@@ -93,7 +100,7 @@ export function CreatePaymentDialog({
       {
         onSuccess: ({ created, confirmed }) => {
           const payment = created.data
-          const amountLabel = `${formatMinor(payment.amount, payment.currency)} ${payment.currency}`
+          const amountLabel = `${fmt.money(payment.amount, payment.currency)} ${payment.currency}`
           const replayNote = created.replayed ? ' Replayed: no second payment was created.' : ''
           const view = { label: 'View', onClick: () => navigate(`/payments/${payment.id}`) }
 
@@ -142,42 +149,48 @@ export function CreatePaymentDialog({
         <form id="create-payment" className="space-y-4" onSubmit={form.handleSubmit(submit)} noValidate>
           {mutation.isError && <Callout tone="danger">{errorMessage(mutation.error)}</Callout>}
 
-          <Field
-            label="Amount"
-            error={errors.amount?.message}
-            hint={
-              preview
-                ? `Sent as ${preview.toLocaleString('en-US')} minor units`
-                : 'Amounts are stored as integer minor units.'
-            }
-          >
-            <div className="flex gap-2">
-              <div className="w-24 shrink-0">
-                <NativeSelect aria-label="Currency" {...form.register('currency')}>
-                  {COMMON_CURRENCIES.map((c) => (
-                    <option key={c}>{c}</option>
-                  ))}
-                </NativeSelect>
-              </div>
+          {/* Two fields, so each control gets its own label, error and description. */}
+          <div className="flex items-start gap-2">
+            <Field label="Currency" className="w-24 shrink-0">
+              <NativeSelect {...form.register('currency')}>
+                {COMMON_CURRENCIES.map((c) => (
+                  <option key={c}>{c}</option>
+                ))}
+              </NativeSelect>
+            </Field>
+            <Field
+              label="Amount"
+              className="min-w-0 flex-1"
+              error={fieldError(errors.amount?.message, {
+                currency,
+                example: fmt.money(1_234_567, currency),
+              })}
+              hint={
+                preview
+                  ? // Show how the input was read, so a misplaced separator is visible before sending.
+                    `= ${fmt.moneyWithCode(preview, currency)} · ${fmt.number(preview)} minor units`
+                  : 'Amounts are stored as integer minor units.'
+              }
+            >
               <Input
                 inputMode="decimal"
                 autoFocus
-                placeholder={currency === 'VND' || currency === 'JPY' ? '500000' : '125.00'}
+                placeholder={fmt.money(currencyDigits(currency) === 0 ? 500_000 : 12_500, currency)}
                 className="num"
                 {...form.register('amount')}
               />
-            </div>
-          </Field>
+            </Field>
+          </div>
 
           <Field
             label="Order ID"
             hint="Your own reference. Filter payments by it later."
-            error={errors.orderId?.message}
+            error={fieldError(errors.orderId?.message)}
           >
             <Input className="font-mono" {...form.register('orderId')} />
           </Field>
 
-          <Field label="Description" error={errors.description?.message}>
+          <Field label="Description" error={fieldError(errors.description?.message)}>
             <Input placeholder="Optional" {...form.register('description')} />
           </Field>
 

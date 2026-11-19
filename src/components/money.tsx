@@ -1,5 +1,5 @@
 import { cn } from '@/lib/cn'
-import { formatMinor } from '@/lib/money'
+import { useFormat } from '@/i18n'
 
 interface MoneyProps {
   /** Integer minor units, exactly as the API returns them. */
@@ -20,11 +20,12 @@ const sizes = {
 
 /** Amount first, ISO code second and quieter: "500,000 VND". */
 export function Money({ amount, currency, size = 'md', negative, className }: MoneyProps) {
+  const fmt = useFormat()
   return (
     <span className={cn('num inline-flex items-baseline gap-1 whitespace-nowrap', sizes[size], className)}>
       <span>
         {negative && '−'}
-        {formatMinor(amount, currency)}
+        {fmt.money(amount, currency)}
       </span>
       <span className={cn('text-ink-3', size === 'xl' ? 'text-base font-normal' : 'text-[0.85em]')}>
         {currency}

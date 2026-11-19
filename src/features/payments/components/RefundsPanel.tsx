@@ -10,7 +10,8 @@ import { Pagination } from '@/components/pagination'
 import { Sheet } from '@/components/ui/sheet'
 import { TableSkeleton } from '@/components/ui/skeleton'
 import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/table'
-import { formatDateTime, humanize } from '@/lib/format'
+import { humanize } from '@/lib/format'
+import { useFormat } from '@/i18n'
 import { usePaymentRefunds, useRefund } from '../queries'
 import { refundStatus } from '../status'
 import type { Refund } from '../types'
@@ -78,6 +79,7 @@ export function RefundsPanel({ paymentId }: { paymentId: string }) {
 }
 
 function RefundSheet({ refund, onClose }: { refund: Refund | null; onClose: () => void }) {
+  const fmt = useFormat()
   // Row data renders instantly; the detail request refreshes it in the background.
   const { data } = useRefund(refund?.id ?? null)
   const current = data ?? refund
@@ -119,8 +121,8 @@ function RefundSheet({ refund, onClose }: { refund: Refund | null; onClose: () =
                   </span>
                 ),
               },
-              { label: 'Created', value: formatDateTime(current.createdAt) },
-              { label: 'Completed', value: formatDateTime(current.completedAt) },
+              { label: 'Created', value: fmt.dateTime(current.createdAt) },
+              { label: 'Completed', value: fmt.dateTime(current.completedAt) },
             ]}
           />
         </div>

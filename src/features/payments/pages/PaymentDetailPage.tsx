@@ -14,8 +14,8 @@ import { Panel, PanelHeader } from '@/components/ui/panel'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RequireTestKey } from '@/features/test-mode'
 import { errorMessage } from '@/lib/api/errors'
-import { formatDateTime } from '@/lib/format'
 import { useIdempotencyKey } from '@/lib/idempotency'
+import { useFormat } from '@/i18n'
 import { AttemptsList } from '../components/AttemptsList'
 import { LifecycleRail } from '../components/LifecycleRail'
 import { MerchantApiError } from '../components/MerchantApiError'
@@ -36,6 +36,7 @@ export function PaymentDetailPage() {
 }
 
 function PaymentDetail({ id }: { id: string }) {
+  const fmt = useFormat()
   const { data: payment, isPending, error, refetch } = usePayment(id)
   const { data: attempts } = usePaymentTransactions(id)
   const [refunding, setRefunding] = useState(false)
@@ -167,8 +168,8 @@ function PaymentDetail({ id }: { id: string }) {
                   },
                   { label: 'Order ID', value: payment.orderId },
                   { label: 'Description', value: payment.description },
-                  { label: 'Created', value: formatDateTime(payment.createdAt) },
-                  { label: 'Updated', value: formatDateTime(payment.updatedAt) },
+                  { label: 'Created', value: fmt.dateTime(payment.createdAt) },
+                  { label: 'Updated', value: fmt.dateTime(payment.updatedAt) },
                 ]}
               />
             </Panel>

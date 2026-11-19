@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { useFieldError, vmsg } from '@/i18n'
 import { errorMessage } from '@/lib/api/errors'
 import { applyServerErrors } from '@/lib/form'
 import { useCreateEndpoint, useUpdateEndpoint } from '../queries'
@@ -37,11 +38,11 @@ const DEFAULT_EVENTS: EventType[] = [
 function urlProblem(url: string): string | undefined {
   try {
     const u = new URL(url)
-    if (u.protocol !== 'https:' && u.protocol !== 'http:') return 'Use an https:// URL.'
-    if (u.hash) return 'Remove the #fragment.'
-    if (u.username || u.password) return 'Credentials in the URL are not allowed.'
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return vmsg('urlScheme')
+    if (u.hash) return vmsg('urlFragment')
+    if (u.username || u.password) return vmsg('urlCredentials')
   } catch {
-    return 'This is not a valid URL.'
+    return vmsg('urlInvalid')
   }
   return undefined
 }
@@ -50,12 +51,12 @@ const schema = z.object({
   url: z
     .string()
     .trim()
-    .min(1, 'Enter the URL that will receive events.')
+    .min(1, vmsg('urlRequired'))
     .superRefine((url, ctx) => {
       const problem = url ? urlProblem(url) : undefined
       if (problem) ctx.addIssue({ code: 'custom', message: problem })
     }),
-  events: z.array(z.enum(EVENT_TYPES)).min(1, 'Choose at least one event.'),
+  events: z.array(z.enum(EVENT_TYPES)).min(1, vmsg('eventsRequired')),
 })
 
 type Values = z.infer<typeof schema>
@@ -77,6 +78,7 @@ export function EndpointFormDialog({ open, onOpenChange, endpoint }: Props) {
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: valuesFor(endpoint) })
   const events = useWatch({ control: form.control, name: 'events' })
   const { errors } = form.formState
+  const fieldError = useFieldError()
 
   function close() {
     onOpenChange(false)
@@ -146,7 +148,7 @@ export function EndpointFormDialog({ open, onOpenChange, endpoint }: Props) {
             <Field
               label="Endpoint URL"
               hint="HTTPS required in production. Private, local and metadata addresses are rejected."
-              error={errors.url?.message}
+              error={fieldError(errors.url?.message)}
             >
               <Input
                 {...form.register('url')}
@@ -170,7 +172,7 @@ export function EndpointFormDialog({ open, onOpenChange, endpoint }: Props) {
                   <EventPicker value={field.value} onChange={field.onChange} invalid={fieldState.invalid} />
                 )}
               />
-              {errors.events && <p className="text-xs text-danger">{errors.events.message}</p>}
+              {errors.events && <p className="text-xs text-danger">{fieldError(errors.events.message)}</p>}
             </div>
           </form>
         </DialogContent>

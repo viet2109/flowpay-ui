@@ -1,16 +1,12 @@
 import i18n from 'i18next'
-import { initReactI18next, useTranslation } from 'react-i18next'
+import { initReactI18next } from 'react-i18next'
+import { setFormatLocale } from '@/lib/locale'
+import { isLanguage, type Language } from './language'
 import { NAMESPACES, resources } from './resources'
 
-export const LANGUAGES = ['vi', 'en'] as const
-export type Language = (typeof LANGUAGES)[number]
-
-/** Always shown in their own language, whatever the UI language is. */
-export const LANGUAGE_NAMES: Record<Language, string> = { vi: 'Tiếng Việt', en: 'English' }
+export { isLanguage, LANGUAGE_NAMES, LANGUAGES, useLanguage, type Language } from './language'
 
 const STORAGE_KEY = 'flowpay.language'
-
-export const isLanguage = (value: unknown): value is Language => LANGUAGES.includes(value as Language)
 
 /** Stored choice first, then the first supported browser language, then English. */
 export function detectLanguage(stored: string | null, browserLanguages: readonly string[]): Language {
@@ -41,9 +37,13 @@ void i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false }, // React already escapes
 })
 
-const syncHtmlLang = (lng: string) => document.documentElement.setAttribute('lang', lng)
-syncHtmlLang(i18n.language)
-i18n.on('languageChanged', syncHtmlLang)
+/** Keeps <html lang> and the number/date locale in step with the UI language. */
+function syncLanguage(lng: string) {
+  document.documentElement.setAttribute('lang', lng)
+  setFormatLocale(lng)
+}
+syncLanguage(i18n.language)
+i18n.on('languageChanged', syncLanguage)
 
 /** Switches the UI language without a reload and remembers it for this browser. */
 export async function setLanguage(language: Language) {
@@ -55,10 +55,6 @@ export async function setLanguage(language: Language) {
   await i18n.changeLanguage(language)
 }
 
-/** The active UI language; re-renders the caller when it changes. */
-export function useLanguage(): Language {
-  const { i18n: instance } = useTranslation()
-  return isLanguage(instance.language) ? instance.language : 'en'
-}
-
 export { i18n }
+export { useFormat } from './format'
+export { useFieldError, vmsg } from './validation'

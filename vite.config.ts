@@ -26,6 +26,8 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       globals: false,
       setupFiles: ['./src/test/setup.ts'],
+      // Dates in tests are asserted in the product's time zone, whatever the machine's is.
+      env: { TZ: 'Asia/Ho_Chi_Minh' },
       // Components never need real CSS in jsdom; the token contrast test reads globals.css as text.
       css: { include: [/globals\.css/] },
     },

@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { errorMessage } from '@/lib/api/errors'
 import { authApi } from '../api'
 import { Callout } from '@/components/callout'
+import { useFieldError } from '@/i18n'
 import { loginSchema, type LoginValues } from '../schemas'
 import { useSession } from '../session-store'
 
@@ -18,6 +19,7 @@ export function LoginPage() {
   const registeredEmail = (location.state as { registeredEmail?: string } | null)?.registeredEmail
   const from = (location.state as { from?: string } | null)?.from ?? '/'
 
+  const fieldError = useFieldError()
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: registeredEmail ?? '', password: '' },
@@ -54,10 +56,10 @@ export function LoginPage() {
         onSubmit={form.handleSubmit((values) => login.mutate(values))}
         noValidate
       >
-        <Field label="Email" error={errors.email?.message}>
+        <Field label="Email" error={fieldError(errors.email?.message)}>
           <Input type="email" autoComplete="email" autoFocus={!registeredEmail} {...form.register('email')} />
         </Field>
-        <Field label="Password" error={errors.password?.message}>
+        <Field label="Password" error={fieldError(errors.password?.message)}>
           <Input
             type="password"
             autoComplete="current-password"

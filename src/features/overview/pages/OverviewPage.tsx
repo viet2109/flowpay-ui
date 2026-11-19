@@ -19,6 +19,7 @@ import {
 import { ConnectKeyPanel, useTestKey } from '@/features/test-mode'
 import { deliveryStatus, useDeliveryCounts, useEndpoints } from '@/features/webhooks'
 import { cn } from '@/lib/cn'
+import { useFormat } from '@/i18n'
 
 export function OverviewPage() {
   const { data: merchant } = useMerchant()
@@ -208,6 +209,7 @@ function DistributionBar<S extends string>({
   order: S[]
   hrefFor: (s: S) => string
 }) {
+  const fmt = useFormat()
   const total = order.reduce((sum, s) => sum + counts[s], 0)
   if (total === 0) return <p className="text-sm text-ink-3">Nothing here yet.</p>
 
@@ -234,7 +236,7 @@ function DistributionBar<S extends string>({
                 <span className={cn('size-2 rounded-[2px]', BAR_TONE[meta[s].tone])} />
                 {meta[s].label}
               </span>
-              <span className="num text-ink">{counts[s].toLocaleString()}</span>
+              <span className="num text-ink">{fmt.number(counts[s])}</span>
             </Link>
           </li>
         ))}

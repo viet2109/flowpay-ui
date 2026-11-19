@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
 import { Input, NativeSelect } from '@/components/ui/input'
+import { useFieldError, useFormat, vmsg } from '@/i18n'
 import { errorMessage } from '@/lib/api/errors'
 import { cn } from '@/lib/cn'
 import { useIdempotencyKey } from '@/lib/idempotency'
-import { formatMinor, minorToInput, parseToMinor } from '@/lib/money'
+import { minorToInput, parseToMinor } from '@/lib/money'
 import { useCreateRefund } from '../queries'
 import type { PaymentIntent } from '../types'
 
@@ -28,6 +29,8 @@ interface Props {
 
 export function RefundDialog({ payment, open, onOpenChange }: Props) {
   const { currency, refundableAmount } = payment
+  const fmt = useFormat()
+  const fieldError = useFieldError()
   const [amountText, setAmountText] = useState(() => minorToInput(refundableAmount, currency))
   const [reason, setReason] = useState('CUSTOMER_REQUEST')
   const [otherReason, setOtherReason] = useState('')
@@ -38,11 +41,11 @@ export function RefundDialog({ payment, open, onOpenChange }: Props) {
   const amount = parseToMinor(amountText, currency)
   const amountError =
     amount === null
-      ? `Enter a valid ${currency} amount.`
+      ? vmsg('amountInvalid')
       : amount <= 0
-        ? 'Amount must be greater than zero.'
+        ? vmsg('amountPositive')
         : amount > refundableAmount
-          ? `At most ${formatMinor(refundableAmount, currency)} ${currency} can be refunded.`
+          ? vmsg('amountAboveRefundable')
           : undefined
   const remaining = amount !== null && !amountError ? refundableAmount - amount : null
 
@@ -69,7 +72,7 @@ export function RefundDialog({ payment, open, onOpenChange }: Props) {
       {
         onSuccess: (result) => {
           const refund = result.data
-          const label = `${formatMinor(refund.amount, refund.currency)} ${refund.currency}`
+          const label = `${fmt.money(refund.amount, refund.currency)} ${refund.currency}`
           if (refund.status === 'SUCCEEDED') toast.success(`Refunded ${label}`)
           else if (refund.status === 'PROCESSING')
             toast.warning('Refund outcome unknown', {
@@ -99,7 +102,7 @@ export function RefundDialog({ payment, open, onOpenChange }: Props) {
           <>
             Up to{' '}
             <strong className="num font-medium text-ink">
-              {formatMinor(refundableAmount, currency)} {currency}
+              {fmt.money(refundableAmount, currency)} {currency}
             </strong>{' '}
             is refundable. Multiple partial refunds are allowed.
           </>
@@ -110,7 +113,7 @@ export function RefundDialog({ payment, open, onOpenChange }: Props) {
               Cancel
             </Button>
             <Button variant="primary" type="submit" form="refund-form" loading={mutation.isPending}>
-              Refund {amount && !amountError ? `${formatMinor(amount, currency)} ${currency}` : ''}
+              Refund {amount && !amountError ? `${fmt.money(amount, currency)} ${currency}` : ''}
             </Button>
           </>
         }
@@ -120,7 +123,15 @@ export function RefundDialog({ payment, open, onOpenChange }: Props) {
 
           <Field
             label="Amount"
-            error={touched ? amountError : undefined}
+            error={
+              touched
+                ? fieldError(amountError, {
+                    currency,
+                    example: fmt.money(1_234_567, currency),
+                    amount: fmt.money(refundableAmount, currency),
+                  })
+                : undefined
+            }
             aside={
               <div className="flex gap-1">
                 {quick.map((q) => (
@@ -141,7 +152,7 @@ export function RefundDialog({ payment, open, onOpenChange }: Props) {
             hint={
               remaining !== null ? (
                 <span className="num">
-                  {formatMinor(remaining, currency)} {currency} will remain refundable
+                  {fmt.money(remaining, currency)} {currency} will remain refundable
                 </span>
               ) : undefined
             }

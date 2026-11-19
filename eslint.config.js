@@ -4,6 +4,20 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
+const FEATURE_INTERNALS = [
+  { group: ['@/features/*/*'], message: 'Import a feature through its top-level files.' },
+]
+
+const useFormatMessage = 'Use useFormat() from @/i18n so the value follows the UI language.'
+const LOCALE_FORMATTERS = [
+  {
+    name: '@/lib/format',
+    importNames: ['formatDateTime', 'formatShortDate', 'formatRelative', 'formatDuration'],
+    message: useFormatMessage,
+  },
+  { name: '@/lib/money', importNames: ['formatMinor', 'formatNumber'], message: useFormatMessage },
+]
+
 export default tseslint.config(
   { ignores: ['dist', 'coverage', 'test-results', 'playwright-report', 'shots'] },
   {
@@ -17,12 +31,8 @@ export default tseslint.config(
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       // Features talk to each other through their public files, never deep internals.
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [{ group: ['@/features/*/*'], message: 'Import a feature through its top-level files.' }],
-        },
-      ],
+      // Display formatters come from useFormat(), which re-renders on a language change.
+      'no-restricted-imports': ['error', { patterns: FEATURE_INTERNALS, paths: LOCALE_FORMATTERS }],
       // An effect may only return a cleanup function. Expression bodies return
       // whatever the call returns (window.scrollTo returns a Promise in Chromium),
       // which crashes React at unmount with "destroy is not a function".
@@ -35,6 +45,11 @@ export default tseslint.config(
         },
       ],
     },
+  },
+  // The formatters' own home, the hook that wraps them, and tests may call them directly.
+  {
+    files: ['src/lib/**', 'src/i18n/**', '**/*.test.{ts,tsx}', 'contract/**', 'e2e/**', 'scripts/**'],
+    rules: { 'no-restricted-imports': ['error', { patterns: FEATURE_INTERNALS }] },
   },
   // Dev scripts and contract tests run on Node, not in the browser.
   {

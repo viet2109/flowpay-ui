@@ -17,7 +17,7 @@ import { Panel, PanelHeader } from '@/components/ui/panel'
 import { Skeleton } from '@/components/ui/skeleton'
 import { errorMessage } from '@/lib/api/errors'
 import { cn } from '@/lib/cn'
-import { formatDateTime } from '@/lib/format'
+import { useFormat } from '@/i18n'
 import { endpointStatus, EVENT_INFO } from '../catalog'
 import { DeliveriesView } from '../components/DeliveriesView'
 import { EndpointFormDialog } from '../components/EndpointFormDialog'
@@ -27,6 +27,7 @@ import { useDisableEndpoint, useEndpoint, useRotateSecret } from '../queries'
 import { EVENT_TYPES } from '../types'
 
 export function EndpointDetailPage() {
+  const fmt = useFormat()
   const { endpointId = '' } = useParams()
   const { data: endpoint, isPending, error, refetch } = useEndpoint(endpointId)
   const [editing, setEditing] = useState(false)
@@ -168,8 +169,8 @@ export function EndpointDetailPage() {
             <DescriptionList
               className="px-4 py-1"
               items={[
-                { label: 'Created', value: formatDateTime(endpoint.createdAt) },
-                { label: 'Updated', value: formatDateTime(endpoint.updatedAt) },
+                { label: 'Created', value: fmt.dateTime(endpoint.createdAt) },
+                { label: 'Updated', value: fmt.dateTime(endpoint.updatedAt) },
                 { label: 'Timeouts', value: '2 s connect · 5 s request' },
                 { label: 'Redirects', value: 'Never followed' },
               ]}

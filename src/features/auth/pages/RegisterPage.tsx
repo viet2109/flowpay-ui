@@ -9,10 +9,12 @@ import { errorMessage, isApiError } from '@/lib/api/errors'
 import { applyServerErrors } from '@/lib/form'
 import { authApi } from '../api'
 import { Callout } from '@/components/callout'
+import { useFieldError } from '@/i18n'
 import { registerSchema, type RegisterValues } from '../schemas'
 
 export function RegisterPage() {
   const navigate = useNavigate()
+  const fieldError = useFieldError()
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: { firstName: '', lastName: '', merchantName: '', email: '', password: '' },
@@ -50,24 +52,24 @@ export function RegisterPage() {
 
       <form className="mt-6 space-y-4" onSubmit={form.handleSubmit((v) => register.mutate(v))} noValidate>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="First name" error={errors.firstName?.message}>
+          <Field label="First name" error={fieldError(errors.firstName?.message)}>
             <Input autoComplete="given-name" autoFocus {...form.register('firstName')} />
           </Field>
-          <Field label="Last name" error={errors.lastName?.message}>
+          <Field label="Last name" error={fieldError(errors.lastName?.message)}>
             <Input autoComplete="family-name" {...form.register('lastName')} />
           </Field>
         </div>
         <Field
           label="Business name"
           hint="Shown on your dashboard. You can change it later."
-          error={errors.merchantName?.message}
+          error={fieldError(errors.merchantName?.message)}
         >
           <Input autoComplete="organization" {...form.register('merchantName')} />
         </Field>
-        <Field label="Work email" error={errors.email?.message}>
+        <Field label="Work email" error={fieldError(errors.email?.message)}>
           <Input type="email" autoComplete="email" {...form.register('email')} />
         </Field>
-        <Field label="Password" hint="At least 8 characters." error={errors.password?.message}>
+        <Field label="Password" hint="At least 8 characters." error={fieldError(errors.password?.message)}>
           <Input type="password" autoComplete="new-password" {...form.register('password')} />
         </Field>
         <Button type="submit" variant="primary" size="lg" className="w-full" loading={register.isPending}>

@@ -1,4 +1,5 @@
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react'
+import { useFormat } from '@/i18n'
 import type { PageMeta } from '@/lib/api/types'
 import { Button } from './ui/button'
 
@@ -10,6 +11,7 @@ interface PaginationProps {
 }
 
 export function Pagination({ meta, onPageChange, pending }: PaginationProps) {
+  const fmt = useFormat()
   if (meta.totalElements === 0) return null
   const from = meta.page * meta.size + 1
   const to = Math.min(from + meta.size - 1, meta.totalElements)
@@ -17,7 +19,7 @@ export function Pagination({ meta, onPageChange, pending }: PaginationProps) {
   return (
     <div className="flex items-center justify-between border-t border-line px-4 py-2.5 text-sm text-ink-2">
       <span className="num">
-        {from.toLocaleString()}–{to.toLocaleString()} of {meta.totalElements.toLocaleString()}
+        {fmt.number(from)}–{fmt.number(to)} of {fmt.number(meta.totalElements)}
       </span>
       <div className="flex items-center gap-1">
         <Button
