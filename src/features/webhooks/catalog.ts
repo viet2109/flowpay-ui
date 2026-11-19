@@ -31,16 +31,16 @@ export const EVENT_INFO: Record<
 }
 
 export const deliveryStatus: StatusMap<DeliveryStatus> = {
-  PENDING: { tone: 'neutral', label: 'Pending' },
-  DELIVERING: { tone: 'progress', label: 'Delivering', live: true },
-  DELIVERED: { tone: 'success', label: 'Delivered' },
-  RETRYING: { tone: 'warning', label: 'Retrying', live: true },
-  DEAD: { tone: 'danger', label: 'Dead' },
+  PENDING: { tone: 'neutral', label: 'delivery.PENDING' },
+  DELIVERING: { tone: 'progress', label: 'delivery.DELIVERING', live: true },
+  DELIVERED: { tone: 'success', label: 'delivery.DELIVERED' },
+  RETRYING: { tone: 'warning', label: 'delivery.RETRYING', live: true },
+  DEAD: { tone: 'danger', label: 'delivery.DEAD' },
 }
 
 export const endpointStatus: StatusMap<EndpointStatus> = {
-  ACTIVE: { tone: 'success', label: 'Active' },
-  DISABLED: { tone: 'neutral', label: 'Disabled' },
+  ACTIVE: { tone: 'success', label: 'endpoint.ACTIVE' },
+  DISABLED: { tone: 'neutral', label: 'endpoint.DISABLED' },
 }
 
 /**

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { CheckIcon, CopyIcon, EyeIcon, EyeSlashIcon, LockKeyIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { Button } from './ui/button'
@@ -12,6 +13,7 @@ interface SecretRevealProps {
  * returns these again (BR-KEY-002), so the copy affordance is the main action.
  */
 export function SecretReveal({ label, secret }: SecretRevealProps) {
+  const { t } = useTranslation('common')
   const [visible, setVisible] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -32,18 +34,18 @@ export function SecretReveal({ label, secret }: SecretRevealProps) {
           size="icon-sm"
           variant="ghost"
           onClick={() => setVisible((v) => !v)}
-          aria-label={visible ? 'Hide' : 'Show'}
+          aria-label={visible ? t('hide') : t('show')}
         >
           {visible ? <EyeSlashIcon /> : <EyeIcon />}
         </Button>
         <Button size="sm" variant={copied ? 'secondary' : 'primary'} onClick={copy}>
           {copied ? <CheckIcon weight="bold" /> : <CopyIcon />}
-          {copied ? 'Copied' : 'Copy'}
+          {copied ? t('copied') : t('copy')}
         </Button>
       </div>
       <p className="flex items-start gap-1.5 text-xs text-ink-2">
         <LockKeyIcon className="mt-px size-3.5 shrink-0 text-warning" />
-        Store it now in your secret manager. FlowPay will not show it again.
+        {t('secretOnce')}
       </p>
     </div>
   )

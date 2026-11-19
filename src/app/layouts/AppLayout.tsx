@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Dialog as DialogPrimitive } from 'radix-ui'
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
@@ -7,6 +8,7 @@ import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 
 export function AppLayout() {
+  const { t } = useTranslation('shell')
   const [navOpen, setNavOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const location = useLocation()
@@ -33,8 +35,10 @@ export function AppLayout() {
         <DialogPrimitive.Portal>
           <DialogPrimitive.Overlay className="fp-fade fixed inset-0 z-50 bg-ink/30 lg:hidden" />
           <DialogPrimitive.Content className="fp-slide-in fixed inset-y-0 left-0 z-50 w-64 border-r border-line bg-canvas lg:hidden">
-            <DialogPrimitive.Title className="sr-only">Navigation</DialogPrimitive.Title>
-            <DialogPrimitive.Description className="sr-only">Main navigation</DialogPrimitive.Description>
+            <DialogPrimitive.Title className="sr-only">{t('nav.drawerTitle')}</DialogPrimitive.Title>
+            <DialogPrimitive.Description className="sr-only">
+              {t('nav.drawerDescription')}
+            </DialogPrimitive.Description>
             <Sidebar onNavigate={() => setNavOpen(false)} />
           </DialogPrimitive.Content>
         </DialogPrimitive.Portal>

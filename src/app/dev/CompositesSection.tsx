@@ -9,13 +9,20 @@ import { Pagination } from '@/components/pagination'
 import { RelativeTime } from '@/components/relative-time'
 import { SecretReveal } from '@/components/secret-reveal'
 import { EmptyState, ErrorState } from '@/components/states'
-import { StatusBadge, type Tone } from '@/components/status-badge'
+import { StatusBadge, type StatusLabel, type Tone } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { Panel } from '@/components/ui/panel'
 import { ApiError } from '@/lib/api/errors'
 
-const TONES: Tone[] = ['success', 'danger', 'warning', 'refund', 'progress', 'neutral']
-
+/** One status per tone, to show every tone with a real label. */
+const TONE_SAMPLES: { tone: Tone; label: StatusLabel }[] = [
+  { tone: 'success', label: 'payment.SUCCEEDED' },
+  { tone: 'danger', label: 'payment.FAILED' },
+  { tone: 'warning', label: 'payment.PROCESSING' },
+  { tone: 'refund', label: 'payment.REFUNDED' },
+  { tone: 'progress', label: 'delivery.DELIVERING' },
+  { tone: 'neutral', label: 'payment.CREATED' },
+]
 const ago = (ms: number) => new Date(Date.now() - ms).toISOString()
 
 const serverError = new ApiError({
@@ -36,11 +43,11 @@ export function CompositesSection() {
         description="Six tones; a pulsing dot only for states that move by themselves."
       >
         <div className="flex flex-wrap gap-x-4 gap-y-3">
-          {TONES.map((tone) => (
-            <StatusBadge key={tone} tone={tone} label={tone} />
+          {TONE_SAMPLES.map(({ tone, label }) => (
+            <StatusBadge key={tone} tone={tone} label={label} />
           ))}
-          <StatusBadge tone="warning" label="live" live />
-          <StatusBadge tone="progress" label="live" live />
+          <StatusBadge tone="warning" label="delivery.RETRYING" live />
+          <StatusBadge tone="progress" label="delivery.DELIVERING" live />
         </div>
       </GallerySection>
 
@@ -130,7 +137,7 @@ export function CompositesSection() {
             items={[
               { label: 'Payment', value: <CopyableId value="pi_01KAR7Q9XWB5S3M8ZK2Y6T4N1F" /> },
               { label: 'Amount', value: <Money amount={500_000} currency="VND" /> },
-              { label: 'Status', value: <StatusBadge tone="refund" label="Partially refunded" /> },
+              { label: 'Status', value: <StatusBadge tone="refund" label="payment.PARTIALLY_REFUNDED" /> },
               { label: 'Order', value: 'ORD-1001' },
               { label: 'Hidden row', value: 'not shown', hidden: true },
             ]}

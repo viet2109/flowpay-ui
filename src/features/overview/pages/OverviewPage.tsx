@@ -1,4 +1,6 @@
 import { ArrowRightIcon, CheckCircleIcon, CircleIcon, WarningIcon } from '@phosphor-icons/react'
+import type { StatusMap } from '@/components/status-badge'
+import { useTranslation } from 'react-i18next'
 import { m } from 'motion/react'
 import { EASE_OUT } from '@/lib/motion'
 import type { ReactNode } from 'react'
@@ -146,17 +148,18 @@ function AttentionPanel() {
   const processing = hasKey ? payments.counts.PROCESSING : 0
   const total = processing + deliveries.counts.DEAD + deliveries.counts.RETRYING
   const pending = deliveries.isPending || (hasKey && payments.isPending)
+  const { t } = useTranslation('overview')
 
   return (
     <Panel>
       <PanelHeader
-        title="Needs attention"
+        title={t('attention.title')}
         actions={
           !pending &&
           (total === 0 ? (
             <span className="flex items-center gap-1 text-xs text-success">
               <CheckCircleIcon weight="fill" className="size-3.5" />
-              All clear
+              {t('attention.allClear')}
             </span>
           ) : (
             <WarningIcon className="size-4 text-warning" />
@@ -166,7 +169,7 @@ function AttentionPanel() {
       <div className="divide-y divide-line">
         {hasKey && (
           <AttentionRow count={processing} pending={payments.isPending} to="/payments?status=PROCESSING">
-            payments waiting on an unknown provider outcome
+            {t('attention.unknownOutcome', { count: processing })}
           </AttentionRow>
         )}
         <AttentionRow
@@ -174,14 +177,14 @@ function AttentionPanel() {
           pending={deliveries.isPending}
           to="/developers/webhooks/deliveries?status=DEAD"
         >
-          dead webhook deliveries you can retry
+          {t('attention.deadDeliveries', { count: deliveries.counts.DEAD })}
         </AttentionRow>
         <AttentionRow
           count={deliveries.counts.RETRYING}
           pending={deliveries.isPending}
           to="/developers/webhooks/deliveries?status=RETRYING"
         >
-          deliveries retrying with backoff
+          {t('attention.retrying', { count: deliveries.counts.RETRYING })}
         </AttentionRow>
       </div>
     </Panel>
@@ -205,10 +208,11 @@ function DistributionBar<S extends string>({
   hrefFor,
 }: {
   counts: Record<S, number>
-  meta: Record<S, { tone: string; label: string }>
+  meta: StatusMap<S>
   order: S[]
   hrefFor: (s: S) => string
 }) {
+  const { t: tStatus } = useTranslation('status')
   const fmt = useFormat()
   const total = order.reduce((sum, s) => sum + counts[s], 0)
   if (total === 0) return <p className="text-sm text-ink-3">Nothing here yet.</p>
@@ -234,7 +238,7 @@ function DistributionBar<S extends string>({
             <Link to={hrefFor(s)} className="group flex items-center justify-between gap-2 text-sm">
               <span className="flex items-center gap-2 text-ink-2 group-hover:text-ink">
                 <span className={cn('size-2 rounded-[2px]', BAR_TONE[meta[s].tone])} />
-                {meta[s].label}
+                {tStatus(meta[s].label)}
               </span>
               <span className="num text-ink">{fmt.number(counts[s])}</span>
             </Link>

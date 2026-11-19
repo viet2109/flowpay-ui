@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { GallerySection, GalleryState, GalleryStatusRow } from '@/components/dev-gallery'
 import { paymentStatus, refundStatus, transactionStatus } from '../status'
 import { PAYMENT_STATUSES, type PaymentIntent, type PaymentStatus } from '../types'
@@ -46,6 +47,7 @@ const CAPACITY_CASES: { label: string; payment: PaymentIntent }[] = [
 
 /** Dev-only section of /dev/ui. Not used by product screens. */
 export function PaymentsGallery() {
+  const { t } = useTranslation('status')
   return (
     <>
       <GallerySection
@@ -60,7 +62,7 @@ export function PaymentsGallery() {
       <GallerySection title="LifecycleRail" description="Payment detail header, one per payment status.">
         <div className="grid gap-x-8 gap-y-6 lg:grid-cols-2">
           {PAYMENT_STATUSES.map((status) => (
-            <GalleryState key={status} label={paymentStatus[status].label}>
+            <GalleryState key={status} label={t(paymentStatus[status].label)}>
               <div className="w-full">
                 <LifecycleRail
                   status={status}

@@ -5,14 +5,14 @@ import { Link, useLocation, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { errorMessage } from '@/lib/api/errors'
 import { authApi } from '../api'
 import { Callout } from '@/components/callout'
-import { useFieldError } from '@/i18n'
+import { useErrorMessage, useFieldError } from '@/i18n'
 import { loginSchema, type LoginValues } from '../schemas'
 import { useSession } from '../session-store'
 
 export function LoginPage() {
+  const errorMessage = useErrorMessage()
   const navigate = useNavigate()
   const location = useLocation()
   const signIn = useSession((s) => s.signIn)

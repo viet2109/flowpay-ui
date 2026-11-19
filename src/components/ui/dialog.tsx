@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { XIcon } from '@phosphor-icons/react'
 import { Dialog as DialogPrimitive } from 'radix-ui'
 import type { ComponentProps, ReactNode } from 'react'
@@ -26,6 +27,7 @@ export function DialogContent({
   children,
   ...props
 }: DialogContentProps) {
+  const { t } = useTranslation('common')
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className={cn(overlay, 'fp-fade')} />
@@ -53,7 +55,7 @@ export function DialogContent({
           </div>
           <DialogPrimitive.Close className="-mr-1.5 rounded-md p-1 text-ink-3 hover:bg-surface-hover hover:text-ink">
             <XIcon className="size-4" />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t('close')}</span>
           </DialogPrimitive.Close>
         </div>
         <div className="overflow-y-auto px-5 pt-4 pb-5">{children}</div>

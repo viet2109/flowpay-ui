@@ -13,9 +13,8 @@ import { Button } from '@/components/ui/button'
 import { Panel, PanelHeader } from '@/components/ui/panel'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RequireTestKey } from '@/features/test-mode'
-import { errorMessage } from '@/lib/api/errors'
 import { useIdempotencyKey } from '@/lib/idempotency'
-import { useFormat } from '@/i18n'
+import { useErrorMessage, useFormat } from '@/i18n'
 import { AttemptsList } from '../components/AttemptsList'
 import { LifecycleRail } from '../components/LifecycleRail'
 import { MerchantApiError } from '../components/MerchantApiError'
@@ -36,6 +35,7 @@ export function PaymentDetailPage() {
 }
 
 function PaymentDetail({ id }: { id: string }) {
+  const errorMessage = useErrorMessage()
   const fmt = useFormat()
   const { data: payment, isPending, error, refetch } = usePayment(id)
   const { data: attempts } = usePaymentTransactions(id)

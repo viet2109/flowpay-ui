@@ -41,7 +41,7 @@ export function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onO
         size="icon"
         className="lg:hidden"
         onClick={onOpenNav}
-        aria-label="Open navigation"
+        aria-label={t('topbar.openNavigation')}
       >
         <ListIcon />
       </Button>
@@ -52,22 +52,18 @@ export function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onO
         className="flex h-8 w-full max-w-72 items-center gap-2 rounded-md border border-line bg-surface px-2.5 text-sm text-ink-3 hover:border-line-strong"
       >
         <MagnifyingGlassIcon className="size-4" />
-        <span className="flex-1 text-left">Jump to…</span>
+        <span className="flex-1 text-left">{t('topbar.jumpTo')}</span>
         <Kbd>{isMac ? '⌘' : 'Ctrl'}</Kbd>
         <Kbd>K</Kbd>
       </button>
 
       <div className="ml-auto flex items-center gap-1.5">
         <Tooltip
-          content={
-            testKey
-              ? `Payments are read with ${keyPrefix(testKey)}. Outcomes come from the simulator.`
-              : 'All payments go to the simulator. No real money moves.'
-          }
+          content={testKey ? t('topbar.testModeKey', { key: keyPrefix(testKey) }) : t('topbar.testModeNoKey')}
         >
           <span className="hidden items-center gap-1.5 rounded-sm border border-sim/50 bg-sim/10 px-2 py-0.5 text-xs font-medium text-sim-ink sm:inline-flex">
             <span className="hatch-sim size-2 rounded-[2px]" />
-            Test mode
+            {t('topbar.testMode')}
           </span>
         </Tooltip>
 
@@ -83,8 +79,8 @@ export function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onO
           </Button>
         </Tooltip>
 
-        <Tooltip content="Toggle theme (⇧D)">
-          <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
+        <Tooltip content={t('topbar.toggleThemeShortcut')}>
+          <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label={t('topbar.toggleTheme')}>
             <SunIcon className="hidden dark:block" />
             <MoonIcon className="dark:hidden" />
           </Button>
@@ -92,7 +88,7 @@ export function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onO
 
         <Menu>
           <MenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Account">
+            <Button variant="ghost" size="icon" aria-label={t('topbar.account')}>
               <UserIcon />
             </Button>
           </MenuTrigger>
@@ -107,7 +103,7 @@ export function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onO
             </MenuItem>
             <MenuItem onSelect={signOut}>
               <SignOutIcon />
-              Sign out
+              {t('topbar.signOut')}
             </MenuItem>
           </MenuContent>
         </Menu>

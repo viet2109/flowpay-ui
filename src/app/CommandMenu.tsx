@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
   ArrowRightIcon,
   GearSixIcon,
@@ -10,6 +11,7 @@ import {
   type Icon,
 } from '@phosphor-icons/react'
 import { Command } from 'cmdk'
+import type { ParseKeys } from 'i18next'
 import { Dialog as DialogPrimitive } from 'radix-ui'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -23,9 +25,9 @@ interface Entry {
 }
 
 /** IDs carry their type in the prefix, so pasting one is enough to jump to it. */
-const ID_ROUTES: { prefix: string; label: string; to: (id: string) => string }[] = [
-  { prefix: 'pi_', label: 'Open payment', to: (id) => `/payments/${id}` },
-  { prefix: 'wep_', label: 'Open webhook endpoint', to: (id) => `/developers/webhooks/${id}` },
+const ID_ROUTES: { prefix: string; label: ParseKeys<'shell'>; to: (id: string) => string }[] = [
+  { prefix: 'pi_', label: 'command.openPayment', to: (id) => `/payments/${id}` },
+  { prefix: 'wep_', label: 'command.openEndpoint', to: (id) => `/developers/webhooks/${id}` },
 ]
 
 export function CommandMenu({
@@ -35,6 +37,7 @@ export function CommandMenu({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const { t } = useTranslation('shell')
   const navigate = useNavigate()
   const toggleTheme = useTheme((s) => s.toggle)
   const [search, setSearch] = useState('')
@@ -46,34 +49,38 @@ export function CommandMenu({
   }
 
   const pages: Entry[] = [
-    { label: 'Overview', icon: SquaresFourIcon, run: () => navigate('/') },
+    { label: t('nav.overview'), icon: SquaresFourIcon, run: () => navigate('/') },
     {
-      label: 'Payments',
+      label: t('nav.payments'),
       icon: ReceiptIcon,
       run: () => navigate('/payments'),
       keywords: ['refunds', 'transactions'],
     },
     {
-      label: 'Failed payments',
+      label: t('command.failedPayments'),
       icon: ReceiptIcon,
       run: () => navigate('/payments?status=FAILED'),
       keywords: ['declined'],
     },
     {
-      label: 'API keys',
+      label: t('nav.apiKeys'),
       icon: KeyIcon,
       run: () => navigate('/developers/api-keys'),
       keywords: ['secret', 'token'],
     },
-    { label: 'Webhook endpoints', icon: WebhooksLogoIcon, run: () => navigate('/developers/webhooks') },
     {
-      label: 'Dead webhook deliveries',
+      label: t('command.webhookEndpoints'),
+      icon: WebhooksLogoIcon,
+      run: () => navigate('/developers/webhooks'),
+    },
+    {
+      label: t('command.deadDeliveries'),
       icon: PaperPlaneTiltIcon,
       run: () => navigate('/developers/webhooks/deliveries?status=DEAD'),
       keywords: ['retry', 'failed'],
     },
     {
-      label: 'Settings',
+      label: t('nav.settings'),
       icon: GearSixIcon,
       run: () => navigate('/settings'),
       keywords: ['profile', 'business'],
@@ -88,9 +95,9 @@ export function CommandMenu({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fp-fade fixed inset-0 z-50 bg-ink/25" />
         <DialogPrimitive.Content className="fp-pop fixed top-[15vh] left-1/2 z-50 w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 overflow-hidden rounded-lg border border-line bg-surface shadow-pop">
-          <DialogPrimitive.Title className="sr-only">Command menu</DialogPrimitive.Title>
+          <DialogPrimitive.Title className="sr-only">{t('command.title')}</DialogPrimitive.Title>
           <DialogPrimitive.Description className="sr-only">
-            Search pages or paste an ID
+            {t('command.description')}
           </DialogPrimitive.Description>
           <Command
             loop
@@ -99,23 +106,25 @@ export function CommandMenu({
             <Command.Input
               value={search}
               onValueChange={setSearch}
-              placeholder="Search pages, or paste a pi_… / wep_… ID"
+              placeholder={t('command.placeholder')}
               className="h-11 w-full border-b border-line bg-transparent px-4 text-sm outline-none placeholder:text-ink-3"
             />
             <Command.List className="max-h-80 overflow-y-auto p-1.5">
-              <Command.Empty className="px-3 py-6 text-center text-sm text-ink-3">No matches.</Command.Empty>
+              <Command.Empty className="px-3 py-6 text-center text-sm text-ink-3">
+                {t('command.empty')}
+              </Command.Empty>
               {idMatch && (
-                <Command.Group heading="Jump to">
+                <Command.Group heading={t('command.jumpTo')}>
                   <Item
                     value={`id ${trimmed}`}
                     icon={ArrowRightIcon}
                     onSelect={go(() => navigate(idMatch.to(trimmed)))}
                   >
-                    {idMatch.label} <span className="font-mono text-xs text-ink-3">{trimmed}</span>
+                    {t(idMatch.label)} <span className="font-mono text-xs text-ink-3">{trimmed}</span>
                   </Item>
                 </Command.Group>
               )}
-              <Command.Group heading="Pages">
+              <Command.Group heading={t('command.pages')}>
                 {pages.map((p) => (
                   <Item
                     key={p.label}
@@ -128,14 +137,14 @@ export function CommandMenu({
                   </Item>
                 ))}
               </Command.Group>
-              <Command.Group heading="Preferences">
+              <Command.Group heading={t('command.preferences')}>
                 <Item
-                  value="Toggle dark mode"
+                  value={t('command.toggleDarkMode')}
                   keywords={['theme', 'light']}
                   icon={MoonIcon}
                   onSelect={go(toggleTheme)}
                 >
-                  Toggle dark mode
+                  {t('command.toggleDarkMode')}
                 </Item>
               </Command.Group>
             </Command.List>

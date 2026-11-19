@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { XIcon } from '@phosphor-icons/react'
 import { Dialog as DialogPrimitive } from 'radix-ui'
 import type { ReactNode } from 'react'
@@ -16,6 +17,7 @@ interface SheetProps {
 
 /** Right-side drawer for inspecting a record without leaving the list. */
 export function Sheet({ open, onOpenChange, title, eyebrow, actions, children, className }: SheetProps) {
+  const { t } = useTranslation('common')
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
@@ -32,13 +34,13 @@ export function Sheet({ open, onOpenChange, title, eyebrow, actions, children, c
               <DialogPrimitive.Title className="truncate text-base font-semibold">
                 {title}
               </DialogPrimitive.Title>
-              <DialogPrimitive.Description className="sr-only">Details</DialogPrimitive.Description>
+              <DialogPrimitive.Description className="sr-only">{t('details')}</DialogPrimitive.Description>
             </div>
             <div className="flex items-center gap-1">
               {actions}
               <DialogPrimitive.Close className="rounded-md p-1.5 text-ink-3 hover:bg-surface-hover hover:text-ink">
                 <XIcon className="size-4" />
-                <span className="sr-only">Close</span>
+                <span className="sr-only">{t('close')}</span>
               </DialogPrimitive.Close>
             </div>
           </header>

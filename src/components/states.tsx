@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next'
 import { WarningIcon } from '@phosphor-icons/react'
 import type { ReactNode } from 'react'
-import { errorMessage, isApiError } from '@/lib/api/errors'
+import { isApiError } from '@/lib/api/errors'
 import { cn } from '@/lib/cn'
+import { useErrorMessage } from '@/i18n'
 import { CopyableId } from './copyable-id'
 import { Button } from './ui/button'
 
@@ -39,20 +41,22 @@ export function ErrorState({
   onRetry?: () => void
   className?: string
 }) {
+  const { t } = useTranslation('common')
+  const errorMessage = useErrorMessage()
   const requestId = isApiError(error) ? error.requestId : undefined
   return (
     <div className={cn('flex flex-col items-center px-6 py-12 text-center', className)}>
       <WarningIcon className="mb-2 size-5 text-danger" />
-      <p className="text-sm font-medium">Could not load this</p>
+      <p className="text-sm font-medium">{t('errorState.title')}</p>
       <p className="mt-1 max-w-sm text-sm text-ink-2">{errorMessage(error)}</p>
       {requestId && (
         <p className="mt-2 flex items-center gap-1.5 text-xs text-ink-3">
-          Request <CopyableId value={requestId} truncate={false} />
+          {t('errorState.request')} <CopyableId value={requestId} truncate={false} />
         </p>
       )}
       {onRetry && (
         <Button size="sm" className="mt-4" onClick={onRetry}>
-          Try again
+          {t('errorState.retry')}
         </Button>
       )}
     </div>

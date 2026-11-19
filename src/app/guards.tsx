@@ -1,10 +1,12 @@
+import { useTranslation } from 'react-i18next'
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { Logo } from '@/components/logo'
 import { useSession } from '@/features/auth'
 
 function Splash() {
+  const { t } = useTranslation('common')
   return (
-    <div className="flex min-h-dvh items-center justify-center" role="status" aria-label="Loading">
+    <div className="flex min-h-dvh items-center justify-center" role="status" aria-label={t('loading')}>
       <Logo withWordmark={false} className="animate-pulse" />
     </div>
   )

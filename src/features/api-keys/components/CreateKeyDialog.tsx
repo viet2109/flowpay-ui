@@ -8,7 +8,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { useTestKey } from '@/features/test-mode'
-import { errorMessage } from '@/lib/api/errors'
+import { useErrorMessage } from '@/i18n'
 import type { CreatedApiKey } from '../api'
 import { useCreateApiKey } from '../queries'
 
@@ -24,6 +24,7 @@ export function CreateKeyDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const errorMessage = useErrorMessage()
   const [name, setName] = useState('')
   const [created, setCreated] = useState<CreatedApiKey | null>(null)
   const [useInDashboard, setUseInDashboard] = useState(true)

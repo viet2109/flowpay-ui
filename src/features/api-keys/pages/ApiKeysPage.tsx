@@ -14,13 +14,14 @@ import { TableSkeleton } from '@/components/ui/skeleton'
 import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/table'
 import { Tooltip } from '@/components/ui/tooltip'
 import { useTestKey } from '@/features/test-mode'
-import { errorMessage } from '@/lib/api/errors'
+import { useErrorMessage } from '@/i18n'
 import type { ApiKey } from '../api'
 import { CreateKeyDialog } from '../components/CreateKeyDialog'
 import { useApiKeys, useRevokeApiKey } from '../queries'
 import { keyStatus } from '../status'
 
 export function ApiKeysPage() {
+  const errorMessage = useErrorMessage()
   const [creating, setCreating] = useState(false)
   const [revoking, setRevoking] = useState<ApiKey | null>(null)
   const { data, isPending, error, refetch } = useApiKeys()

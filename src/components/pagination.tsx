@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react'
 import { useFormat } from '@/i18n'
 import type { PageMeta } from '@/lib/api/types'
@@ -11,6 +12,7 @@ interface PaginationProps {
 }
 
 export function Pagination({ meta, onPageChange, pending }: PaginationProps) {
+  const { t } = useTranslation('common')
   const fmt = useFormat()
   if (meta.totalElements === 0) return null
   const from = meta.page * meta.size + 1
@@ -19,7 +21,11 @@ export function Pagination({ meta, onPageChange, pending }: PaginationProps) {
   return (
     <div className="flex items-center justify-between border-t border-line px-4 py-2.5 text-sm text-ink-2">
       <span className="num">
-        {fmt.number(from)}–{fmt.number(to)} of {fmt.number(meta.totalElements)}
+        {t('pagination.range', {
+          from: fmt.number(from),
+          to: fmt.number(to),
+          total: fmt.number(meta.totalElements),
+        })}
       </span>
       <div className="flex items-center gap-1">
         <Button
@@ -27,7 +33,7 @@ export function Pagination({ meta, onPageChange, pending }: PaginationProps) {
           variant="ghost"
           disabled={!meta.hasPrevious || pending}
           onClick={() => onPageChange(meta.page - 1)}
-          aria-label="Previous page"
+          aria-label={t('pagination.previous')}
         >
           <CaretLeftIcon />
         </Button>
@@ -39,7 +45,7 @@ export function Pagination({ meta, onPageChange, pending }: PaginationProps) {
           variant="ghost"
           disabled={!meta.hasNext || pending}
           onClick={() => onPageChange(meta.page + 1)}
-          aria-label="Next page"
+          aria-label={t('pagination.next')}
         >
           <CaretRightIcon />
         </Button>

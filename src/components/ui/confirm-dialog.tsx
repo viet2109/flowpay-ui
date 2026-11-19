@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { AlertDialog } from 'radix-ui'
 import type { ReactNode } from 'react'
 import { Button } from './button'
@@ -27,6 +28,7 @@ export function ConfirmDialog({
   loading,
   tone = 'danger',
 }: ConfirmDialogProps) {
+  const { t } = useTranslation('common')
   return (
     <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
       <AlertDialog.Portal>
@@ -39,7 +41,7 @@ export function ConfirmDialog({
           <div className="mt-5 flex justify-end gap-2">
             <AlertDialog.Cancel asChild>
               <Button variant="ghost" disabled={loading}>
-                Cancel
+                {t('cancel')}
               </Button>
             </AlertDialog.Cancel>
             <Button

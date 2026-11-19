@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
 import { Input, NativeSelect } from '@/components/ui/input'
-import { useFieldError, useFormat, vmsg } from '@/i18n'
-import { errorMessage } from '@/lib/api/errors'
+import { useErrorMessage, useFieldError, useFormat, vmsg } from '@/i18n'
 import { cn } from '@/lib/cn'
 import { useIdempotencyKey } from '@/lib/idempotency'
 import { minorToInput, parseToMinor } from '@/lib/money'
@@ -28,6 +27,7 @@ interface Props {
 }
 
 export function RefundDialog({ payment, open, onOpenChange }: Props) {
+  const errorMessage = useErrorMessage()
   const { currency, refundableAmount } = payment
   const fmt = useFormat()
   const fieldError = useFieldError()

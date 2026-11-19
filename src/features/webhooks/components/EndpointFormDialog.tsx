@@ -10,8 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { useFieldError, vmsg } from '@/i18n'
-import { errorMessage } from '@/lib/api/errors'
+import { useErrorMessage, useFieldError, vmsg } from '@/i18n'
 import { applyServerErrors } from '@/lib/form'
 import { useCreateEndpoint, useUpdateEndpoint } from '../queries'
 import { EVENT_TYPES, type CreatedEndpoint, type EventType, type WebhookEndpoint } from '../types'
@@ -69,6 +68,7 @@ const valuesFor = (endpoint?: WebhookEndpoint): Values => ({
 const sameEvents = (a: EventType[], b: EventType[]) => [...a].sort().join() === [...b].sort().join()
 
 export function EndpointFormDialog({ open, onOpenChange, endpoint }: Props) {
+  const errorMessage = useErrorMessage()
   const navigate = useNavigate()
   const [created, setCreated] = useState<CreatedEndpoint | null>(null)
   const create = useCreateEndpoint()

@@ -9,9 +9,8 @@ import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { Sheet } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
-import { errorMessage } from '@/lib/api/errors'
 import { cn } from '@/lib/cn'
-import { useFormat } from '@/i18n'
+import { useErrorMessage, useFormat } from '@/i18n'
 import { deliveryStatus, EVENT_INFO } from '../catalog'
 import { useDelivery, useEndpoints, useRetryDelivery } from '../queries'
 import type { DeliveryAttempt } from '../types'
@@ -19,6 +18,7 @@ import { HttpResult } from './DeliveriesTable'
 import { RetryTrack } from './RetryTrack'
 
 export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | null; onClose: () => void }) {
+  const errorMessage = useErrorMessage()
   const fmt = useFormat()
   const { data, isPending, error, refetch } = useDelivery(deliveryId)
   const endpoints = useEndpoints()

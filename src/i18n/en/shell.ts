@@ -1,4 +1,4 @@
-/** App frame: sidebar, topbar. */
+/** App frame: sidebar, topbar, command menu, error pages, sign-in frame. */
 export const shell = {
   nav: {
     main: 'Main',
@@ -8,9 +8,55 @@ export const shell = {
     apiKeys: 'API keys',
     webhooks: 'Webhooks',
     settings: 'Settings',
+    drawerTitle: 'Navigation',
+    drawerDescription: 'Main navigation',
   },
   language: {
     current: 'Language: {{name}}',
     switchTo: 'Switch to {{name}}',
+  },
+  topbar: {
+    openNavigation: 'Open navigation',
+    jumpTo: 'Jump to…',
+    testMode: 'Test mode',
+    testModeKey: 'Payments are read with {{key}}. Outcomes come from the simulator.',
+    testModeNoKey: 'All payments go to the simulator. No real money moves.',
+    toggleTheme: 'Toggle theme',
+    toggleThemeShortcut: 'Toggle theme (⇧D)',
+    account: 'Account',
+    signOut: 'Sign out',
+  },
+  command: {
+    title: 'Command menu',
+    description: 'Search pages or paste an ID',
+    placeholder: 'Search pages, or paste a pi_… / wep_… ID',
+    empty: 'No matches.',
+    jumpTo: 'Jump to',
+    pages: 'Pages',
+    preferences: 'Preferences',
+    openPayment: 'Open payment',
+    openEndpoint: 'Open webhook endpoint',
+    failedPayments: 'Failed payments',
+    webhookEndpoints: 'Webhook endpoints',
+    deadDeliveries: 'Dead webhook deliveries',
+    toggleDarkMode: 'Toggle dark mode',
+  },
+  notFound: {
+    title: 'This page does not exist',
+    body: 'Check the URL, or paste a payment ID into the search ({{shortcut}}).',
+    back: 'Back to overview',
+  },
+  crash: {
+    eyebrow: 'Unexpected error',
+    title: 'Something broke on this screen',
+    body: 'Your data is safe: nothing is changed by a display error. Reload to try again.',
+    reload: 'Reload',
+  },
+  auth: {
+    footer: 'FlowPay simulator · no real card data',
+    asideEyebrow: 'Example lifecycle',
+    asideHeadline:
+      'One payment. Every state change idempotent, every posting balanced, every webhook signed.',
+    asideFooter: 'Simulator build. No real money or card data moves through this system.',
   },
 }

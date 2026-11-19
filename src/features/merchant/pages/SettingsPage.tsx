@@ -15,9 +15,8 @@ import { Segmented } from '@/components/ui/segmented'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSession } from '@/features/auth'
 import { keyPrefix, useTestKey } from '@/features/test-mode'
-import { errorMessage } from '@/lib/api/errors'
 import { humanize } from '@/lib/format'
-import { LANGUAGE_NAMES, LANGUAGES, setLanguage, useLanguage, type Language } from '@/i18n'
+import { LANGUAGES, LANGUAGE_NAMES, setLanguage, type Language, useErrorMessage, useLanguage } from '@/i18n'
 import { useTheme, type ThemePreference } from '@/lib/theme'
 import { useFormat } from '@/i18n'
 import { useMerchant, useUpdateMerchant } from '../queries'
@@ -39,6 +38,7 @@ export function SettingsPage() {
 }
 
 function BusinessPanel() {
+  const errorMessage = useErrorMessage()
   const fmt = useFormat()
   const { data, isPending, error, refetch } = useMerchant()
   const update = useUpdateMerchant()

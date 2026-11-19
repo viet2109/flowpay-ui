@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { CheckIcon, CopyIcon } from '@phosphor-icons/react'
 import { useState, type MouseEvent } from 'react'
 import { cn } from '@/lib/cn'
@@ -15,6 +16,7 @@ export function CopyableId({
   className?: string
   truncate?: boolean
 }) {
+  const { t } = useTranslation('common')
   const [copied, setCopied] = useState(false)
   const split = value.indexOf('_')
   const prefix = split > 0 ? value.slice(0, split + 1) : ''
@@ -42,7 +44,7 @@ export function CopyableId({
         <span className="text-ink-3">{prefix}</span>
         {shown}
       </span>
-      <span className="sr-only">Copy {value}</span>
+      <span className="sr-only">{t('copyValue', { value })}</span>
       {copied ? (
         <CheckIcon weight="bold" className="size-3 text-success" />
       ) : (

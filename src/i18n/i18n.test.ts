@@ -42,10 +42,15 @@ function keysOf(messages: object, prefix = ''): string[] {
   )
 }
 
+/** Plural forms other than `_other` are optional per language (Vietnamese has one form). */
+const required = (keys: string[]) => keys.filter((k) => !/_(zero|one|two|few|many)$/.test(k))
+
 describe('resources', () => {
-  it('every language has exactly the English keys', () => {
-    for (const [language, messages] of Object.entries(resources))
-      expect(keysOf(messages), language).toEqual(keysOf(en))
+  it('every language has exactly the English keys (optional plural forms aside)', () => {
+    for (const [language, messages] of Object.entries(resources)) {
+      expect(required(keysOf(messages)), language).toEqual(required(keysOf(en)))
+      for (const key of keysOf(messages)) expect(keysOf(en), `${language}: ${key}`).toContain(key)
+    }
   })
 
   it('makes a missing or unknown key a compile error', () => {

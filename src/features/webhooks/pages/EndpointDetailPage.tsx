@@ -15,9 +15,8 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/ui/menu'
 import { Panel, PanelHeader } from '@/components/ui/panel'
 import { Skeleton } from '@/components/ui/skeleton'
-import { errorMessage } from '@/lib/api/errors'
 import { cn } from '@/lib/cn'
-import { useFormat } from '@/i18n'
+import { useErrorMessage, useFormat } from '@/i18n'
 import { endpointStatus, EVENT_INFO } from '../catalog'
 import { DeliveriesView } from '../components/DeliveriesView'
 import { EndpointFormDialog } from '../components/EndpointFormDialog'
@@ -27,6 +26,7 @@ import { useDisableEndpoint, useEndpoint, useRotateSecret } from '../queries'
 import { EVENT_TYPES } from '../types'
 
 export function EndpointDetailPage() {
+  const errorMessage = useErrorMessage()
   const fmt = useFormat()
   const { endpointId = '' } = useParams()
   const { data: endpoint, isPending, error, refetch } = useEndpoint(endpointId)

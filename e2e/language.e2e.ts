@@ -1,6 +1,8 @@
 import { expect, test } from './fixtures'
 
 test('switching language re-renders without a reload and is remembered', async ({ authedPage: page }) => {
+  // Loads the whole app twice (first visit and the reload) on the dev server.
+  test.slow()
   await page.goto('/settings')
   await expect(
     page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Payments' }),

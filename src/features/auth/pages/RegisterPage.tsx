@@ -5,14 +5,15 @@ import { Link, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { errorMessage, isApiError } from '@/lib/api/errors'
+import { isApiError } from '@/lib/api/errors'
 import { applyServerErrors } from '@/lib/form'
 import { authApi } from '../api'
 import { Callout } from '@/components/callout'
-import { useFieldError } from '@/i18n'
+import { useErrorMessage, useFieldError } from '@/i18n'
 import { registerSchema, type RegisterValues } from '../schemas'
 
 export function RegisterPage() {
+  const errorMessage = useErrorMessage()
   const navigate = useNavigate()
   const fieldError = useFieldError()
   const form = useForm<RegisterValues>({

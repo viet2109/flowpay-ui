@@ -9,8 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
 import { Input, NativeSelect } from '@/components/ui/input'
-import { useFieldError, useFormat, vmsg } from '@/i18n'
-import { errorMessage } from '@/lib/api/errors'
+import { useErrorMessage, useFieldError, useFormat, vmsg } from '@/i18n'
 import { applyServerErrors } from '@/lib/form'
 import { useIdempotencyKey } from '@/lib/idempotency'
 import { COMMON_CURRENCIES, currencyDigits, parseToMinor } from '@/lib/money'
@@ -59,6 +58,7 @@ export function CreatePaymentDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
+  const errorMessage = useErrorMessage()
   const navigate = useNavigate()
   const createKey = useIdempotencyKey('create')
   const confirmKey = useIdempotencyKey('confirm')

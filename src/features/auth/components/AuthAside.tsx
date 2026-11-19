@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { m, type Variants } from 'motion/react'
 import { EASE_OUT } from '@/lib/motion'
 import type { ReactNode } from 'react'
@@ -33,15 +34,14 @@ function Dot({ className }: { className: string }) {
 }
 
 export function AuthAside() {
+  const { t } = useTranslation('shell')
   return (
     <div className="dark relative flex h-full flex-col justify-between overflow-hidden border-l border-line bg-surface-sunken p-10 text-ink">
       <div className="hatch-sim absolute inset-x-0 top-0 h-1" />
 
       <div className="max-w-md">
-        <p className="font-mono text-2xs tracking-widest text-ink-3 uppercase">Example lifecycle</p>
-        <p className="mt-3 text-xl leading-snug font-medium text-ink">
-          One payment. Every state change idempotent, every posting balanced, every webhook signed.
-        </p>
+        <p className="font-mono text-2xs tracking-widest text-ink-3 uppercase">{t('auth.asideEyebrow')}</p>
+        <p className="mt-3 text-xl leading-snug font-medium text-ink">{t('auth.asideHeadline')}</p>
       </div>
 
       <div className="num space-y-6 font-mono text-xs leading-6">
@@ -103,9 +103,7 @@ export function AuthAside() {
         </section>
       </div>
 
-      <p className="text-xs text-ink-3">
-        Simulator build. No real money or card data moves through this system.
-      </p>
+      <p className="text-xs text-ink-3">{t('auth.asideFooter')}</p>
     </div>
   )
 }

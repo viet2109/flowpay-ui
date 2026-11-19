@@ -67,7 +67,8 @@ dashboard therefore must be served **from the same origin** as `/api`:
 - Unwraps `{ data, meta }` envelopes; exposes `status` (201/202 matter) and
   `replayed` (`Idempotency-Replayed: true`).
 - Converts RFC 9457 Problem Details into `ApiError { status, code, requestId, fieldErrors }`.
-  **Branch on `error.code`, never on `detail`.** Copy for codes is in `lib/api/errors.ts`.
+  **Branch on `error.code`, never on `detail`.** Copy for codes is in the `errors`
+  namespace; components show it with `useErrorMessage()` (`src/i18n`).
 - Adds `X-FlowPay-CSRF: 1` to every auth POST (BR-AUTH-012).
 - Three auth modes per request: `dashboard` (JWT), `merchant` (API key), `none`.
 - On a dashboard 401 it refreshes **once** for all concurrent requests (refresh
@@ -165,7 +166,9 @@ One hook per list owns the URL format (`use-payment-filters.ts`, `DeliveriesView
 The dashboard ships in Vietnamese and English (`i18next` + `react-i18next`).
 
 - Messages live in `src/i18n/en/<namespace>.ts` and `src/i18n/vi/<namespace>.ts`,
-  one namespace per area (`shell` for the app frame, then one per feature).
+  one namespace per area: `common` (shared components), `shell` (app frame,
+  command menu, error pages), `errors` (API error codes), `status` (status
+  labels), `validation`, then one per feature.
   English is the source of keys: each Vietnamese file is typed `Messages<typeof en>`,
   so a missing or extra key fails typecheck, and `t('…')` only accepts existing keys.
 - Read strings with `const { t } = useTranslation('<namespace>')`. Don't build
@@ -182,6 +185,11 @@ The dashboard ships in Vietnamese and English (`i18next` + `react-i18next`).
 - Validation messages are keys, translated when shown: schemas use
   `vmsg('tooLong', { max: 255 })`, fields render `fieldError(errors.x?.message, params)`
   from `useFieldError()`. Server field errors pass through unchanged.
+- Status maps hold label keys (`label: 'payment.SUCCEEDED'`); `StatusBadge`
+  translates them. Where a label is printed as text, use `t(map[s].label)` with
+  the `status` namespace.
+- API errors: `const errorMessage = useErrorMessage()`. Known codes are
+  translated, unknown codes show the server's message, other errors a generic line.
 - Tests run in English (`src/test/setup.ts`) with `TZ=Asia/Ho_Chi_Minh`.
 
 ## 8. Testing

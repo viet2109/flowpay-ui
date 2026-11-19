@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Panel } from '@/components/ui/panel'
-import { errorMessage } from '@/lib/api/errors'
 import { request } from '@/lib/api/http'
 import { cn } from '@/lib/cn'
+import { useErrorMessage } from '@/i18n'
 import { useTestKey } from '../store'
 
 interface ConnectKeyPanelProps {
@@ -23,6 +23,7 @@ interface ConnectKeyPanelProps {
  * The key is verified against the Merchant API before it is stored.
  */
 export function ConnectKeyPanel({ reason, className }: ConnectKeyPanelProps) {
+  const errorMessage = useErrorMessage()
   const connect = useTestKey((s) => s.connect)
   const [value, setValue] = useState('')
 

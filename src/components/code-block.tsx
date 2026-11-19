@@ -1,8 +1,10 @@
+import { useTranslation } from 'react-i18next'
 import { CheckIcon, CopyIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { cn } from '@/lib/cn'
 
 export function CodeBlock({ code, label, className }: { code: string; label?: string; className?: string }) {
+  const { t } = useTranslation('common')
   const [copied, setCopied] = useState(false)
   return (
     <div className={cn('overflow-hidden rounded-md border border-line bg-surface-sunken', className)}>
@@ -18,7 +20,7 @@ export function CodeBlock({ code, label, className }: { code: string; label?: st
           }}
         >
           {copied ? <CheckIcon className="size-3.5" /> : <CopyIcon className="size-3.5" />}
-          {copied ? 'Copied' : 'Copy'}
+          {copied ? t('copied') : t('copy')}
         </button>
       </div>
       <pre className="overflow-x-auto p-3 font-mono text-xs leading-relaxed text-ink-2">

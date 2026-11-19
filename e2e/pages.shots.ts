@@ -41,7 +41,8 @@ const TARGETS: ShotTarget[] = [
 
 /**
  * /dev/ui: every primitive in every prop state, plus the states that
- * need interaction. English only until the gallery is translated.
+ * need interaction. The full page runs in both languages (components translate;
+ * the gallery's own captions stay English); interaction shots run in English.
  */
 function galleryTargets(): ShotTarget[] {
   const gallery = { path: '/dev/ui', auth: false, locales: ['en' as const] }
@@ -62,7 +63,7 @@ function galleryTargets(): ShotTarget[] {
     await target.focus()
   }
   return [
-    { ...gallery, name: 'ui-gallery', ready: loaded },
+    { ...gallery, name: 'ui-gallery', locales: undefined, ready: loaded },
     interaction('focus-input', async (page) => {
       await page.getByLabel('Filled', { exact: true }).focus()
       await page.getByRole('button', { name: 'Edit endpoint' }).hover()
