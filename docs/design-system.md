@@ -118,13 +118,13 @@ background.
 | `ink` on `accent-soft`               | Selected text                  | 14.67 | 11.94 | 4.5:1 |
 | `ink-inverse` on `ink`               | Primary button                 | 15.95 | 15.70 | 4.5:1 |
 | `ink-inverse` on `danger`            | Danger button                  |  5.48 |  7.37 | 4.5:1 |
-| `sim-ink` on `sim` 10% over `canvas` | Test mode badge                |  6.43 |  9.90 | 4.5:1 |
+| `sim-ink` on `sim` 10% over `canvas` | Test mode badge                |  6.43 |  9.99 | 4.5:1 |
 | `success` on `success-soft`          | Status badge                   |  5.33 |  7.44 | 4.5:1 |
 | `success` on `surface`               | Status text, field errors      |  6.08 |  8.46 | 4.5:1 |
 | `danger` on `danger-soft`            | Status badge                   |  5.16 |  6.35 | 4.5:1 |
 | `danger` on `surface`                | Status text, field errors      |  5.98 |  6.85 | 4.5:1 |
-| `warning` on `warning-soft`          | Status badge                   |  5.25 |  8.05 | 4.5:1 |
-| `warning` on `surface`               | Status text, field errors      |  5.88 |  9.30 | 4.5:1 |
+| `warning` on `warning-soft`          | Status badge                   |  5.25 |  8.62 | 4.5:1 |
+| `warning` on `surface`               | Status text, field errors      |  5.88 |  9.95 | 4.5:1 |
 | `refund` on `refund-soft`            | Status badge                   |  6.20 |  6.68 | 4.5:1 |
 | `refund` on `surface`                | Status text, field errors      |  7.21 |  7.34 | 4.5:1 |
 | `progress` on `progress-soft`        | Status badge                   |  6.26 |  5.90 | 4.5:1 |
@@ -280,4 +280,29 @@ Every data view handles all of these:
 - `Field` wires `label`, `aria-invalid` and `aria-describedby`.
 - Dialogs and sheets always have a title (visually hidden if needed).
 - Focus ring: 2px `accent`, 2px offset, on `:focus-visible` only.
-- Shortcuts: ⌘K / Ctrl+K command menu, ⇧D theme toggle (ignored while typing).
+- Never dim **text** with `opacity` (disabled rows, zero values): it drops below
+  4.5:1. Use `text-ink-3` / a quieter weight; only non-text marks may fade.
+  Disabled controls are the exception WCAG allows.
+- A button keeps its label while loading (hidden with `opacity-0`, not
+  `invisible`), so it never loses its accessible name.
+- Scrollable code (`CodeBlock`) is focusable so keyboard users can scroll it.
+- Menus are non-modal (a menu is not a dialog); dialogs and sheets trap focus.
+
+### Keyboard map
+
+| Keys         | Where                                         | Does                                                   |
+| ------------ | --------------------------------------------- | ------------------------------------------------------ |
+| ⌘K / Ctrl+K  | Anywhere when signed in                       | Open the command menu (pages, pasted `pi_`/`wep_` IDs) |
+| ⇧D           | Anywhere, except while typing in a field      | Toggle light / dark                                    |
+| Tab / ⇧Tab   | Everywhere                                    | Move focus; the accent ring shows where                |
+| Enter        | Table rows (payments, refunds, deliveries)    | Open the record                                        |
+| Esc          | Dialog, sheet, menu, command menu             | Close; focus returns to what opened it                 |
+| ↑ / ↓, Enter | Menus, command menu                           | Move the highlight, run the item                       |
+| ← / →, Space | Segmented controls (filters, theme, language) | Move between options, select                           |
+| Space        | Checkbox                                      | Toggle                                                 |
+
+### Automated check
+
+`npm run e2e` includes `e2e/a11y.e2e.ts`: axe (WCAG 2.2 A/AA rules) on every page
+and on the gallery's open dialog, menu and sheet, in light and dark. Serious and
+critical violations fail it; add a page there when you add a route.

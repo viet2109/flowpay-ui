@@ -2,7 +2,10 @@ import { DropdownMenu } from 'radix-ui'
 import type { ComponentProps } from 'react'
 import { cn } from '@/lib/cn'
 
-export const Menu = DropdownMenu.Root
+/** Non-modal: a menu is not a dialog, and a modal one hides the page with aria-hidden. */
+export function Menu(props: ComponentProps<typeof DropdownMenu.Root>) {
+  return <DropdownMenu.Root modal={false} {...props} />
+}
 export const MenuTrigger = DropdownMenu.Trigger
 
 export function MenuContent({

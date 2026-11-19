@@ -70,14 +70,14 @@
   --accent: #8b9bff;
   --accent-soft: #23284a;
 
-  --sim: #e59a33;
+  --sim: #ee8a3c; /* orange, kept apart from the amber warning tone */
   --sim-ink: #f4c27d;
 
   --tone-success-fg: #5fc896;
   --tone-success-bg: #15291f;
   --tone-danger-fg: #f2836f;
   --tone-danger-bg: #331a15;
-  --tone-warning-fg: #edb35b;
+  --tone-warning-fg: #e9be5c;
   --tone-warning-bg: #312411;
   --tone-refund-fg: #ad9cf4;
   --tone-refund-bg: #241e3b;

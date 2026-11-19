@@ -73,7 +73,7 @@ export function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onO
             size="icon"
             className="font-mono text-xs"
             onClick={() => void setLanguage(otherLanguage)}
-            aria-label={`${t('language.current', { name: LANGUAGE_NAMES[language] })}. ${t('language.switchTo', { name: LANGUAGE_NAMES[otherLanguage] })}`}
+            aria-label={`${language.toUpperCase()}: ${t('language.current', { name: LANGUAGE_NAMES[language] })}. ${t('language.switchTo', { name: LANGUAGE_NAMES[otherLanguage] })}`}
           >
             {language.toUpperCase()}
           </Button>

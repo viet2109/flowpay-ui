@@ -63,7 +63,8 @@ export function Button({
       ) : (
         <>
           {loading && <Spinner className="absolute" />}
-          <span className={cn('inline-flex items-center gap-1.5', loading && 'invisible')}>{children}</span>
+          {/* opacity, not visibility: the label stays the button's accessible name while loading. */}
+          <span className={cn('inline-flex items-center gap-1.5', loading && 'opacity-0')}>{children}</span>
         </>
       )}
     </Comp>

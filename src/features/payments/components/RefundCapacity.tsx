@@ -1,4 +1,5 @@
 import { m } from 'motion/react'
+import { cn } from '@/lib/cn'
 import { EASE_OUT } from '@/lib/motion'
 import { useFormat } from '@/i18n'
 import type { PaymentIntent } from '../types'
@@ -64,13 +65,14 @@ function Legend({
   value: string
   muted?: boolean
 }) {
+  // A zero share is quieter, but its text keeps full contrast (only the dot fades).
   return (
-    <div className={muted ? 'opacity-50' : undefined}>
+    <div>
       <dt className="flex items-center gap-1.5 text-xs text-ink-3">
-        <span className={`size-2 rounded-[2px] ${dot}`} />
+        <span className={cn('size-2 rounded-[2px]', dot, muted && 'opacity-40')} />
         {label}
       </dt>
-      <dd className="mt-0.5 font-medium">{value}</dd>
+      <dd className={cn('mt-0.5 font-medium', muted && 'font-normal text-ink-3')}>{value}</dd>
     </div>
   )
 }

@@ -8,7 +8,6 @@ import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { Panel } from '@/components/ui/panel'
 import { TableSkeleton } from '@/components/ui/skeleton'
-import { cn } from '@/lib/cn'
 import { endpointStatus } from '../catalog'
 import { EndpointFormDialog } from '../components/EndpointFormDialog'
 import { EndpointUrl } from '../components/EndpointUrl'
@@ -76,14 +75,11 @@ function EndpointRow({ endpoint }: { endpoint: WebhookEndpoint }) {
     <li>
       <Link
         to={`/developers/webhooks/${endpoint.id}`}
-        className={cn(
-          'group flex items-center gap-4 px-4 py-3.5 hover:bg-surface-hover',
-          !active && 'opacity-60',
-        )}
+        className="group flex items-center gap-4 px-4 py-3.5 hover:bg-surface-hover"
       >
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex items-center gap-2">
-            <EndpointUrl url={endpoint.url} />
+            <EndpointUrl url={endpoint.url} muted={!active} />
           </div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-3">
             <StatusBadge {...endpointStatus[endpoint.status]} />
