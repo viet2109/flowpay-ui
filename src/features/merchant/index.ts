@@ -1,4 +1,5 @@
-export { SettingsPage } from './pages/SettingsPage'
+/** Settings page, loaded on demand (the sidebar only needs useMerchant). */
+export const loadMerchantPages = () => import('./pages')
 export { useMerchant } from './queries'
 export type { Merchant } from './api'
 /** Dev-only /dev/ui section. `null` in production builds, so none of it ships. */

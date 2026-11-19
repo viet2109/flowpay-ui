@@ -1,7 +1,8 @@
 import { createBrowserRouter } from 'react-router'
-// auth and merchant are already in the main bundle (session store, sidebar), so lazy-loading them gains nothing.
-import { LoginPage, RegisterPage } from '@/features/auth'
-import { SettingsPage } from '@/features/merchant'
+// The auth and merchant features are in the main bundle (session store, sidebar), but
+// their pages are not: they load on demand and bring the form libraries with them.
+import { loadAuthPages } from '@/features/auth'
+import { loadMerchantPages } from '@/features/merchant'
 import { GuestOnly, RequireAuth } from './guards'
 import { AppLayout } from './layouts/AppLayout'
 import { AuthLayout } from './layouts/AuthLayout'
@@ -35,8 +36,8 @@ export const router = createBrowserRouter([
           {
             element: <AuthLayout />,
             children: [
-              { path: '/login', Component: LoginPage },
-              { path: '/register', Component: RegisterPage },
+              { path: '/login', lazy: async () => ({ Component: (await loadAuthPages()).LoginPage }) },
+              { path: '/register', lazy: async () => ({ Component: (await loadAuthPages()).RegisterPage }) },
             ],
           },
         ],
@@ -73,7 +74,10 @@ export const router = createBrowserRouter([
                 path: 'developers/webhooks/:endpointId',
                 lazy: async () => ({ Component: (await webhooks()).EndpointDetailPage }),
               },
-              { path: 'settings', Component: SettingsPage },
+              {
+                path: 'settings',
+                lazy: async () => ({ Component: (await loadMerchantPages()).SettingsPage }),
+              },
               { path: '*', element: <NotFoundPage /> },
             ],
           },

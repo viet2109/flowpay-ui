@@ -30,17 +30,18 @@ First run:
 
 ## Scripts
 
-| Command                                 | What it does                                                                          |
-| --------------------------------------- | ------------------------------------------------------------------------------------- |
-| `npm run dev`                           | Dev server with HMR and API proxy                                                     |
-| `npm run build`                         | Typecheck + production build to `dist/`                                               |
-| `npm run preview`                       | Serve the production build locally                                                    |
-| `npm run verify`                        | Everything a change must pass: format check, typecheck, lint, unit tests, build       |
-| `npm run typecheck` / `lint` / `format` | Static checks                                                                         |
-| `npm test` / `npm run test:run`         | Vitest (watch / once)                                                                 |
-| `npm run seed`                          | Fill a new demo merchant with every UI state ([how](docs/local-stack.md#5-seed-data)) |
-| `npm run test:contract`                 | Check every endpoint and type against the running backend (needs the local stack)     |
-| `npm run e2e` / `npm run shots`         | Playwright behaviour tests / review screenshots in `shots/` (needs the local stack)   |
+| Command                                 | What it does                                                                                   |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `npm run dev`                           | Dev server with HMR and API proxy                                                              |
+| `npm run build`                         | Typecheck + production build to `dist/`                                                        |
+| `npm run preview`                       | Serve the production build locally                                                             |
+| `npm run verify`                        | Everything a change must pass: format check, typecheck, lint, unit tests, build, bundle budget |
+| `npm run budget`                        | Initial JS and lazy chunk sizes against the budget (after a build)                             |
+| `npm run typecheck` / `lint` / `format` | Static checks                                                                                  |
+| `npm test` / `npm run test:run`         | Vitest (watch / once)                                                                          |
+| `npm run seed`                          | Fill a new demo merchant with every UI state ([how](docs/local-stack.md#5-seed-data))          |
+| `npm run test:contract`                 | Check every endpoint and type against the running backend (needs the local stack)              |
+| `npm run e2e` / `npm run shots`         | Playwright behaviour tests / review screenshots in `shots/` (needs the local stack)            |
 
 ## Stack
 

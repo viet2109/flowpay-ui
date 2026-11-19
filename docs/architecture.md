@@ -192,6 +192,27 @@ The dashboard ships in Vietnamese and English (`i18next` + `react-i18next`).
   translated, unknown codes show the server's message, other errors a generic line.
 - Tests run in English (`src/test/setup.ts`) with `TZ=Asia/Ho_Chi_Minh`.
 
+## 7a. Bundle budget
+
+`npm run budget` (part of `npm run verify`) checks the production build:
+
+| Limit                                      | Budget   | Today (2026-11-19) |
+| ------------------------------------------ | -------- | ------------------ |
+| Initial JS: entry + preloaded chunks, gzip | ≤ 230 kB | 223 kB             |
+| Any chunk loaded on demand, gzip           | ≤ 45 kB  | 36 kB (`form`)     |
+
+Initial JS is what every visit downloads before the first page: React DOM, the
+router, i18next, TanStack Query, icons, toasts, the app shell. Keep anything a
+first view does not need out of it:
+
+- Feature pages are lazy routes. A feature that the shell imports eagerly (auth's
+  session store, merchant's `useMerchant`) exposes its pages as a loader
+  (`loadAuthPages`, `loadMerchantPages`) instead of exporting them from its index,
+  so the pages and the form libraries (react-hook-form, zod) stay out.
+- Animation features load after first paint (`<LazyMotion features={…}>`).
+- If the budget fails, find what grew with a sourcemap build
+  (`vite build --sourcemap`) before raising a limit, and say why when you do.
+
 ## 8. Testing
 
 - `vitest` + Testing Library + jsdom.

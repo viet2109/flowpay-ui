@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { domAnimation, LazyMotion, MotionConfig, useReducedMotion } from 'motion/react'
+import { LazyMotion, MotionConfig, useReducedMotion } from 'motion/react'
 import { RouterProvider } from 'react-router'
 import { Toaster } from 'sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -12,13 +12,15 @@ import { router } from './router'
 // navigator.webdriver): its floating button covers content in review screenshots.
 const showQueryDevtools = import.meta.env.DEV && typeof navigator !== 'undefined' && !navigator.webdriver
 
+const loadMotionFeatures = () => import('./motion-features').then((module) => module.default)
+
 export function App() {
   const preference = useTheme((s) => s.preference)
   const reduceMotion = useReducedMotion() ?? false
   return (
     <QueryClientProvider client={queryClient}>
-      {/* LazyMotion + `m.*` ships only the animation features we use (~5x smaller than `motion.*`). */}
-      <LazyMotion features={domAnimation} strict>
+      {/* LazyMotion + `m.*` ships only the animation features we use, and loads them after first paint. */}
+      <LazyMotion features={loadMotionFeatures} strict>
         {/* Reduced motion jumps JS fills to their final value, like the CSS rule in globals.css.
             Motion's own `reducedMotion="user"` would still tween widths. */}
         <MotionConfig skipAnimations={reduceMotion}>
