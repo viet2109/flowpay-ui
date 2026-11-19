@@ -5,7 +5,7 @@ import { CopyableId } from '@/components/copyable-id'
 import { DescriptionList } from '@/components/description-list'
 import { PageHeader } from '@/components/page-header'
 import { ErrorState } from '@/components/states'
-import { StatusBadge, type StatusMap } from '@/components/status-badge'
+import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -17,14 +17,8 @@ import { keyPrefix, useTestKey } from '@/features/test-mode'
 import { errorMessage } from '@/lib/api/errors'
 import { formatDateTime, humanize } from '@/lib/format'
 import { useTheme, type ThemePreference } from '@/lib/theme'
-import type { MerchantStatus } from '../api'
 import { useMerchant, useUpdateMerchant } from '../queries'
-
-const merchantStatus: StatusMap<MerchantStatus> = {
-  ACTIVE: { tone: 'success', label: 'Active' },
-  SUSPENDED: { tone: 'warning', label: 'Suspended' },
-  CLOSED: { tone: 'neutral', label: 'Closed' },
-}
+import { merchantStatus } from '../status'
 
 export function SettingsPage() {
   return (

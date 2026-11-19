@@ -198,6 +198,7 @@ background.
 | Amount + code    | `Money`                            | `500,000 VND`: minor units formatted per currency, code quieter                   |
 | Lifecycle rail   | `LifecycleRail`                    | The payment state machine, with timestamps                                        |
 | Refund capacity  | `RefundCapacity`                   | `refunded + in flight + refundable = amount`, the invariant the backend protects  |
+| Pending share    | `hatch text-warning`               | Something scheduled or in flight, not settled; never the simulator colour         |
 | Retry track      | `RetryTrack` in `DeliverySheet`    | Six automatic attempts (now, 10s, 30s, 2m, 10m, 1h) + manual                      |
 | One-time secret  | `SecretReveal`                     | Copy is the primary action; dialog can't be dismissed by an outside click         |
 | Event matrix     | `EventPicker`                      | Six events are resource × outcome; toggle rows/columns                            |
@@ -208,8 +209,10 @@ background.
 Primitives (`src/components/ui`) are thin wrappers over Radix with FlowPay
 styling. Composites (`src/components`) encode FlowPay concepts.
 
-Every primitive and its states are on the dev-only gallery at **`/dev/ui`**
-(`src/app/dev/UiGalleryPage.tsx`). Change a primitive there first, then run
+Every component and its states are on the dev-only gallery at **`/dev/ui`**:
+primitives and shared composites in `src/app/dev/`, then one section per
+feature with its status maps and own components (`PaymentsGallery`,
+`WebhooksGallery`, …). Change a component there first, then run
 `npm run shots -- -g ui-` to review all its states in both themes and widths.
 
 | Need                         | Use                                                                                                     |

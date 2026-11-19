@@ -6,7 +6,7 @@ import { CopyableId } from '@/components/copyable-id'
 import { PageHeader } from '@/components/page-header'
 import { RelativeTime } from '@/components/relative-time'
 import { EmptyState, ErrorState } from '@/components/states'
-import { StatusBadge, type StatusMap } from '@/components/status-badge'
+import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Panel } from '@/components/ui/panel'
@@ -15,14 +15,10 @@ import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/table'
 import { Tooltip } from '@/components/ui/tooltip'
 import { useTestKey } from '@/features/test-mode'
 import { errorMessage } from '@/lib/api/errors'
-import type { ApiKey, ApiKeyStatus } from '../api'
+import type { ApiKey } from '../api'
 import { CreateKeyDialog } from '../components/CreateKeyDialog'
 import { useApiKeys, useRevokeApiKey } from '../queries'
-
-const keyStatus: StatusMap<ApiKeyStatus> = {
-  ACTIVE: { tone: 'success', label: 'Active' },
-  REVOKED: { tone: 'neutral', label: 'Revoked' },
-}
+import { keyStatus } from '../status'
 
 export function ApiKeysPage() {
   const [creating, setCreating] = useState(false)

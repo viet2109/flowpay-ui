@@ -12,10 +12,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { errorMessage } from '@/lib/api/errors'
 import { cn } from '@/lib/cn'
 import { formatDateTime, formatDuration } from '@/lib/format'
-import { deliveryStatus, EVENT_INFO, RETRY_SCHEDULE } from '../catalog'
+import { deliveryStatus, EVENT_INFO } from '../catalog'
 import { useDelivery, useEndpoints, useRetryDelivery } from '../queries'
-import type { DeliveryAttempt, WebhookDeliveryDetail } from '../types'
+import type { DeliveryAttempt } from '../types'
 import { HttpResult } from './DeliveriesTable'
+import { RetryTrack } from './RetryTrack'
 
 export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | null; onClose: () => void }) {
   const { data, isPending, error, refetch } = useDelivery(deliveryId)
@@ -136,43 +137,6 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
         </div>
       )}
     </Sheet>
-  )
-}
-
-/** Six automatic slots (now, 10s, 30s, 2m, 10m, 1h); manual retries extend past them. */
-function RetryTrack({ delivery }: { delivery: WebhookDeliveryDetail }) {
-  const slots = Math.max(RETRY_SCHEDULE.length, delivery.attemptCount)
-  const byNo = new Map(delivery.attempts.map((a) => [a.attemptNo, a]))
-
-  return (
-    <div className="flex items-start gap-1">
-      {Array.from({ length: slots }, (_, i) => {
-        const attempt = byNo.get(i + 1)
-        const ok =
-          attempt?.httpStatus !== undefined && attempt.httpStatus !== null && attempt.httpStatus < 300
-        const failed = attempt && !ok && attempt.finishedAt
-        const isNext = !attempt && i === delivery.attemptCount && delivery.nextAttemptAt
-        return (
-          <div key={i} className="flex-1">
-            <div
-              className={cn(
-                'h-1.5 rounded-full',
-                ok
-                  ? 'bg-success'
-                  : failed
-                    ? 'bg-danger'
-                    : attempt
-                      ? 'bg-progress'
-                      : isNext
-                        ? 'hatch-sim'
-                        : 'bg-surface-sunken',
-              )}
-            />
-            <div className="num mt-1 font-mono text-2xs text-ink-3">{RETRY_SCHEDULE[i] ?? 'manual'}</div>
-          </div>
-        )
-      })}
-    </div>
   )
 }
 

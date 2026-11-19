@@ -185,3 +185,8 @@ One hook per list owns the URL format (`use-payment-filters.ts`, `DeliveriesView
    command entry in `app/CommandMenu.tsx`.
 7. Handle every state in design-system §8.
 8. Add the routes to the smoke test; unit-test any non-trivial logic.
+9. Status maps and feature components go in the `/dev/ui` gallery: a
+   `components/<Name>Gallery.tsx` with fixed fixtures, exported from `index.ts`
+   as a loader guarded by `import.meta.env.DEV` (so production builds drop it),
+   and listed in `app/dev/UiGalleryPage.tsx`. Status maps live in the feature's
+   `status.ts` or `catalog.ts`, never in a page.

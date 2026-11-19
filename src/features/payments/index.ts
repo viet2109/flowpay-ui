@@ -12,3 +12,5 @@ export type {
   PaymentTransaction,
   Refund,
 } from './types'
+/** Dev-only /dev/ui section. `null` in production builds, so none of it ships. */
+export const paymentsGallery = import.meta.env.DEV ? () => import('./components/PaymentsGallery') : null

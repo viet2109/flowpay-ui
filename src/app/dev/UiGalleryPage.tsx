@@ -1,6 +1,7 @@
 import { DotsThreeIcon, MoonIcon, PencilSimpleIcon, ProhibitIcon, TrashIcon } from '@phosphor-icons/react'
-import { useState, type ReactNode } from 'react'
+import { lazy, Suspense, useState, type ComponentType } from 'react'
 import { Callout } from '@/components/callout'
+import { GallerySection, GalleryState } from '@/components/dev-gallery'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -9,18 +10,23 @@ import { Field } from '@/components/ui/field'
 import { Input, NativeSelect, Textarea } from '@/components/ui/input'
 import { Kbd } from '@/components/ui/kbd'
 import { Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger } from '@/components/ui/menu'
-import { Panel, PanelHeader } from '@/components/ui/panel'
 import { Segmented } from '@/components/ui/segmented'
 import { Sheet } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Tooltip } from '@/components/ui/tooltip'
+import { apiKeysGallery } from '@/features/api-keys'
+import { merchantGallery } from '@/features/merchant'
+import { paymentsGallery } from '@/features/payments'
+import { webhooksGallery } from '@/features/webhooks'
 import { useTheme } from '@/lib/theme'
+import { CompositesSection } from './CompositesSection'
 
 /**
- * Dev-only catalogue of every primitive in every state it can be put in by
- * props. Hover, focus and open overlays are produced by `e2e/pages.shots.ts`.
- * Composites (Money, StatusBadge, LifecycleRail…) are not catalogued yet.
+ * Dev-only catalogue: every primitive in every state it can be put in by props,
+ * the shared composites, then each feature's own components and status maps
+ * (contributed by the feature, so its private components stay private).
+ * Hover, focus and open overlays are produced by `e2e/pages.shots.ts`.
  */
 export function UiGalleryPage() {
   const toggleTheme = useTheme((s) => s.toggle)
@@ -31,7 +37,8 @@ export function UiGalleryPage() {
           <div>
             <h1 className="text-xl font-semibold tracking-tight">UI gallery</h1>
             <p className="mt-1 text-sm text-ink-2">
-              Primitives in every state. Development builds only. <Kbd>⇧</Kbd> <Kbd>D</Kbd> switches theme.
+              Every component in every state. Development builds only. <Kbd>⇧</Kbd> <Kbd>D</Kbd> switches
+              theme.
             </p>
           </div>
           <Button size="sm" onClick={toggleTheme}>
@@ -39,41 +46,45 @@ export function UiGalleryPage() {
             Toggle theme
           </Button>
         </header>
+        <GroupHeading id="primitives">Primitives</GroupHeading>
         <ButtonsSection />
         <FieldsSection />
         <ChoiceSection />
         <CalloutSection />
         <OverlaySection />
         <LoadingSection />
+        <GroupHeading id="composites">Composites</GroupHeading>
+        <CompositesSection />
+        <GroupHeading id="domain">Domain</GroupHeading>
+        <Suspense fallback={<Skeleton className="h-40 w-full" />}>
+          <PaymentsGallery />
+          <WebhooksGallery />
+          <ApiKeysGallery />
+          <MerchantGallery />
+        </Suspense>
       </main>
     </div>
   )
 }
 
-function Section({
-  title,
-  description,
-  children,
-}: {
-  title: string
-  description?: string
-  children: ReactNode
-}) {
-  return (
-    <Panel aria-label={title}>
-      <PanelHeader title={title} description={description} />
-      <div className="p-4">{children}</div>
-    </Panel>
-  )
+/** Features hand over their sections as dev-only loaders, so production builds drop them. */
+function devSection<K extends string>(load: (() => Promise<Record<K, ComponentType>>) | null, name: K) {
+  return lazy(async () => {
+    if (!load) throw new Error('Gallery sections exist in development builds only')
+    return { default: (await load())[name] }
+  })
 }
 
-/** One labelled cell: the state name above the element in that state. */
-function State({ label, children }: { label: string; children: ReactNode }) {
+const PaymentsGallery = devSection(paymentsGallery, 'PaymentsGallery')
+const WebhooksGallery = devSection(webhooksGallery, 'WebhooksGallery')
+const ApiKeysGallery = devSection(apiKeysGallery, 'ApiKeysGallery')
+const MerchantGallery = devSection(merchantGallery, 'MerchantGallery')
+
+function GroupHeading({ id, children }: { id: string; children: string }) {
   return (
-    <div className="flex min-w-0 flex-col items-start gap-2">
-      <span className="text-xs text-ink-3">{label}</span>
+    <h2 id={id} className="pt-4 text-xs font-medium tracking-wide text-ink-3 uppercase first-of-type:pt-0">
       {children}
-    </div>
+    </h2>
   )
 }
 
@@ -81,7 +92,7 @@ const VARIANTS = ['primary', 'secondary', 'ghost', 'danger', 'danger-outline', '
 
 function ButtonsSection() {
   return (
-    <Section
+    <GallerySection
       title="Button"
       description="One primary per view. Hover and keyboard focus: see the focus shots."
     >
@@ -100,28 +111,28 @@ function ButtonsSection() {
         </div>
       </div>
       <div className="mt-5 flex flex-wrap items-start gap-4 border-t border-line pt-4">
-        <State label="sm">
+        <GalleryState label="sm">
           <Button size="sm">Refund</Button>
-        </State>
-        <State label="md (default)">
+        </GalleryState>
+        <GalleryState label="md (default)">
           <Button>Refund</Button>
-        </State>
-        <State label="lg">
+        </GalleryState>
+        <GalleryState label="lg">
           <Button size="lg">Refund</Button>
-        </State>
-        <State label="icon">
+        </GalleryState>
+        <GalleryState label="icon">
           <Button size="icon" variant="ghost" aria-label="More actions">
             <DotsThreeIcon />
           </Button>
-        </State>
-        <State label="With icon">
+        </GalleryState>
+        <GalleryState label="With icon">
           <Button variant="secondary">
             <PencilSimpleIcon />
             Edit endpoint
           </Button>
-        </State>
+        </GalleryState>
       </div>
-    </Section>
+    </GallerySection>
   )
 }
 
@@ -149,7 +160,10 @@ function ButtonRow({ variant }: { variant: (typeof VARIANTS)[number] }) {
 
 function FieldsSection() {
   return (
-    <Section title="Text fields" description="Input, NativeSelect and Textarea share one set of states.">
+    <GallerySection
+      title="Text fields"
+      description="Input, NativeSelect and Textarea share one set of states."
+    >
       <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
         <Field label="Empty">
           <Input placeholder="ORDER-1001" />
@@ -189,14 +203,14 @@ function FieldsSection() {
           <Textarea defaultValue="Đơn hàng giao trong ngày." />
         </Field>
       </div>
-    </Section>
+    </GallerySection>
   )
 }
 
 function ChoiceSection() {
   const [filter, setFilter] = useState('dead')
   return (
-    <Section title="Choice" description="Checkbox and Segmented.">
+    <GallerySection title="Choice" description="Checkbox and Segmented.">
       <div className="flex flex-wrap gap-x-8 gap-y-4">
         <CheckboxState label="Unchecked" />
         <CheckboxState label="Checked" checked />
@@ -205,7 +219,7 @@ function ChoiceSection() {
         <CheckboxState label="Disabled checked" checked disabled />
       </div>
       <div className="mt-5 border-t border-line pt-4">
-        <State label="Segmented">
+        <GalleryState label="Segmented">
           <Segmented
             aria-label="Delivery status"
             value={filter}
@@ -216,9 +230,9 @@ function ChoiceSection() {
               { value: 'retrying', label: 'Retrying', count: 26 },
             ]}
           />
-        </State>
+        </GalleryState>
       </div>
-    </Section>
+    </GallerySection>
   )
 }
 
@@ -249,7 +263,7 @@ function CheckboxState({
 
 function CalloutSection() {
   return (
-    <Section title="Callout" description="A persistent condition of what is on screen.">
+    <GallerySection title="Callout" description="A persistent condition of what is on screen.">
       <div className="grid gap-3 lg:grid-cols-2">
         <Callout tone="info" title="Test key connected">
           Payments are read with fp_test_A7x… for this tab only.
@@ -273,7 +287,7 @@ function CalloutSection() {
         </Callout>
         <Callout tone="danger">Body only, no title: the request failed (req_01KAR7Q9XW).</Callout>
       </div>
-    </Section>
+    </GallerySection>
   )
 }
 
@@ -281,7 +295,7 @@ function OverlaySection() {
   const [confirming, setConfirming] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
   return (
-    <Section title="Overlays" description="Dialog, ConfirmDialog, Sheet, Menu, Tooltip.">
+    <GallerySection title="Overlays" description="Dialog, ConfirmDialog, Sheet, Menu, Tooltip.">
       <div className="flex flex-wrap gap-3">
         <Dialog>
           <DialogTrigger asChild>
@@ -354,30 +368,30 @@ function OverlaySection() {
           <Button variant="ghost">Hover for tooltip</Button>
         </Tooltip>
       </div>
-    </Section>
+    </GallerySection>
   )
 }
 
 function LoadingSection() {
   return (
-    <Section title="Loading and keys">
+    <GallerySection title="Loading and keys">
       <div className="flex flex-wrap items-center gap-8">
-        <State label="Spinner">
+        <GalleryState label="Spinner">
           <Spinner />
-        </State>
-        <State label="Skeleton">
+        </GalleryState>
+        <GalleryState label="Skeleton">
           <div className="w-48 space-y-2">
             <Skeleton className="w-full" />
             <Skeleton className="w-2/3" />
           </div>
-        </State>
-        <State label="Kbd">
+        </GalleryState>
+        <GalleryState label="Kbd">
           <span className="flex gap-1">
             <Kbd>Ctrl</Kbd>
             <Kbd>K</Kbd>
           </span>
-        </State>
+        </GalleryState>
       </div>
-    </Section>
+    </GallerySection>
   )
 }

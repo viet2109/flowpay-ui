@@ -122,13 +122,26 @@ describe('app routes', () => {
     expect(await screen.findByText('HTTP 500')).toBeInTheDocument()
   })
 
-  it('dev UI gallery renders every primitive section', async () => {
+  it('dev UI gallery renders primitives, composites and every feature section', async () => {
+    // The page and the feature sections are lazy chunks. A cold run transforms
+    // them first, which takes longer than findBy's 1 s default.
+    const lazyChunk = { timeout: 5_000 }
     render(<App />)
     await visit('/dev/ui')
-    expect(await screen.findByRole('heading', { level: 1, name: 'UI gallery' })).toBeInTheDocument()
-    for (const section of ['Button', 'Text fields', 'Choice', 'Callout', 'Overlays'])
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'UI gallery' }, lazyChunk),
+    ).toBeInTheDocument()
+    for (const section of ['Button', 'Text fields', 'Choice', 'Callout', 'Overlays', 'Money', 'IDs and time'])
       expect(screen.getByRole('region', { name: section })).toBeInTheDocument()
-  })
+    for (const section of [
+      'LifecycleRail',
+      'RefundCapacity',
+      'RetryTrack',
+      'API key statuses',
+      'Merchant statuses',
+    ])
+      expect(await screen.findByRole('region', { name: section }, lazyChunk)).toBeInTheDocument()
+  }, 15_000)
 
   it('unknown route shows not found', async () => {
     render(<App />)

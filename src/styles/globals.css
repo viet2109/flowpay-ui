@@ -182,7 +182,19 @@
       'tnum' 1,
       'zero' 1;
   }
-  /* Diagonal hatch used only for the simulator marker. */
+  /*
+   * Diagonal hatch in the current text colour (`hatch text-warning`): a share
+   * that is pending, not settled, such as a refund in flight or the next
+   * scheduled delivery attempt.
+   */
+  .hatch {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      currentColor 0 6px,
+      color-mix(in oklab, currentColor 35%, transparent) 6px 12px
+    );
+  }
+  /* The simulator marker only ("not real money"). Use .hatch for anything else. */
   .hatch-sim {
     background-image: repeating-linear-gradient(
       -45deg,

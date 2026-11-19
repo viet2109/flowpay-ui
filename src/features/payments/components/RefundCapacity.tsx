@@ -21,7 +21,7 @@ export function RefundCapacity({ payment }: { payment: PaymentIntent }) {
   const pct = (v: number) => `${(v / amount) * 100}%`
   const segments = [
     { key: 'refunded', value: refunded, className: 'bg-refund' },
-    { key: 'reserved', value: reserved, className: 'hatch-sim opacity-70' },
+    { key: 'reserved', value: reserved, className: 'hatch text-warning' },
     { key: 'available', value: refundable, className: 'bg-success/80' },
   ].filter((s) => s.value > 0)
 
@@ -41,7 +41,7 @@ export function RefundCapacity({ payment }: { payment: PaymentIntent }) {
       <dl className="num mt-3 grid grid-cols-3 gap-4 text-sm">
         <Legend dot="bg-refund" label="Refunded" value={formatMinor(refunded, currency)} />
         <Legend
-          dot="hatch-sim"
+          dot="hatch text-warning"
           label="In flight"
           value={formatMinor(reserved, currency)}
           muted={reserved === 0}

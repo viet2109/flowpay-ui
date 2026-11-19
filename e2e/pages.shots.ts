@@ -36,8 +36,8 @@ const TARGETS: ShotTarget[] = [
  */
 function galleryTargets(): ShotTarget[] {
   const gallery = { path: '/dev/ui', auth: false, locales: ['en' as const] }
-  const loaded = (page: Page) =>
-    expect(page.getByRole('heading', { level: 1, name: 'UI gallery' })).toBeVisible()
+  // Feature sections load lazily; the last one appearing means the page is complete.
+  const loaded = (page: Page) => expect(page.getByRole('region', { name: 'Merchant statuses' })).toBeVisible()
   const interaction = (name: string, act: (page: Page) => Promise<void>): ShotTarget => ({
     ...gallery,
     name: `ui-${name}`,
