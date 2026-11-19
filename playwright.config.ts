@@ -22,6 +22,10 @@ export default defineConfig({
   globalSetup: './e2e/global-setup.ts',
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
+  // The first view of a page restores the session (refresh call) while the Vite
+  // dev server compiles chunks on demand; with parallel workers that can pass
+  // the 5 s default.
+  expect: { timeout: 10_000 },
   reporter: [['list']],
   use: {
     ...devices['Desktop Chrome'],

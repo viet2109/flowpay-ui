@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { restoreSession, startProactiveRefresh } from '@/features/auth'
+import '@/i18n' // before anything renders: the first paint is already translated
 import { watchSystemTheme } from '@/lib/theme'
 import { App } from './app/App'
 import { setupHttp } from './app/http-setup'

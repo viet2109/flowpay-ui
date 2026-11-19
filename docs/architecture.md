@@ -26,6 +26,7 @@ src/
 ├── components/
 │   ├── ui/               design-system primitives (Radix + tokens), no domain knowledge
 │   └── *.tsx             FlowPay composites: Money, CopyableId, StatusBadge, PageHeader…
+├── i18n/                 vi/en messages per namespace, language detection and switching
 ├── lib/                  framework-light utilities: http client, errors, money, format…
 ├── styles/globals.css    design tokens (see docs/design-system.md)
 └── test/setup.ts
@@ -152,6 +153,22 @@ One hook per list owns the URL format (`use-payment-filters.ts`, `DeliveriesView
 - **Comments:** explain _why_ (business rule, trade-off), cite the backend rule
   (`BR-REF-003`) when relevant. Don't narrate what the code does.
 - **Effects:** avoid syncing state in `useEffect`; derive, or adjust during render.
+
+### Copy and languages (`src/i18n`)
+
+The dashboard ships in Vietnamese and English (`i18next` + `react-i18next`).
+
+- Messages live in `src/i18n/en/<namespace>.ts` and `src/i18n/vi/<namespace>.ts`,
+  one namespace per area (`shell` for the app frame, then one per feature).
+  English is the source of keys: each Vietnamese file is typed `Messages<typeof en>`,
+  so a missing or extra key fails typecheck, and `t('…')` only accepts existing keys.
+- Read strings with `const { t } = useTranslation('<namespace>')`. Don't build
+  sentences from fragments; use interpolation (`{{name}}`) and plural keys
+  (`_one` / `_other`; Vietnamese only needs `_other`).
+- Language: stored choice (`localStorage` `flowpay.language`), else the browser
+  language, else English. `setLanguage()` switches without a reload and updates
+  `<html lang>`. Language names are always shown in their own language.
+- Tests run in English (`src/test/setup.ts`).
 
 ## 8. Testing
 

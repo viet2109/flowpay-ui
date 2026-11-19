@@ -6,6 +6,7 @@ import {
   SunIcon,
   UserIcon,
 } from '@phosphor-icons/react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Kbd } from '@/components/ui/kbd'
@@ -13,6 +14,7 @@ import { Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger } fr
 import { Tooltip } from '@/components/ui/tooltip'
 import { logout, useSession } from '@/features/auth'
 import { keyPrefix, useTestKey } from '@/features/test-mode'
+import { LANGUAGE_NAMES, setLanguage, useLanguage } from '@/i18n'
 import { useTheme } from '@/lib/theme'
 import { signOutLocally } from '../http-setup'
 
@@ -21,6 +23,9 @@ export function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onO
   const testKey = useTestKey((s) => s.key)
   const toggleTheme = useTheme((s) => s.toggle)
   const navigate = useNavigate()
+  const { t } = useTranslation('shell')
+  const language = useLanguage()
+  const otherLanguage = language === 'vi' ? 'en' : 'vi'
   const isMac = /Mac|iPhone|iPad/.test(navigator.userAgent)
 
   async function signOut() {
@@ -66,6 +71,18 @@ export function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onO
           </span>
         </Tooltip>
 
+        <Tooltip content={t('language.switchTo', { name: LANGUAGE_NAMES[otherLanguage] })}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="font-mono text-xs"
+            onClick={() => void setLanguage(otherLanguage)}
+            aria-label={`${t('language.current', { name: LANGUAGE_NAMES[language] })}. ${t('language.switchTo', { name: LANGUAGE_NAMES[otherLanguage] })}`}
+          >
+            {language.toUpperCase()}
+          </Button>
+        </Tooltip>
+
         <Tooltip content="Toggle theme (⇧D)">
           <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Toggle theme">
             <SunIcon className="hidden dark:block" />
@@ -86,7 +103,7 @@ export function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onO
             <MenuSeparator />
             <MenuItem onSelect={() => navigate('/settings')}>
               <UserIcon />
-              Settings
+              {t('nav.settings')}
             </MenuItem>
             <MenuItem onSelect={signOut}>
               <SignOutIcon />

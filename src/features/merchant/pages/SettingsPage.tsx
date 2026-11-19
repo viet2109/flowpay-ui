@@ -1,5 +1,6 @@
 import { DesktopIcon, MoonIcon, SunIcon } from '@phosphor-icons/react'
 import { useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { CopyableId } from '@/components/copyable-id'
 import { DescriptionList } from '@/components/description-list'
@@ -16,6 +17,7 @@ import { useSession } from '@/features/auth'
 import { keyPrefix, useTestKey } from '@/features/test-mode'
 import { errorMessage } from '@/lib/api/errors'
 import { formatDateTime, humanize } from '@/lib/format'
+import { LANGUAGE_NAMES, LANGUAGES, setLanguage, useLanguage, type Language } from '@/i18n'
 import { useTheme, type ThemePreference } from '@/lib/theme'
 import { useMerchant, useUpdateMerchant } from '../queries'
 import { merchantStatus } from '../status'
@@ -28,6 +30,7 @@ export function SettingsPage() {
         <BusinessPanel />
         <AccountPanel />
         <TestKeyPanel />
+        <LanguagePanel />
         <AppearancePanel />
       </div>
     </>
@@ -140,6 +143,28 @@ function TestKeyPanel() {
           <span className="text-ink-3">No key connected.</span>
         )}
       </div>
+    </Panel>
+  )
+}
+
+function LanguagePanel() {
+  const { t } = useTranslation('merchant')
+  const language = useLanguage()
+  return (
+    <Panel>
+      <PanelHeader
+        className="border-b-0"
+        title={t('settings.language.title')}
+        description={t('settings.language.description')}
+        actions={
+          <Segmented<Language>
+            aria-label={t('settings.language.title')}
+            value={language}
+            onChange={(next) => void setLanguage(next)}
+            options={LANGUAGES.map((value) => ({ value, label: LANGUAGE_NAMES[value] }))}
+          />
+        }
+      />
     </Panel>
   )
 }

@@ -57,6 +57,7 @@ First run:
 | Icons        | Phosphor                                          | Less ubiquitous than the default set; consistent weights |
 | Motion       | `motion` (LazyMotion) + CSS keyframes             | Meaningful fills; small bundle                           |
 | Feedback     | Sonner (toasts), cmdk (⌘K)                        | —                                                        |
+| Languages    | i18next + react-i18next (vi, en)                  | Typed keys, plurals, switch without reload               |
 | Fonts        | IBM Plex Sans / Mono (self-hosted via Fontsource) | Ledger character, Vietnamese glyphs, no CDN              |
 | Tests        | Vitest, Testing Library, jsdom                    | Same config as Vite                                      |
 

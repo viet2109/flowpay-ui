@@ -6,6 +6,8 @@ import {
   WebhooksLogoIcon,
   type Icon,
 } from '@phosphor-icons/react'
+import type { ParseKeys } from 'i18next'
+import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router'
 import { Logo } from '@/components/logo'
 import { useSession } from '@/features/auth'
@@ -15,28 +17,29 @@ import { humanize } from '@/lib/format'
 
 interface NavItem {
   to: string
-  label: string
+  label: ParseKeys<'shell'>
   icon: Icon
   end?: boolean
 }
 
-const sections: { title?: string; items: NavItem[] }[] = [
+const sections: { title?: ParseKeys<'shell'>; items: NavItem[] }[] = [
   {
     items: [
-      { to: '/', label: 'Overview', icon: SquaresFourIcon, end: true },
-      { to: '/payments', label: 'Payments', icon: ReceiptIcon },
+      { to: '/', label: 'nav.overview', icon: SquaresFourIcon, end: true },
+      { to: '/payments', label: 'nav.payments', icon: ReceiptIcon },
     ],
   },
   {
-    title: 'Developers',
+    title: 'nav.developers',
     items: [
-      { to: '/developers/api-keys', label: 'API keys', icon: KeyIcon },
-      { to: '/developers/webhooks', label: 'Webhooks', icon: WebhooksLogoIcon },
+      { to: '/developers/api-keys', label: 'nav.apiKeys', icon: KeyIcon },
+      { to: '/developers/webhooks', label: 'nav.webhooks', icon: WebhooksLogoIcon },
     ],
   },
 ]
 
 function NavRow({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
+  const { t } = useTranslation('shell')
   return (
     <NavLink
       to={item.to}
@@ -55,7 +58,7 @@ function NavRow({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }
         <>
           {isActive && <span className="absolute top-2 bottom-2 -left-3 w-0.5 rounded-full bg-accent" />}
           <item.icon className="size-4" weight={isActive ? 'fill' : 'regular'} />
-          {item.label}
+          {t(item.label)}
         </>
       )}
     </NavLink>
@@ -63,6 +66,7 @@ function NavRow({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }
 }
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+  const { t } = useTranslation('shell')
   const { data: merchant } = useMerchant()
   const role = useSession((s) => s.user?.role)
   const initials = (merchant?.name ?? '··')
@@ -87,11 +91,11 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-5" aria-label="Main">
+      <nav className="flex-1 space-y-5" aria-label={t('nav.main')}>
         {sections.map((section, i) => (
           <div key={i} className="space-y-0.5">
             {section.title && (
-              <div className="px-2.5 pb-1 text-xs font-medium text-ink-3">{section.title}</div>
+              <div className="px-2.5 pb-1 text-xs font-medium text-ink-3">{t(section.title)}</div>
             )}
             {section.items.map((item) => (
               <NavRow key={item.to} item={item} onNavigate={onNavigate} />
@@ -100,7 +104,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         ))}
       </nav>
 
-      <NavRow item={{ to: '/settings', label: 'Settings', icon: GearSixIcon }} onNavigate={onNavigate} />
+      <NavRow item={{ to: '/settings', label: 'nav.settings', icon: GearSixIcon }} onNavigate={onNavigate} />
     </div>
   )
 }

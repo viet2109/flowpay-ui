@@ -27,6 +27,15 @@ const TARGETS: ShotTarget[] = [
       await expect(page.getByText('ORD-1012').first()).toBeVisible()
     },
   },
+  {
+    name: 'settings',
+    path: '/settings',
+    auth: true,
+    ready: async (page) => {
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+      await expect(page.getByRole('radio', { name: 'Tiếng Việt' })).toBeVisible()
+    },
+  },
   ...galleryTargets(),
 ]
 
