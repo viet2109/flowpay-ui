@@ -9,13 +9,20 @@ export function setupHttp() {
     getAccessToken: () => sessionSnapshot().accessToken,
     refreshAccessToken: refreshSession,
     getMerchantKey: testKeySnapshot,
-    onSessionExpired: signOutLocally,
+    // The server refused the session mid-use: back to sign-in, which explains why.
+    onSessionExpired: () => useSession.getState().signOut('expired'),
   })
 }
 
-/** Forget everything tied to the previous user. */
-export function signOutLocally() {
-  useSession.getState().signOut()
-  useTestKey.getState().disconnect()
-  queryClient.clear()
+/**
+ * Forget everything tied to the previous user whenever a session ends, however
+ * it ends (sign-out here or in another tab, expiry). Called once from main.tsx.
+ */
+export function watchSessionEnd() {
+  return useSession.subscribe((state, previous) => {
+    if (previous.status === 'authenticated' && state.status !== 'authenticated') {
+      useTestKey.getState().disconnect()
+      queryClient.clear()
+    }
+  })
 }

@@ -4,10 +4,11 @@ import { restoreSession, startProactiveRefresh } from '@/features/auth'
 import '@/i18n' // before anything renders: the first paint is already translated
 import { watchSystemTheme } from '@/lib/theme'
 import { App } from './app/App'
-import { setupHttp } from './app/http-setup'
+import { setupHttp, watchSessionEnd } from './app/http-setup'
 import './styles/globals.css'
 
 setupHttp()
+watchSessionEnd()
 watchSystemTheme()
 startProactiveRefresh()
 // Outside React on purpose: StrictMode double-runs effects, and two concurrent

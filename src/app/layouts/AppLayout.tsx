@@ -2,6 +2,9 @@ import { useTranslation } from 'react-i18next'
 import { Dialog as DialogPrimitive } from 'radix-ui'
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
+import { Callout } from '@/components/callout'
+import { useMerchant } from '@/features/merchant'
+import { isApiError } from '@/lib/api/errors'
 import { useTheme } from '@/lib/theme'
 import { CommandMenu } from '../CommandMenu'
 import { Sidebar } from './Sidebar'
@@ -10,6 +13,7 @@ import { Topbar } from './Topbar'
 export function AppLayout() {
   const { t } = useTranslation('shell')
   const [navOpen, setNavOpen] = useState(false)
+  const suspended = isApiError(useMerchant().error, 'MERCHANT_SUSPENDED')
   const [searchOpen, setSearchOpen] = useState(false)
   const location = useLocation()
   useGlobalShortcuts(() => setSearchOpen((o) => !o))
@@ -47,6 +51,11 @@ export function AppLayout() {
       <div className="pt-[3px] lg:pl-60">
         <Topbar onOpenNav={() => setNavOpen(true)} onOpenSearch={() => setSearchOpen(true)} />
         <main className="mx-auto max-w-6xl px-4 py-6 lg:px-8 lg:py-8">
+          {suspended && (
+            <Callout tone="danger" className="mb-5">
+              {t('suspended')}
+            </Callout>
+          )}
           <Outlet />
         </main>
       </div>

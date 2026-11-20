@@ -13,15 +13,44 @@ export interface SessionUser {
   role: string
 }
 
+/** Why the last session ended; the sign-in page explains it. */
+export type SessionEnd = 'expired' | 'signed-out' | 'elsewhere'
+
 type SessionState =
-  | { status: 'checking'; accessToken: null; user: null; expiresAt: null }
-  | { status: 'anonymous'; accessToken: null; user: null; expiresAt: null }
-  | { status: 'authenticated'; accessToken: string; user: SessionUser; expiresAt: number }
+  | { status: 'checking'; accessToken: null; user: null; expiresAt: null; issuedAt: null; ended: null }
+  | {
+      status: 'anonymous'
+      accessToken: null
+      user: null
+      expiresAt: null
+      issuedAt: null
+      ended: SessionEnd | null
+    }
+  /** The session could not be checked (backend unreachable or rate limited); it may still be valid. */
+  | {
+      status: 'unreachable'
+      accessToken: null
+      user: null
+      expiresAt: null
+      issuedAt: null
+      ended: null
+      error: unknown
+    }
+  | {
+      status: 'authenticated'
+      accessToken: string
+      user: SessionUser
+      expiresAt: number
+      /** When this tab received the token, to tell a fresh one from a stale one. */
+      issuedAt: number
+      ended: null
+    }
 
 interface SessionActions {
   /** Store a freshly issued access token. `email` is only known right after login. */
   signIn: (accessToken: string, expiresIn: number, email?: string) => void
-  signOut: () => void
+  signOut: (ended?: SessionEnd) => void
+  markUnreachable: (error: unknown) => void
 }
 
 // The login response is the only place the email appears; remember it per user
@@ -48,25 +77,27 @@ function recallEmail(userId: string): string | null {
   }
 }
 
-const anonymous = { status: 'anonymous', accessToken: null, user: null, expiresAt: null } as const
+const empty = { accessToken: null, user: null, expiresAt: null, issuedAt: null } as const
 
 export const useSession = create<SessionState & SessionActions>()((set) => ({
   status: 'checking',
-  accessToken: null,
-  user: null,
-  expiresAt: null,
+  ...empty,
+  ended: null,
 
   signIn: (accessToken, expiresIn, email) => {
     const claims = decodeClaims(accessToken)
     if (!claims) {
-      set(anonymous)
+      set({ status: 'anonymous', ...empty, ended: null })
       return
     }
     if (email) rememberEmail(claims.sub, email)
+    const now = Date.now()
     set({
       status: 'authenticated',
       accessToken,
-      expiresAt: Date.now() + expiresIn * 1000,
+      expiresAt: now + expiresIn * 1000,
+      issuedAt: now,
+      ended: null,
       user: {
         id: claims.sub,
         email: email ?? recallEmail(claims.sub),
@@ -76,7 +107,9 @@ export const useSession = create<SessionState & SessionActions>()((set) => ({
     })
   },
 
-  signOut: () => set(anonymous),
+  signOut: (ended) => set({ status: 'anonymous', ...empty, ended: ended ?? null }),
+
+  markUnreachable: (error) => set({ status: 'unreachable', ...empty, ended: null, error }),
 }))
 
 /** Non-React access for the HTTP layer. */

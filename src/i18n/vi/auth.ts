@@ -9,6 +9,8 @@ export const auth: Messages<typeof en> = {
     password: 'Mật khẩu',
     submit: 'Đăng nhập',
     registered: 'Đã tạo tài khoản. Đăng nhập bằng {{email}}.',
+    endedExpired: 'Phiên đăng nhập đã kết thúc. Đăng nhập lại để tiếp tục từ chỗ đang làm.',
+    endedElsewhere: 'Bạn đã đăng xuất ở một tab khác.',
     newHere: 'Lần đầu dùng FlowPay?',
     createAccount: 'Tạo tài khoản merchant',
   },

@@ -10,6 +10,8 @@ import { ApiError } from '@/lib/api/errors'
 export function useErrorMessage() {
   const { t, i18n } = useTranslation('errors')
   return (error: unknown): string => {
+    if (error instanceof ApiError && error.code === 'RATE_LIMIT_EXCEEDED' && error.retryAfter)
+      return t('rateLimitedFor', { count: error.retryAfter })
     if (error instanceof ApiError)
       return i18n.exists(error.code, { ns: 'errors' }) ? t(error.code as ParseKeys<'errors'>) : error.message
     return t('unexpected')

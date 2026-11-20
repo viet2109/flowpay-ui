@@ -48,6 +48,13 @@ export const shell: Messages<typeof en> = {
     body: 'Kiểm tra lại URL, hoặc dán ID thanh toán vào ô tìm kiếm ({{shortcut}}).',
     back: 'Về trang tổng quan',
   },
+  unreachable: {
+    title: 'FlowPay không phản hồi',
+    body: 'Phiên đăng nhập chưa được kiểm tra, nên nếu bạn đang đăng nhập thì vẫn còn.',
+    retry: 'Thử lại',
+  },
+  suspended:
+    'Merchant này đang bị tạm ngưng. FlowPay từ chối các yêu cầu của merchant cho tới khi người vận hành kích hoạt lại.',
   crash: {
     eyebrow: 'Lỗi không mong muốn',
     title: 'Màn hình này gặp sự cố',

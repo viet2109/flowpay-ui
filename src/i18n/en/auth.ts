@@ -7,6 +7,8 @@ export const auth = {
     password: 'Password',
     submit: 'Sign in',
     registered: 'Account created. Sign in with {{email}}.',
+    endedExpired: 'Your session ended. Sign in again to continue where you were.',
+    endedElsewhere: 'You signed out in another tab.',
     newHere: 'New to FlowPay?',
     createAccount: 'Create a merchant account',
   },

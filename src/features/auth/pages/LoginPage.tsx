@@ -13,6 +13,7 @@ import { isApiError } from '@/lib/api/errors'
 import { applyServerErrors } from '@/lib/form'
 import { authApi } from '../api'
 import { loginSchema, type LoginValues } from '../schemas'
+import { completeSignIn } from '../session'
 import { useSession } from '../session-store'
 
 /** What other pages may hand over when they send someone here. */
@@ -30,7 +31,7 @@ export function LoginPage() {
   const errorMessage = useErrorMessage()
   const fieldError = useFieldError()
   const navigate = useNavigate()
-  const signIn = useSession((s) => s.signIn)
+  const ended = useSession((s) => (s.status === 'anonymous' ? s.ended : null))
   const state = (useLocation().state ?? {}) as LoginState
   const prefill = state.registeredEmail ?? state.email ?? ''
 
@@ -42,7 +43,7 @@ export function LoginPage() {
   const login = useMutation({
     mutationFn: authApi.login,
     onSuccess: (result) => {
-      signIn(result.accessToken, result.expiresIn, result.user.email)
+      completeSignIn(result)
       navigate(state.from ?? '/', { replace: true })
     },
     onError: (error) => {
@@ -69,6 +70,11 @@ export function LoginPage() {
       {state.registeredEmail && !login.isError && (
         <Callout tone="success" className="mt-6">
           {t('login.registered', { email: state.registeredEmail })}
+        </Callout>
+      )}
+      {(ended === 'expired' || ended === 'elsewhere') && !login.isError && (
+        <Callout tone="info" className="mt-6">
+          {ended === 'expired' ? t('login.endedExpired') : t('login.endedElsewhere')}
         </Callout>
       )}
       {showCallout && (

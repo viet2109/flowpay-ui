@@ -21,5 +21,7 @@ export const errors = {
   IDEMPOTENCY_REQUEST_IN_PROGRESS: 'The same request is still being processed. Try again in a moment.',
   WEBHOOK_INVALID_STATE: 'The endpoint changed or is disabled. Reload and try again.',
   RATE_LIMIT_EXCEEDED: 'Too many requests. Wait a moment and retry.',
+  rateLimitedFor_one: 'Too many requests. Try again in {{count}} second.',
+  rateLimitedFor_other: 'Too many requests. Try again in {{count}} seconds.',
   INTERNAL_ERROR: 'FlowPay hit an unexpected error.',
 }

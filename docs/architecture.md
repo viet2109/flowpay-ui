@@ -72,7 +72,12 @@ dashboard therefore must be served **from the same origin** as `/api`:
 - Adds `X-FlowPay-CSRF: 1` to every auth POST (BR-AUTH-012).
 - Three auth modes per request: `dashboard` (JWT), `merchant` (API key), `none`.
 - On a dashboard 401 it refreshes **once** for all concurrent requests (refresh
-  tokens rotate; parallel refreshes would revoke each other), then retries.
+  tokens rotate; parallel refreshes would revoke each other), then retries. Only a
+  refused refresh (401/403) signs out; a network failure, 429 or 5xx while
+  refreshing keeps the session and surfaces that error.
+- `ApiError.retryAfter` carries a 429's `Retry-After` (seconds). Queries retry a
+  429 once after that delay; mutations never retry (the person retries, with the
+  same idempotency key).
 - No React imports; the app injects token getters via `configureHttp` (`app/http-setup.ts`).
 
 ### Authentication
@@ -86,6 +91,28 @@ dashboard therefore must be served **from the same origin** as `/api`:
 Startup: `main.tsx` calls `restoreSession()` once (outside React, so StrictMode
 can't double-refresh). Guards show a splash while `status === 'checking'`.
 A timer refreshes one minute before expiry; the 401 retry is the fallback.
+
+Session states (`features/auth/session-store.ts`): `checking` → `authenticated`,
+`anonymous` (with why the last session ended: `expired`, `signed-out`,
+`elsewhere`, explained on the sign-in page) or `unreachable` (the backend did
+not answer or rate-limited the check: a retry screen, not the sign-in page,
+because the session may still be valid).
+
+Several tabs share the refresh cookie (`features/auth/session.ts`):
+
+- A **Web Lock** (`flowpay-session-refresh`) lets one tab refresh at a time. A tab
+  that waited uses the token another tab just obtained instead of presenting
+  the rotated (now revoked) one. Without it the second tab got
+  `REFRESH_TOKEN_REVOKED` and signed out although the session was fine.
+- A **BroadcastChannel** (`flowpay-session`) shares new tokens (one refresh timer
+  fires per cycle; signing in in one tab opens the dashboard in the others) and
+  sign-outs (every tab signs out). Tokens are never persisted.
+- Whenever a session ends, `watchSessionEnd` (`app/http-setup.ts`) clears the
+  query cache and the connected test key.
+- After sign-in, the person returns to the page that sent them there (`from`);
+  `GuestOnly` and `LoginPage` must agree on it, as both redirect at that moment.
+- A suspended merchant (`MERCHANT_SUSPENDED` on dashboard APIs) is explained once,
+  in a banner above every page.
 
 ### Why a "test key" for payments
 

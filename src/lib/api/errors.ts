@@ -68,14 +68,17 @@ export class ApiError extends Error {
   readonly code: string
   readonly requestId?: string
   readonly fieldErrors: FieldViolation[]
+  /** Seconds from a `Retry-After` header (429 from the edge), when present. */
+  readonly retryAfter?: number
 
-  constructor(problem: ProblemDetails) {
+  constructor(problem: ProblemDetails, retryAfter?: number) {
     super(problem.detail ?? problem.title ?? 'Request failed')
     this.name = 'ApiError'
     this.status = problem.status
     this.code = problem.code ?? `HTTP_${problem.status}`
     this.requestId = problem.requestId
     this.fieldErrors = problem.errors ?? []
+    this.retryAfter = retryAfter
   }
 
   static client(code: ClientErrorCode, message: string) {
@@ -85,6 +88,15 @@ export class ApiError extends Error {
 
 export function isApiError(error: unknown, code?: string): error is ApiError {
   return error instanceof ApiError && (code === undefined || error.code === code)
+}
+
+/**
+ * The server refused the session itself (refresh token invalid, expired or
+ * revoked; user locked or disabled): signing out is the only way forward.
+ * Network failures, 429 and 5xx are not: the session may still be valid.
+ */
+export function isSessionRejected(error: unknown): boolean {
+  return error instanceof ApiError && (error.status === 401 || error.status === 403)
 }
 
 // Merchant-facing copy per code lives in src/i18n (namespace "errors"); use useErrorMessage().

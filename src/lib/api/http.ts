@@ -1,4 +1,4 @@
-import { ApiError, type ProblemDetails } from './errors'
+import { ApiError, isSessionRejected, type ProblemDetails } from './errors'
 import type { Page, PageMeta } from './types'
 
 /**
@@ -92,11 +92,24 @@ async function send(path: string, options: RequestOptions, token: string | null)
   }
 }
 
+/** Retry-After in seconds (the edge sends seconds; an HTTP date is converted). */
+function retryAfterSeconds(response: Response): number | undefined {
+  const value = response.headers.get('Retry-After')
+  if (!value) return undefined
+  const seconds = Number(value)
+  if (Number.isFinite(seconds)) return Math.max(0, Math.ceil(seconds))
+  const date = Date.parse(value)
+  return Number.isNaN(date) ? undefined : Math.max(0, Math.ceil((date - Date.now()) / 1000))
+}
+
 async function toApiError(response: Response): Promise<ApiError> {
   const problem = (await response.json().catch(() => null)) as ProblemDetails | null
   // A bare 502–504 comes from the proxy/edge, not FlowPay: the backend is unreachable.
   const unreachable = response.status >= 502 && response.status <= 504
-  return new ApiError(problem ?? { status: response.status, code: unreachable ? 'NETWORK_ERROR' : undefined })
+  return new ApiError(
+    problem ?? { status: response.status, code: unreachable ? 'NETWORK_ERROR' : undefined },
+    retryAfterSeconds(response),
+  )
 }
 
 // Concurrent 401s share one refresh call. Refresh tokens rotate, so two
@@ -118,7 +131,10 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     let fresh: string
     try {
       fresh = await refreshOnce()
-    } catch {
+    } catch (refreshError) {
+      // Only a refused session signs out. A network failure or 429 while
+      // refreshing leaves the session in place; the caller sees that error.
+      if (!isSessionRejected(refreshError)) throw refreshError
       config?.onSessionExpired()
       throw await toApiError(response)
     }

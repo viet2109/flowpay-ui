@@ -16,7 +16,6 @@ import { logout, useSession } from '@/features/auth'
 import { keyPrefix, useTestKey } from '@/features/test-mode'
 import { LANGUAGE_NAMES, setLanguage, useLanguage } from '@/i18n'
 import { useTheme } from '@/lib/theme'
-import { signOutLocally } from '../http-setup'
 
 export function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onOpenSearch: () => void }) {
   const user = useSession((s) => s.user)
@@ -29,8 +28,8 @@ export function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onO
   const isMac = /Mac|iPhone|iPad/.test(navigator.userAgent)
 
   async function signOut() {
+    // Signs out here and in the other tabs, even if the request fails.
     await logout().catch(() => undefined)
-    signOutLocally()
     navigate('/login', { replace: true })
   }
 

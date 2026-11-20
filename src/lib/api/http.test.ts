@@ -62,6 +62,32 @@ describe('request', () => {
     expect(refresh).toHaveBeenCalledTimes(1)
   })
 
+  it('signs out only when the server refuses the session while refreshing', async () => {
+    fetchMock.mockResolvedValue(json(401, { status: 401, code: 'AUTHENTICATION_REQUIRED' }))
+    refresh.mockRejectedValueOnce(new ApiError({ status: 401, code: 'REFRESH_TOKEN_REVOKED' }))
+    await expect(request('/merchant')).rejects.toMatchObject({ status: 401 })
+    expect(onSessionExpired).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the session when the refresh itself cannot get through', async () => {
+    fetchMock.mockResolvedValue(json(401, { status: 401, code: 'AUTHENTICATION_REQUIRED' }))
+    refresh.mockRejectedValueOnce(ApiError.client('NETWORK_ERROR', 'offline'))
+    await expect(request('/merchant')).rejects.toMatchObject({ code: 'NETWORK_ERROR' })
+    refresh.mockRejectedValueOnce(new ApiError({ status: 429, code: 'RATE_LIMIT_EXCEEDED' }, 60))
+    await expect(request('/merchant')).rejects.toMatchObject({ code: 'RATE_LIMIT_EXCEEDED' })
+    expect(onSessionExpired).not.toHaveBeenCalled()
+  })
+
+  it('reads Retry-After from a 429', async () => {
+    fetchMock.mockResolvedValueOnce(
+      json(429, { status: 429, code: 'RATE_LIMIT_EXCEEDED', requestId: 'req_9' }, { 'Retry-After': '60' }),
+    )
+    await expect(request('/auth/login', { method: 'POST', auth: 'none', body: {} })).rejects.toMatchObject({
+      status: 429,
+      retryAfter: 60,
+    })
+  })
+
   it('sends the CSRF marker on auth POSTs only', async () => {
     fetchMock.mockImplementation(async () => json(200, { data: {} })) // fresh body per call
     await request('/auth/login', { method: 'POST', auth: 'none', body: {} })

@@ -5,6 +5,13 @@
  */
 export const loadAuthPages = () => import('./pages')
 export { AuthAside } from './components/AuthAside'
-export { useSession, sessionSnapshot, type SessionUser } from './session-store'
-export { refreshSession, restoreSession, startProactiveRefresh, logout } from './session'
+export { useSession, sessionSnapshot, type SessionEnd, type SessionUser } from './session-store'
+export {
+  completeSignIn,
+  logout,
+  refreshSession,
+  restoreSession,
+  retryRestoreSession,
+  startProactiveRefresh,
+} from './session'
 export type { LoginResult, RefreshResult, RegisterInput, RegisterResult } from './api'

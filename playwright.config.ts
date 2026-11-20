@@ -1,5 +1,5 @@
-import { existsSync } from 'node:fs'
-import { chromium, defineConfig, devices } from '@playwright/test'
+import { defineConfig, devices } from '@playwright/test'
+import { BASE_URL, BROWSER_CHANNEL } from './e2e/browser'
 
 /**
  * E2E and screenshot review against the real local stack (docs/local-stack.md).
@@ -7,15 +7,9 @@ import { chromium, defineConfig, devices } from '@playwright/test'
  *   npm run e2e     behaviour tests        (e2e/*.e2e.ts)
  *   npm run shots   review screenshots     (e2e/*.shots.ts -> shots/)
  *
- * Browser: Playwright's bundled Chromium when installed (`npx playwright install
- * chromium`), otherwise the system Edge. Override with E2E_BROWSER_CHANNEL
- * (`chromium`, `msedge`, `chrome`).
+ * Browser and base URL: e2e/browser.ts. The global setup seeds a merchant and
+ * warms the dev server, so the first tests do not pay for module compilation.
  */
-const channel =
-  process.env.E2E_BROWSER_CHANNEL ?? (existsSync(chromium.executablePath()) ? undefined : 'msedge')
-
-const BASE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:5173'
-
 export default defineConfig({
   testDir: 'e2e',
   outputDir: 'test-results',
@@ -29,7 +23,7 @@ export default defineConfig({
   reporter: [['list']],
   use: {
     ...devices['Desktop Chrome'],
-    channel,
+    channel: BROWSER_CHANNEL,
     baseURL: BASE_URL,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',

@@ -46,6 +46,13 @@ export const shell = {
     body: 'Check the URL, or paste a payment ID into the search ({{shortcut}}).',
     back: 'Back to overview',
   },
+  unreachable: {
+    title: 'FlowPay is not answering',
+    body: 'Your session was not checked, so you are still signed in if you were.',
+    retry: 'Try again',
+  },
+  suspended:
+    'This merchant is suspended. FlowPay rejects its requests until your FlowPay operator reactivates it.',
   crash: {
     eyebrow: 'Unexpected error',
     title: 'Something broke on this screen',
