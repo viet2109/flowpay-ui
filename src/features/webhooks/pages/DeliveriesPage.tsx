@@ -1,15 +1,14 @@
+import { useTranslation } from 'react-i18next'
 import { PageHeader } from '@/components/page-header'
 import { Panel } from '@/components/ui/panel'
 import { DeliveriesView } from '../components/DeliveriesView'
 import { WebhooksTabs } from '../components/WebhooksTabs'
 
 export function DeliveriesPage() {
+  const { t } = useTranslation('webhooks')
   return (
     <>
-      <PageHeader
-        title="Webhooks"
-        description="Every delivery attempt FlowPay made to your endpoints, with full retry history."
-      >
+      <PageHeader title={t('title')} description={t('deliveriesDescription')}>
         <WebhooksTabs />
       </PageHeader>
       <Panel className="p-4">

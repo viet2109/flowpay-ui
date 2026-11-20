@@ -6,6 +6,7 @@ import { overview as enOverview } from './en/overview'
 import { shell as enShell } from './en/shell'
 import { status as enStatus } from './en/status'
 import { validation as enValidation } from './en/validation'
+import { webhooks as enWebhooks } from './en/webhooks'
 import { auth as viAuth } from './vi/auth'
 import { common as viCommon } from './vi/common'
 import { errors as viErrors } from './vi/errors'
@@ -14,6 +15,7 @@ import { overview as viOverview } from './vi/overview'
 import { shell as viShell } from './vi/shell'
 import { status as viStatus } from './vi/status'
 import { validation as viValidation } from './vi/validation'
+import { webhooks as viWebhooks } from './vi/webhooks'
 
 /** English is the source of truth for keys; every other language must match it (see Messages). */
 export const en = {
@@ -25,6 +27,7 @@ export const en = {
   auth: enAuth,
   merchant: enMerchant,
   overview: enOverview,
+  webhooks: enWebhooks,
 }
 export const vi = {
   common: viCommon,
@@ -35,6 +38,7 @@ export const vi = {
   auth: viAuth,
   merchant: viMerchant,
   overview: viOverview,
+  webhooks: viWebhooks,
 }
 
 export const resources = { en, vi }

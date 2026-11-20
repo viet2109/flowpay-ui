@@ -1,14 +1,16 @@
+import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router'
 import { cn } from '@/lib/cn'
 
 const tabs = [
-  { to: '/developers/webhooks', label: 'Endpoints', end: true },
-  { to: '/developers/webhooks/deliveries', label: 'Deliveries', end: false },
-]
+  { to: '/developers/webhooks', label: 'tabs.endpoints', end: true },
+  { to: '/developers/webhooks/deliveries', label: 'tabs.deliveries', end: false },
+] as const
 
 export function WebhooksTabs() {
+  const { t } = useTranslation('webhooks')
   return (
-    <nav className="flex gap-5 border-b border-line" aria-label="Webhooks">
+    <nav className="flex gap-5 border-b border-line" aria-label={t('tabs.label')}>
       {tabs.map((tab) => (
         <NavLink
           key={tab.to}
@@ -21,7 +23,7 @@ export function WebhooksTabs() {
             )
           }
         >
-          {tab.label}
+          {t(tab.label)}
         </NavLink>
       ))}
     </nav>

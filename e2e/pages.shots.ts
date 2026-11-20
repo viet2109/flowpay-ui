@@ -38,6 +38,13 @@ const TARGETS: ShotTarget[] = [
     },
   },
   {
+    name: 'webhooks',
+    path: '/developers/webhooks',
+    auth: true,
+    // "HTTP 200" is the healthy seeded endpoint's last delivery, in either language.
+    ready: (page) => expect(page.getByText('HTTP 200')).toBeVisible(),
+  },
+  {
     name: 'command-menu',
     path: '/',
     auth: true,

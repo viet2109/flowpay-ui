@@ -155,6 +155,9 @@ their `fp_test_` keys for the current tab (`features/test-mode`):
 - Records in moving states poll: PROCESSING payment (5s), deliveries that are
   PENDING/DELIVERING/RETRYING (3–5s).
 - Counts come from `meta.totalElements` of `size=1` pages (no aggregate API).
+  The endpoint list shows each active endpoint's health from three of them
+  (`useEndpointHealth`: DEAD and RETRYING counts, and the latest delivery, since
+  the list is newest first), refreshed every 30s, or every 5s while the latest moves.
 - Optimistic updates only where reversal is harmless (revoking a key's row).
 
 ## 4. Idempotency in the UI
