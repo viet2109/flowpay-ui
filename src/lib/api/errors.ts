@@ -20,10 +20,9 @@ export interface ProblemDetails {
 }
 
 /**
- * Every `code` FlowPay can return: docs/api-contract.md §17, plus codes the
- * backend emits that the contract does not list yet (ACCESS_DENIED for a missing
- * CSRF marker, MALFORMED_REQUEST, RESOURCE_NOT_FOUND). RATE_LIMIT_EXCEEDED comes
- * from the NGINX edge. `npm run test:contract` fails on any code not listed here.
+ * Every `code` FlowPay can return: docs/api-contract.md §17 (RATE_LIMIT_EXCEEDED
+ * comes from the NGINX edge, not the application). `npm run test:contract` fails
+ * on any code not listed here.
  */
 export const SERVER_ERROR_CODES = [
   'VALIDATION_ERROR',
@@ -46,7 +45,6 @@ export const SERVER_ERROR_CODES = [
   'INVALID_API_KEY',
   'PAYMENT_NOT_FOUND',
   'PAYMENT_INVALID_STATE',
-  'PAYMENT_ALREADY_SUCCEEDED',
   'REFUND_NOT_FOUND',
   'REFUND_INVALID_PAYMENT_STATE',
   'REFUND_AMOUNT_EXCEEDS_AVAILABLE',
