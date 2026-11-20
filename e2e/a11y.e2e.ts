@@ -38,13 +38,13 @@ const TARGETS: Target[] = [
     name: 'login',
     path: '/login',
     auth: false,
-    ready: (p) => expect(p.getByLabel('Password')).toBeVisible(),
+    ready: (p) => expect(p.getByLabel('Password', { exact: true })).toBeVisible(),
   },
   {
     name: 'register',
     path: '/register',
     auth: false,
-    ready: (p) => expect(p.getByLabel('Password')).toBeVisible(),
+    ready: (p) => expect(p.getByLabel('Password', { exact: true })).toBeVisible(),
   },
   {
     name: 'gallery',

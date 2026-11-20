@@ -7,6 +7,7 @@ export const validation = {
   passwordRequired: 'Password is required.',
   passwordTooShort: 'Use at least {{min}} characters.',
   businessNameRequired: 'Your business name is required.',
+  emailTaken: 'An account with this email already exists.',
   currency: 'Use a 3-letter currency code.',
   amountRequired: 'Enter an amount.',
   amountInvalid: 'Not a valid {{currency}} amount. Write it like {{example}}.',

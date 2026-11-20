@@ -9,6 +9,11 @@ export const common = {
   copyValue: 'Copy {{value}}',
   show: 'Show',
   hide: 'Hide',
+  password: {
+    show: 'Show password',
+    hide: 'Hide password',
+    capsLock: 'Caps Lock is on.',
+  },
   secretOnce: 'Store it now in your secret manager. FlowPay will not show it again.',
   pagination: {
     range: '{{from}}–{{to}} of {{total}}',

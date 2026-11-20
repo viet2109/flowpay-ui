@@ -1,25 +1,32 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router'
+import { Callout } from '@/components/callout'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
+import { useErrorMessage, useFieldError, useLanguage, vmsg } from '@/i18n'
 import { isApiError } from '@/lib/api/errors'
 import { applyServerErrors } from '@/lib/form'
 import { authApi } from '../api'
-import { Callout } from '@/components/callout'
-import { useErrorMessage, useFieldError } from '@/i18n'
-import { registerSchema, type RegisterValues } from '../schemas'
+import { PASSWORD_MIN_LENGTH, registerSchema, type RegisterValues } from '../schemas'
+
+const EMAIL_TAKEN = vmsg('emailTaken')
 
 export function RegisterPage() {
+  const { t } = useTranslation('auth')
+  const familyNameFirst = useLanguage() === 'vi'
   const errorMessage = useErrorMessage()
-  const navigate = useNavigate()
   const fieldError = useFieldError()
+  const navigate = useNavigate()
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: { firstName: '', lastName: '', merchantName: '', email: '', password: '' },
   })
+  const email = useWatch({ control: form.control, name: 'email' })
 
   const register = useMutation({
     mutationFn: authApi.register,
@@ -28,7 +35,7 @@ export function RegisterPage() {
       navigate('/login', { replace: true, state: { registeredEmail: result.user.email } }),
     onError: (error) => {
       if (isApiError(error, 'USER_EMAIL_ALREADY_EXISTS')) {
-        form.setError('email', { message: 'An account with this email already exists.' })
+        form.setError('email', { message: EMAIL_TAKEN }, { shouldFocus: true })
       } else {
         applyServerErrors(error, form.setError)
       }
@@ -36,52 +43,78 @@ export function RegisterPage() {
   })
 
   const { errors } = form.formState
-  const showBanner = register.isError && !isApiError(register.error, 'USER_EMAIL_ALREADY_EXISTS')
+  const emailTaken = errors.email?.message === EMAIL_TAKEN
+  // Errors that belong to a field are shown there; the rest go in the callout.
+  const showCallout =
+    register.isError &&
+    !isApiError(register.error, 'USER_EMAIL_ALREADY_EXISTS') &&
+    !(isApiError(register.error, 'VALIDATION_ERROR') && register.error.fieldErrors.length > 0)
 
   return (
     <div className="w-full max-w-sm">
-      <h1 className="text-xl font-semibold tracking-tight">Create a merchant account</h1>
-      <p className="mt-1 text-sm text-ink-2">
-        You will be the owner. Everything runs against the payment simulator.
-      </p>
+      <h1 className="text-xl font-semibold tracking-tight">{t('register.title')}</h1>
+      <p className="mt-1 text-sm text-ink-2">{t('register.subtitle')}</p>
 
-      {showBanner && (
+      {showCallout && (
         <Callout tone="danger" className="mt-6">
           {errorMessage(register.error)}
         </Callout>
       )}
 
       <form className="mt-6 space-y-4" onSubmit={form.handleSubmit((v) => register.mutate(v))} noValidate>
+        {/* Vietnamese names put the family name first. The DOM order changes too, so
+            the tab order matches what is on screen. */}
         <div className="grid grid-cols-2 gap-3">
-          <Field label="First name" error={fieldError(errors.firstName?.message)}>
-            <Input autoComplete="given-name" autoFocus {...form.register('firstName')} />
-          </Field>
-          <Field label="Last name" error={fieldError(errors.lastName?.message)}>
-            <Input autoComplete="family-name" {...form.register('lastName')} />
-          </Field>
+          {(familyNameFirst
+            ? (['lastName', 'firstName'] as const)
+            : (['firstName', 'lastName'] as const)
+          ).map((name, index) => (
+            <Field key={name} label={t(`register.${name}`)} error={fieldError(errors[name]?.message)}>
+              <Input
+                autoComplete={name === 'firstName' ? 'given-name' : 'family-name'}
+                autoFocus={index === 0}
+                {...form.register(name)}
+              />
+            </Field>
+          ))}
         </div>
         <Field
-          label="Business name"
-          hint="Shown on your dashboard. You can change it later."
+          label={t('register.businessName')}
+          hint={t('register.businessNameHint')}
           error={fieldError(errors.merchantName?.message)}
         >
           <Input autoComplete="organization" {...form.register('merchantName')} />
         </Field>
-        <Field label="Work email" error={fieldError(errors.email?.message)}>
-          <Input type="email" autoComplete="email" {...form.register('email')} />
-        </Field>
-        <Field label="Password" hint="At least 8 characters." error={fieldError(errors.password?.message)}>
-          <Input type="password" autoComplete="new-password" {...form.register('password')} />
+        <div className="space-y-1.5">
+          <Field label={t('register.email')} error={fieldError(errors.email?.message)}>
+            <Input type="email" autoComplete="email" {...form.register('email')} />
+          </Field>
+          {emailTaken && (
+            <Link
+              to="/login"
+              state={{ email: email.trim() }}
+              className="inline-block text-xs font-medium text-ink underline underline-offset-4 hover:text-accent"
+            >
+              {t('register.signInInstead')}
+            </Link>
+          )}
+        </div>
+        <Field
+          label={t('register.password')}
+          hint={t('register.passwordHint', { min: PASSWORD_MIN_LENGTH })}
+          error={fieldError(errors.password?.message)}
+        >
+          <PasswordInput autoComplete="new-password" {...form.register('password')} />
         </Field>
         <Button type="submit" variant="primary" size="lg" className="w-full" loading={register.isPending}>
-          Create account
+          {t('register.submit')}
         </Button>
       </form>
 
       <p className="mt-6 text-sm text-ink-2">
-        Already have an account?{' '}
+        {t('register.haveAccount')}{' '}
         <Link to="/login" className="font-medium text-ink underline underline-offset-4 hover:text-accent">
-          Sign in
+          {t('register.signIn')}
         </Link>
       </p>
     </div>

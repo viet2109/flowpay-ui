@@ -10,13 +10,14 @@ const TARGETS: ShotTarget[] = [
     name: 'login',
     path: '/login',
     auth: false,
-    ready: (page) => expect(page.getByRole('button', { name: 'Sign in' })).toBeVisible(),
+    // Language-neutral: these pages are translated, and shots run in both languages.
+    ready: (page) => expect(page.locator('input[type=password]')).toBeVisible(),
   },
   {
     name: 'register',
     path: '/register',
     auth: false,
-    ready: (page) => expect(page.getByLabel('Password')).toBeVisible(),
+    ready: (page) => expect(page.locator('input[type=password]')).toBeVisible(),
   },
   {
     name: 'overview',

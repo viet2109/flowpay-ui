@@ -9,6 +9,7 @@ export const validation: Messages<typeof en> = {
   passwordRequired: 'Vui lòng nhập mật khẩu.',
   passwordTooShort: 'Mật khẩu cần ít nhất {{min}} ký tự.',
   businessNameRequired: 'Vui lòng nhập tên doanh nghiệp.',
+  emailTaken: 'Email này đã có tài khoản.',
   currency: 'Dùng mã tiền tệ 3 chữ cái.',
   amountRequired: 'Vui lòng nhập số tiền.',
   amountInvalid: 'Số tiền {{currency}} không hợp lệ. Viết theo dạng {{example}}.',

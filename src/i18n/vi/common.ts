@@ -11,6 +11,11 @@ export const common: Messages<typeof en> = {
   copyValue: 'Sao chép {{value}}',
   show: 'Hiện',
   hide: 'Ẩn',
+  password: {
+    show: 'Hiện mật khẩu',
+    hide: 'Ẩn mật khẩu',
+    capsLock: 'Caps Lock đang bật.',
+  },
   secretOnce: 'Lưu ngay vào trình quản lý bí mật của bạn. FlowPay sẽ không hiển thị lại.',
   pagination: {
     range: '{{from}}–{{to}} trên {{total}}',

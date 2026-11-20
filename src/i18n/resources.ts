@@ -1,3 +1,4 @@
+import { auth as enAuth } from './en/auth'
 import { common as enCommon } from './en/common'
 import { errors as enErrors } from './en/errors'
 import { merchant as enMerchant } from './en/merchant'
@@ -5,6 +6,7 @@ import { overview as enOverview } from './en/overview'
 import { shell as enShell } from './en/shell'
 import { status as enStatus } from './en/status'
 import { validation as enValidation } from './en/validation'
+import { auth as viAuth } from './vi/auth'
 import { common as viCommon } from './vi/common'
 import { errors as viErrors } from './vi/errors'
 import { merchant as viMerchant } from './vi/merchant'
@@ -20,6 +22,7 @@ export const en = {
   shell: enShell,
   status: enStatus,
   validation: enValidation,
+  auth: enAuth,
   merchant: enMerchant,
   overview: enOverview,
 }
@@ -29,6 +32,7 @@ export const vi = {
   shell: viShell,
   status: viStatus,
   validation: viValidation,
+  auth: viAuth,
   merchant: viMerchant,
   overview: viOverview,
 }
