@@ -2,6 +2,7 @@ import type { shell as en } from '../en/shell'
 import type { Messages } from '../types'
 
 export const shell: Messages<typeof en> = {
+  skipToContent: 'Bỏ qua tới nội dung',
   nav: {
     main: 'Chính',
     overview: 'Tổng quan',

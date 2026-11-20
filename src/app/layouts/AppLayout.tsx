@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Dialog as DialogPrimitive } from 'radix-ui'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
 import { Callout } from '@/components/callout'
 import { useMerchant } from '@/features/merchant'
@@ -26,8 +26,24 @@ export function AppLayout() {
     window.scrollTo(0, 0)
   }, [location.pathname])
 
+  // After a page change (not the first load, not a filter change), move focus to
+  // the new content so keyboard and screen reader users start there. Compared to
+  // the previous path, not "first render": StrictMode runs this effect twice on mount.
+  const previousPath = useRef(location.pathname)
+  useEffect(() => {
+    if (previousPath.current === location.pathname) return
+    previousPath.current = location.pathname
+    document.getElementById('main')?.focus({ preventScroll: true })
+  }, [location.pathname])
+
   return (
     <div className="min-h-dvh">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:border focus:border-line focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-pop"
+      >
+        {t('skipToContent')}
+      </a>
       {/* Simulator marker: always visible, never dismissible. */}
       <div className="hatch-sim fixed inset-x-0 top-0 z-40 h-[3px]" aria-hidden="true" />
 
@@ -50,7 +66,11 @@ export function AppLayout() {
 
       <div className="pt-[3px] lg:pl-60">
         <Topbar onOpenNav={() => setNavOpen(true)} onOpenSearch={() => setSearchOpen(true)} />
-        <main className="mx-auto max-w-6xl px-4 py-6 lg:px-8 lg:py-8">
+        <main
+          id="main"
+          tabIndex={-1}
+          className="mx-auto max-w-6xl px-4 py-6 focus:outline-none lg:px-8 lg:py-8"
+        >
           {suspended && (
             <Callout tone="danger" className="mb-5">
               {t('suspended')}

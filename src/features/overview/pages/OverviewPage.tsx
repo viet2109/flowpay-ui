@@ -237,7 +237,7 @@ function DistributionBar<S extends string>({
           <li key={s}>
             <Link to={hrefFor(s)} className="group flex items-center justify-between gap-2 text-sm">
               <span className="flex items-center gap-2 text-ink-2 group-hover:text-ink">
-                <span className={cn('size-2 rounded-[2px]', BAR_TONE[meta[s].tone])} />
+                <span className={cn('size-2 rounded-full', BAR_TONE[meta[s].tone])} />
                 {tStatus(meta[s].label)}
               </span>
               <span className="num text-ink">{fmt.number(counts[s])}</span>

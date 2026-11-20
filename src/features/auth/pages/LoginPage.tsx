@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { Callout } from '@/components/callout'
+import { useDocumentTitle } from '@/components/document-title'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -28,6 +29,7 @@ interface LoginState {
 
 export function LoginPage() {
   const { t } = useTranslation('auth')
+  useDocumentTitle(t('login.title'))
   const errorMessage = useErrorMessage()
   const fieldError = useFieldError()
   const navigate = useNavigate()

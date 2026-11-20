@@ -34,7 +34,7 @@ export function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onO
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-line bg-canvas/85 px-4 backdrop-blur-sm lg:px-6">
+    <header className="sticky top-0 z-30 flex h-12 items-center gap-1.5 border-b border-line bg-canvas/85 px-4 backdrop-blur-sm lg:px-6">
       <Button
         variant="ghost"
         size="icon"
@@ -45,23 +45,25 @@ export function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onO
         <ListIcon />
       </Button>
 
+      {/* Phones get an icon button (the label stays for screen readers); the shortcut needs a keyboard. */}
       <button
         type="button"
         onClick={onOpenSearch}
-        className="flex h-8 w-full max-w-72 items-center gap-2 rounded-md border border-line bg-surface px-2.5 text-sm text-ink-3 hover:border-line-strong"
+        className="flex size-8 shrink-0 items-center justify-center gap-2 rounded-md border border-line bg-surface text-sm text-ink-3 hover:border-line-strong sm:h-8 sm:w-full sm:max-w-72 sm:justify-start sm:px-2.5"
       >
         <MagnifyingGlassIcon className="size-4" />
-        <span className="flex-1 text-left">{t('topbar.jumpTo')}</span>
-        <Kbd>{isMac ? '⌘' : 'Ctrl'}</Kbd>
-        <Kbd>K</Kbd>
+        <span className="sr-only flex-1 text-left sm:not-sr-only">{t('topbar.jumpTo')}</span>
+        <Kbd className="hidden sm:inline-flex">{isMac ? '⌘' : 'Ctrl'}</Kbd>
+        <Kbd className="hidden sm:inline-flex">K</Kbd>
       </button>
 
-      <div className="ml-auto flex items-center gap-1.5">
+      <div className="ml-auto flex items-center gap-1 sm:gap-1.5">
         <Tooltip
           content={testKey ? t('topbar.testModeKey', { key: keyPrefix(testKey) }) : t('topbar.testModeNoKey')}
         >
-          <span className="hidden items-center gap-1.5 rounded-sm border border-sim/50 bg-sim/10 px-2 py-0.5 text-xs font-medium text-sim-ink sm:inline-flex">
-            <span className="hatch-sim size-2 rounded-[2px]" />
+          {/* Always visible, phones included: nothing here is real money. */}
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-sm border border-sim/50 bg-sim/10 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-sim-ink">
+            <span className="hatch-sim size-2 rounded-full" />
             {t('topbar.testMode')}
           </span>
         </Tooltip>

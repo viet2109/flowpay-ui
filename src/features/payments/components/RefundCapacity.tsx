@@ -69,7 +69,7 @@ function Legend({
   return (
     <div>
       <dt className="flex items-center gap-1.5 text-xs text-ink-3">
-        <span className={cn('size-2 rounded-[2px]', dot, muted && 'opacity-40')} />
+        <span className={cn('size-2 rounded-full', dot, muted && 'opacity-40')} />
         {label}
       </dt>
       <dd className={cn('mt-0.5 font-medium', muted && 'font-normal text-ink-3')}>{value}</dd>

@@ -1,5 +1,6 @@
 /** App frame: sidebar, topbar, command menu, error pages, sign-in frame. */
 export const shell = {
+  skipToContent: 'Skip to content',
   nav: {
     main: 'Main',
     overview: 'Overview',

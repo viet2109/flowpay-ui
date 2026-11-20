@@ -4,6 +4,7 @@ import { useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router'
 import { Callout } from '@/components/callout'
+import { useDocumentTitle } from '@/components/document-title'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -18,6 +19,7 @@ const EMAIL_TAKEN = vmsg('emailTaken')
 
 export function RegisterPage() {
   const { t } = useTranslation('auth')
+  useDocumentTitle(t('register.title'))
   const familyNameFirst = useLanguage() === 'vi'
   const errorMessage = useErrorMessage()
   const fieldError = useFieldError()

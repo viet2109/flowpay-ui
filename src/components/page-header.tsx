@@ -2,6 +2,7 @@ import { ArrowLeftIcon } from '@phosphor-icons/react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { cn } from '@/lib/cn'
+import { useDocumentTitle } from './document-title'
 
 interface PageHeaderProps {
   title: ReactNode
@@ -14,6 +15,7 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ title, description, actions, back, children, className }: PageHeaderProps) {
+  useDocumentTitle(typeof title === 'string' ? title : undefined)
   return (
     <header className={cn('mb-5 space-y-4', className)}>
       {back && (

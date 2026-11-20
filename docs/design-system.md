@@ -287,6 +287,12 @@ Every data view handles all of these:
   `invisible`), so it never loses its accessible name.
 - Scrollable code (`CodeBlock`) is focusable so keyboard users can scroll it.
 - Menus are non-modal (a menu is not a dialog); dialogs and sheets trap focus.
+- "Skip to content" is the first Tab stop on every dashboard page. After a page
+  change (not a filter change), focus moves to the new content (`<main id="main">`).
+- Every page sets the tab title: `PageHeader` does it from its title
+  ("Payments · FlowPay"); pages without one call `useDocumentTitle`.
+- On phones the simulator chip stays visible; the search becomes an icon button
+  whose label remains for screen readers, and the shortcut keys are hidden.
 
 ### Keyboard map
 
