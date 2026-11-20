@@ -1,34 +1,40 @@
-import { useTranslation } from 'react-i18next'
 import {
   ArrowRightIcon,
+  ClockCounterClockwiseIcon,
   GearSixIcon,
   KeyIcon,
   MoonIcon,
   PaperPlaneTiltIcon,
   ReceiptIcon,
   SquaresFourIcon,
+  TranslateIcon,
   WebhooksLogoIcon,
   type Icon,
 } from '@phosphor-icons/react'
 import { Command } from 'cmdk'
 import type { ParseKeys } from 'i18next'
 import { Dialog as DialogPrimitive } from 'radix-ui'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
+import { LANGUAGE_NAMES, setLanguage, useFormat, useLanguage } from '@/i18n'
+import { useRecentItems, type RecentItem } from '@/lib/recent-items'
 import { useTheme } from '@/lib/theme'
+import { commandFilter, parseId, type IdTarget } from './command-search'
 
 interface Entry {
   label: string
   icon: Icon
   run: () => void
+  /** English and translated synonyms, so either language finds the entry. */
   keywords?: string[]
 }
 
-/** IDs carry their type in the prefix, so pasting one is enough to jump to it. */
-const ID_ROUTES: { prefix: string; label: ParseKeys<'shell'>; to: (id: string) => string }[] = [
-  { prefix: 'pi_', label: 'command.openPayment', to: (id) => `/payments/${id}` },
-  { prefix: 'wep_', label: 'command.openEndpoint', to: (id) => `/developers/webhooks/${id}` },
-]
+const ID_LABEL: Record<IdTarget['kind'], ParseKeys<'shell'>> = {
+  payment: 'command.openPayment',
+  endpoint: 'command.openEndpoint',
+  delivery: 'command.openDelivery',
+}
 
 export function CommandMenu({
   open,
@@ -38,8 +44,12 @@ export function CommandMenu({
   onOpenChange: (open: boolean) => void
 }) {
   const { t } = useTranslation('shell')
+  const fmt = useFormat()
   const navigate = useNavigate()
   const toggleTheme = useTheme((s) => s.toggle)
+  const language = useLanguage()
+  const otherLanguage = language === 'vi' ? 'en' : 'vi'
+  const recent = useRecentItems((s) => s.items)
   const [search, setSearch] = useState('')
 
   const go = (fn: () => void) => () => {
@@ -47,48 +57,63 @@ export function CommandMenu({
     onOpenChange(false)
     setSearch('')
   }
+  /** Synonyms in this language plus the English ones, so either language finds the entry. */
+  const words = (key: ParseKeys<'shell'>) => [
+    ...new Set([...t(key).split(' '), ...t(key, { lng: 'en' }).split(' ')]),
+  ]
 
   const pages: Entry[] = [
-    { label: t('nav.overview'), icon: SquaresFourIcon, run: () => navigate('/') },
+    {
+      label: t('nav.overview'),
+      icon: SquaresFourIcon,
+      run: () => navigate('/'),
+      keywords: words('command.keywords.overview'),
+    },
     {
       label: t('nav.payments'),
       icon: ReceiptIcon,
       run: () => navigate('/payments'),
-      keywords: ['refunds', 'transactions'],
+      keywords: words('command.keywords.payments'),
     },
     {
       label: t('command.failedPayments'),
       icon: ReceiptIcon,
       run: () => navigate('/payments?status=FAILED'),
-      keywords: ['declined'],
+      keywords: words('command.keywords.failedPayments'),
     },
     {
       label: t('nav.apiKeys'),
       icon: KeyIcon,
       run: () => navigate('/developers/api-keys'),
-      keywords: ['secret', 'token'],
+      keywords: words('command.keywords.apiKeys'),
     },
     {
       label: t('command.webhookEndpoints'),
       icon: WebhooksLogoIcon,
       run: () => navigate('/developers/webhooks'),
+      keywords: words('command.keywords.webhooks'),
     },
     {
       label: t('command.deadDeliveries'),
       icon: PaperPlaneTiltIcon,
       run: () => navigate('/developers/webhooks/deliveries?status=DEAD'),
-      keywords: ['retry', 'failed'],
+      keywords: words('command.keywords.deadDeliveries'),
     },
     {
       label: t('nav.settings'),
       icon: GearSixIcon,
       run: () => navigate('/settings'),
-      keywords: ['profile', 'business'],
+      keywords: words('command.keywords.settings'),
     },
   ]
 
-  const trimmed = search.trim()
-  const idMatch = ID_ROUTES.find((r) => trimmed.startsWith(r.prefix) && trimmed.length > r.prefix.length + 3)
+  const idTarget = parseId(search)
+  const recentLabel = (item: RecentItem) =>
+    item.kind === 'payment'
+      ? `${item.orderId ?? item.id} · ${fmt.moneyWithCode(item.amount, item.currency)}`
+      : item.url.replace(/^https?:\/\//, '')
+  const recentPath = (item: RecentItem) =>
+    item.kind === 'payment' ? `/payments/${item.id}` : `/developers/webhooks/${item.id}`
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -101,6 +126,7 @@ export function CommandMenu({
           </DialogPrimitive.Description>
           <Command
             loop
+            filter={commandFilter}
             className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-ink-3"
           >
             <Command.Input
@@ -109,19 +135,34 @@ export function CommandMenu({
               placeholder={t('command.placeholder')}
               className="h-11 w-full border-b border-line bg-transparent px-4 text-sm outline-none placeholder:text-ink-3"
             />
-            <Command.List className="max-h-80 overflow-y-auto p-1.5">
+            <Command.List label={t('command.suggestions')} className="max-h-80 overflow-y-auto p-1.5">
               <Command.Empty className="px-3 py-6 text-center text-sm text-ink-3">
                 {t('command.empty')}
               </Command.Empty>
-              {idMatch && (
+              {idTarget && (
                 <Command.Group heading={t('command.jumpTo')}>
-                  <Item
-                    value={`id ${trimmed}`}
-                    icon={ArrowRightIcon}
-                    onSelect={go(() => navigate(idMatch.to(trimmed)))}
-                  >
-                    {t(idMatch.label)} <span className="font-mono text-xs text-ink-3">{trimmed}</span>
+                  {/* The value is the search itself, so the filter always keeps this item. */}
+                  <Item value={search} icon={ArrowRightIcon} onSelect={go(() => navigate(idTarget.to))}>
+                    {t(ID_LABEL[idTarget.kind])}{' '}
+                    <span className="font-mono text-xs text-ink-3">{idTarget.id}</span>
                   </Item>
+                </Command.Group>
+              )}
+              {recent.length > 0 && (
+                <Command.Group heading={t('command.recent')}>
+                  {recent.map((item) => (
+                    <Item
+                      key={item.id}
+                      value={`${recentLabel(item)} ${item.id}`}
+                      icon={item.kind === 'payment' ? ReceiptIcon : WebhooksLogoIcon}
+                      onSelect={go(() => navigate(recentPath(item)))}
+                    >
+                      <span className="flex min-w-0 flex-1 items-center justify-between gap-3">
+                        <span className="num truncate">{recentLabel(item)}</span>
+                        <ClockCounterClockwiseIcon className="size-3.5 shrink-0 text-ink-3" />
+                      </span>
+                    </Item>
+                  ))}
                 </Command.Group>
               )}
               <Command.Group heading={t('command.pages')}>
@@ -140,11 +181,19 @@ export function CommandMenu({
               <Command.Group heading={t('command.preferences')}>
                 <Item
                   value={t('command.toggleDarkMode')}
-                  keywords={['theme', 'light']}
+                  keywords={words('command.keywords.theme')}
                   icon={MoonIcon}
                   onSelect={go(toggleTheme)}
                 >
                   {t('command.toggleDarkMode')}
+                </Item>
+                <Item
+                  value={t('language.switchTo', { name: LANGUAGE_NAMES[otherLanguage] })}
+                  keywords={words('command.keywords.language')}
+                  icon={TranslateIcon}
+                  onSelect={go(() => void setLanguage(otherLanguage))}
+                >
+                  {t('language.switchTo', { name: LANGUAGE_NAMES[otherLanguage] })}
                 </Item>
               </Command.Group>
             </Command.List>
@@ -166,7 +215,7 @@ function Item({
   keywords?: string[]
   icon: Icon
   onSelect: () => void
-  children: React.ReactNode
+  children: ReactNode
 }) {
   return (
     <Command.Item
@@ -175,7 +224,7 @@ function Item({
       onSelect={onSelect}
       className="flex h-9 cursor-default items-center gap-2.5 rounded-md px-2.5 text-sm text-ink-2 data-[selected=true]:bg-surface-hover data-[selected=true]:text-ink"
     >
-      <IconCmp className="size-4 text-ink-3" />
+      <IconCmp className="size-4 shrink-0 text-ink-3" />
       {children}
     </Command.Item>
   )

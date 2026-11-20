@@ -1,20 +1,25 @@
 import { useTranslation } from 'react-i18next'
 import { Dialog as DialogPrimitive } from 'radix-ui'
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
 import { Callout } from '@/components/callout'
 import { useMerchant } from '@/features/merchant'
 import { isApiError } from '@/lib/api/errors'
 import { useTheme } from '@/lib/theme'
-import { CommandMenu } from '../CommandMenu'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
+
+// Loaded on first open: cmdk and the menu's copy stay out of every first visit.
+const CommandMenu = lazy(() => import('../CommandMenu').then((m) => ({ default: m.CommandMenu })))
 
 export function AppLayout() {
   const { t } = useTranslation('shell')
   const [navOpen, setNavOpen] = useState(false)
   const suspended = isApiError(useMerchant().error, 'MERCHANT_SUSPENDED')
   const [searchOpen, setSearchOpen] = useState(false)
+  // Stays mounted after the first open so closing can animate.
+  const [searchUsed, setSearchUsed] = useState(false)
+  if (searchOpen && !searchUsed) setSearchUsed(true)
   const location = useLocation()
   useGlobalShortcuts(() => setSearchOpen((o) => !o))
 
@@ -80,7 +85,11 @@ export function AppLayout() {
         </main>
       </div>
 
-      <CommandMenu open={searchOpen} onOpenChange={setSearchOpen} />
+      {searchUsed && (
+        <Suspense fallback={null}>
+          <CommandMenu open={searchOpen} onOpenChange={setSearchOpen} />
+        </Suspense>
+      )}
     </div>
   )
 }

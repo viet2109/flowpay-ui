@@ -296,16 +296,16 @@ Every data view handles all of these:
 
 ### Keyboard map
 
-| Keys         | Where                                         | Does                                                   |
-| ------------ | --------------------------------------------- | ------------------------------------------------------ |
-| ⌘K / Ctrl+K  | Anywhere when signed in                       | Open the command menu (pages, pasted `pi_`/`wep_` IDs) |
-| ⇧D           | Anywhere, except while typing in a field      | Toggle light / dark                                    |
-| Tab / ⇧Tab   | Everywhere                                    | Move focus; the accent ring shows where                |
-| Enter        | Table rows (payments, refunds, deliveries)    | Open the record                                        |
-| Esc          | Dialog, sheet, menu, command menu             | Close; focus returns to what opened it                 |
-| ↑ / ↓, Enter | Menus, command menu                           | Move the highlight, run the item                       |
-| ← / →, Space | Segmented controls (filters, theme, language) | Move between options, select                           |
-| Space        | Checkbox                                      | Toggle                                                 |
+| Keys         | Where                                         | Does                                                      |
+| ------------ | --------------------------------------------- | --------------------------------------------------------- |
+| ⌘K / Ctrl+K  | Anywhere when signed in                       | Open the command menu (pages, recent records, pasted IDs) |
+| ⇧D           | Anywhere, except while typing in a field      | Toggle light / dark                                       |
+| Tab / ⇧Tab   | Everywhere                                    | Move focus; the accent ring shows where                   |
+| Enter        | Table rows (payments, refunds, deliveries)    | Open the record                                           |
+| Esc          | Dialog, sheet, menu, command menu             | Close; focus returns to what opened it                    |
+| ↑ / ↓, Enter | Menus, command menu                           | Move the highlight, run the item                          |
+| ← / →, Space | Segmented controls (filters, theme, language) | Move between options, select                              |
+| Space        | Checkbox                                      | Toggle                                                    |
 
 ### Automated check
 

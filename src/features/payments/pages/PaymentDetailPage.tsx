@@ -1,5 +1,5 @@
 import { ArrowCounterClockwiseIcon, LightningIcon } from '@phosphor-icons/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router'
 import { toast } from 'sonner'
 import { Callout } from '@/components/callout'
@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RequireTestKey } from '@/features/test-mode'
 import { useIdempotencyKey } from '@/lib/idempotency'
 import { useErrorMessage, useFormat } from '@/i18n'
+import { useRecentItems } from '@/lib/recent-items'
 import { AttemptsList } from '../components/AttemptsList'
 import { LifecycleRail } from '../components/LifecycleRail'
 import { MerchantApiError } from '../components/MerchantApiError'
@@ -38,6 +39,18 @@ function PaymentDetail({ id }: { id: string }) {
   const errorMessage = useErrorMessage()
   const fmt = useFormat()
   const { data: payment, isPending, error, refetch } = usePayment(id)
+  // Offered again in the command menu's "Recent".
+  const remember = useRecentItems((s) => s.remember)
+  useEffect(() => {
+    if (payment)
+      remember({
+        kind: 'payment',
+        id: payment.id,
+        orderId: payment.orderId,
+        amount: payment.amount,
+        currency: payment.currency,
+      })
+  }, [payment, remember])
   const { data: attempts } = usePaymentTransactions(id)
   const [refunding, setRefunding] = useState(false)
   const confirm = useConfirmPayment(id)

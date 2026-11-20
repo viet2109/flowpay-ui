@@ -1,6 +1,7 @@
 import { refreshSession, sessionSnapshot, useSession } from '@/features/auth'
 import { testKeySnapshot, useTestKey } from '@/features/test-mode'
 import { configureHttp } from '@/lib/api/http'
+import { useRecentItems } from '@/lib/recent-items'
 import { queryClient } from './query-client'
 
 /** Wires the framework-free HTTP client to the app's stores. Called once from main.tsx. */
@@ -22,6 +23,7 @@ export function watchSessionEnd() {
   return useSession.subscribe((state, previous) => {
     if (previous.status === 'authenticated' && state.status !== 'authenticated') {
       useTestKey.getState().disconnect()
+      useRecentItems.getState().clear()
       queryClient.clear()
     }
   })

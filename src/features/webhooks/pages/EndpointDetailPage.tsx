@@ -1,5 +1,5 @@
 import { ArrowsClockwiseIcon, DotsThreeIcon, PencilSimpleIcon, ProhibitIcon } from '@phosphor-icons/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router'
 import { toast } from 'sonner'
 import { Callout } from '@/components/callout'
@@ -17,6 +17,7 @@ import { Panel, PanelHeader } from '@/components/ui/panel'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/cn'
 import { useErrorMessage, useFormat } from '@/i18n'
+import { useRecentItems } from '@/lib/recent-items'
 import { endpointStatus, EVENT_INFO } from '../catalog'
 import { DeliveriesView } from '../components/DeliveriesView'
 import { EndpointFormDialog } from '../components/EndpointFormDialog'
@@ -30,6 +31,11 @@ export function EndpointDetailPage() {
   const fmt = useFormat()
   const { endpointId = '' } = useParams()
   const { data: endpoint, isPending, error, refetch } = useEndpoint(endpointId)
+  // Offered again in the command menu's "Recent".
+  const remember = useRecentItems((s) => s.remember)
+  useEffect(() => {
+    if (endpoint) remember({ kind: 'endpoint', id: endpoint.id, url: endpoint.url })
+  }, [endpoint, remember])
   const [editing, setEditing] = useState(false)
   const [confirm, setConfirm] = useState<'rotate' | 'disable' | null>(null)
   const [newSecret, setNewSecret] = useState<string | null>(null)

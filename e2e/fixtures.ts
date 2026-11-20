@@ -14,6 +14,8 @@ export const STORAGE = {
   lastEmail: 'flowpay.lastEmail',
   /** features/test-mode/store.ts — zustand persist, sessionStorage. */
   testKey: 'flowpay.testKey',
+  /** i18n/index.ts — chosen UI language. */
+  language: 'flowpay.language',
 } as const
 
 export function seeded(): SeedResult {

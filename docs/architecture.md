@@ -82,11 +82,12 @@ dashboard therefore must be served **from the same origin** as `/api`:
 
 ### Authentication
 
-| Piece                            | Where it lives                                      |
-| -------------------------------- | --------------------------------------------------- |
-| Access token (15 min JWT)        | Memory only (`features/auth/session-store.ts`)      |
-| Refresh token (7 days, rotating) | `HttpOnly` cookie managed by the browser            |
-| Display email                    | `localStorage` (only the login response carries it) |
+| Piece                            | Where it lives                                          |
+| -------------------------------- | ------------------------------------------------------- |
+| Access token (15 min JWT)        | Memory only (`features/auth/session-store.ts`)          |
+| Refresh token (7 days, rotating) | `HttpOnly` cookie managed by the browser                |
+| Display email                    | `localStorage` (only the login response carries it)     |
+| Recently opened records          | `localStorage` `flowpay.recent` (`lib/recent-items.ts`) |
 
 Startup: `main.tsx` calls `restoreSession()` once (outside React, so StrictMode
 can't double-refresh). Guards show a splash while `status === 'checking'`.
@@ -108,11 +109,25 @@ Several tabs share the refresh cookie (`features/auth/session.ts`):
   fires per cycle; signing in in one tab opens the dashboard in the others) and
   sign-outs (every tab signs out). Tokens are never persisted.
 - Whenever a session ends, `watchSessionEnd` (`app/http-setup.ts`) clears the
-  query cache and the connected test key.
+  query cache, the connected test key and the recently opened records.
 - After sign-in, the person returns to the page that sent them there (`from`);
   `GuestOnly` and `LoginPage` must agree on it, as both redirect at that moment.
 - A suspended merchant (`MERCHANT_SUSPENDED` on dashboard APIs) is explained once,
   in a banner above every page.
+
+### Command menu
+
+`app/CommandMenu.tsx` (⌘K / Ctrl+K) loads on first open, so cmdk stays out of
+the first visit. It offers:
+
+- **Jump to**: a pasted public ID (`pi_`, `wep_`, `wdl_` + ULID, either case)
+  opens its page (`app/command-search.ts` `parseId`).
+- **Recent**: the last five payments and endpoints opened on their detail pages.
+  Only raw fields are stored; labels are formatted when shown, so they follow
+  the UI language.
+- **Pages** and **Preferences**, matched without diacritics ("cai dat" finds
+  "Cài đặt") against the label and synonyms in both languages
+  (`shell` `command.keywords`).
 
 ### Why a "test key" for payments
 

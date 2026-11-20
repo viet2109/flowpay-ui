@@ -37,6 +37,19 @@ const TARGETS: ShotTarget[] = [
       await expect(page.getByRole('radio', { name: 'Tiếng Việt' })).toBeVisible()
     },
   },
+  {
+    name: 'command-menu',
+    path: '/',
+    auth: true,
+    fullPage: false,
+    // Opens a payment first so "Recent" has a real entry.
+    ready: async (page) => {
+      await page.getByText('ORD-1012').first().click()
+      await expect(page).toHaveURL(/\/payments\/pi_/)
+      await page.keyboard.press('Control+K')
+      await expect(page.getByRole('dialog').getByRole('option').first()).toBeVisible()
+    },
+  },
   ...galleryTargets(),
 ]
 
