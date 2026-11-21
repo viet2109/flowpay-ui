@@ -51,12 +51,12 @@ export const webhooks: Messages<typeof en> = {
     payment: {
       processing: 'Đã gửi tới nhà cung cấp; chưa biết kết quả.',
       succeeded: 'Nhà cung cấp đã xác nhận khoản thanh toán.',
-      failed: 'Nhà cung cấp đã từ chối khoản thanh toán.',
+      failed: 'Nhà cung cấp từ chối hoặc không xử lý được khoản thanh toán.',
     },
     refund: {
       processing: 'Chưa biết kết quả hoàn tiền.',
       succeeded: 'Tiền đã được trả lại cho khách.',
-      failed: 'Nhà cung cấp đã từ chối hoàn tiền.',
+      failed: 'Nhà cung cấp từ chối hoặc không xử lý được yêu cầu hoàn tiền.',
     },
   },
   detail: {

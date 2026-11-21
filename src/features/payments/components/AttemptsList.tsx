@@ -1,25 +1,25 @@
+import { useTranslation } from 'react-i18next'
 import { CopyableId } from '@/components/copyable-id'
 import { ErrorState } from '@/components/states'
 import { StatusBadge } from '@/components/status-badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useFormat } from '@/i18n'
+import { cn } from '@/lib/cn'
 import { usePaymentTransactions } from '../queries'
 import { transactionStatus } from '../status'
 
-/** Provider attempts (PaymentTransaction). One payment may have several. */
-export function AttemptsList({ paymentId }: { paymentId: string }) {
+/**
+ * Provider attempts (PaymentTransaction), oldest first. One payment may have
+ * several. `version` (the payment's updatedAt) reads them again when it changes.
+ */
+export function AttemptsList({ paymentId, version }: { paymentId: string; version?: string }) {
+  const { t } = useTranslation('payments')
   const fmt = useFormat()
-  const { data, isPending, error, refetch } = usePaymentTransactions(paymentId)
+  const { data, isPending, error, refetch } = usePaymentTransactions(paymentId, version)
 
   if (isPending) return <Skeleton className="m-4 h-12" />
   if (error) return <ErrorState error={error} onRetry={refetch} />
-  if (data.length === 0) {
-    return (
-      <p className="px-4 py-6 text-sm text-ink-3">
-        Not sent to a provider yet. Confirm the payment to start an attempt.
-      </p>
-    )
-  }
+  if (data.length === 0) return <p className="px-4 py-6 text-sm text-ink-3">{t('detail.noAttempts')}</p>
 
   return (
     <ol className="divide-y divide-line">
@@ -37,7 +37,15 @@ export function AttemptsList({ paymentId }: { paymentId: string }) {
               </div>
               {txn.failureCode && (
                 <p className="text-sm">
-                  <span className="font-mono text-xs text-danger">{txn.failureCode}</span>
+                  {/* An unknown outcome is not a failure: it is shown as a warning. */}
+                  <span
+                    className={cn(
+                      'font-mono text-xs',
+                      txn.status === 'UNKNOWN' ? 'text-warning' : 'text-danger',
+                    )}
+                  >
+                    {txn.failureCode}
+                  </span>
                   {txn.failureMessage && <span className="text-ink-2"> · {txn.failureMessage}</span>}
                 </p>
               )}
@@ -48,7 +56,7 @@ export function AttemptsList({ paymentId }: { paymentId: string }) {
             </div>
             <div className="num text-right text-xs text-ink-3">
               <div>{fmt.dateTime(txn.startedAt)}</div>
-              <div>{txn.completedAt ? fmt.duration(duration) : 'no response'}</div>
+              <div>{txn.completedAt ? fmt.duration(duration) : t('detail.noResponse')}</div>
             </div>
           </li>
         )

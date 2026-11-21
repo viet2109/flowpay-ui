@@ -12,7 +12,8 @@ export const status = {
     PENDING: 'Pending',
     PROCESSING: 'Processing',
     SUCCEEDED: 'Succeeded',
-    FAILED: 'Declined',
+    // Declined or a technical failure: the failure code says which.
+    FAILED: 'Failed',
     UNKNOWN: 'Outcome unknown',
   },
   refund: {

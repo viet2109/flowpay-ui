@@ -5,6 +5,7 @@ import {
   type CreatePaymentInput,
   type CreateRefundInput,
   type PaymentFilters,
+  type PaymentIntent,
 } from './types'
 
 /**
@@ -15,7 +16,9 @@ export const paymentKeys = {
   all: ['payments'] as const,
   list: (filters: PaymentFilters) => [...paymentKeys.all, 'list', filters] as const,
   detail: (id: string) => [...paymentKeys.all, 'detail', id] as const,
-  transactions: (id: string) => [...paymentKeys.detail(id), 'transactions'] as const,
+  /** `version`: the payment's updatedAt, so attempts are read again whenever the payment changes. */
+  transactions: (id: string, version?: string) =>
+    [...paymentKeys.detail(id), 'transactions', version] as const,
   refunds: (id: string, page: number) => [...paymentKeys.detail(id), 'refunds', page] as const,
   refund: (refundId: string) => [...paymentKeys.all, 'refund', refundId] as const,
   statusCount: (status: string) => [...paymentKeys.all, 'count', status] as const,
@@ -29,19 +32,51 @@ export function usePayments(filters: PaymentFilters) {
   })
 }
 
-export function usePayment(id: string) {
-  return useQuery({
-    queryKey: paymentKeys.detail(id),
-    queryFn: ({ signal }) => paymentsApi.get(id, signal),
-    // A PROCESSING payment may still change; poll gently while someone is looking at it.
-    refetchInterval: (query) => (query.state.data?.status === 'PROCESSING' ? 5_000 : false),
-  })
+/**
+ * How long to wait before reading a PROCESSING payment again, by how long it has
+ * been PROCESSING (its updatedAt, set by the server when it entered that state, to
+ * the moment of the last read). Quick at first, since a confirmation in flight
+ * settles within seconds; slower after; none after two minutes. The backend has no
+ * reconciliation: a payment whose provider outcome is UNKNOWN stays
+ * PROCESSING, so polling forever would only cost requests.
+ */
+export const POLL_WINDOW_MS = 120_000
+
+export function pollDelay(processingForMs: number): number | false {
+  const elapsed = Math.max(0, processingForMs)
+  if (elapsed >= POLL_WINDOW_MS) return false
+  if (elapsed < 10_000) return 2_000
+  if (elapsed < 30_000) return 5_000
+  return 15_000
 }
 
-export function usePaymentTransactions(id: string) {
+const processingFor = (payment: PaymentIntent, readAt: number) => readAt - Date.parse(payment.updatedAt)
+
+export function usePayment(id: string) {
+  const query = useQuery({
+    queryKey: paymentKeys.detail(id),
+    queryFn: ({ signal }) => paymentsApi.get(id, signal),
+    refetchInterval: (q) => {
+      const payment = q.state.data
+      return payment?.status === 'PROCESSING'
+        ? pollDelay(processingFor(payment, q.state.dataUpdatedAt))
+        : false
+    },
+  })
+  const { data, dataUpdatedAt } = query
+  return {
+    ...query,
+    /** Still PROCESSING and no longer read automatically; a manual refetch reads once more. */
+    pollingStopped: data?.status === 'PROCESSING' && pollDelay(processingFor(data, dataUpdatedAt)) === false,
+  }
+}
+
+export function usePaymentTransactions(id: string, version?: string) {
   return useQuery({
-    queryKey: paymentKeys.transactions(id),
+    queryKey: paymentKeys.transactions(id, version),
     queryFn: ({ signal }) => paymentsApi.transactions(id, signal),
+    // Moving to the next version keeps the current list on screen until the new one arrives.
+    placeholderData: keepPreviousData,
   })
 }
 

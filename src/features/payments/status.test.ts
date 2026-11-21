@@ -37,3 +37,17 @@ describe('status maps', () => {
     expect(paymentStatus.PROCESSING.tone).not.toBe('danger')
   })
 })
+
+describe('pollDelay', () => {
+  it('reads quickly at first, then slower, then stops after two minutes', async () => {
+    const { pollDelay, POLL_WINDOW_MS } = await import('./queries')
+    expect(pollDelay(0)).toBe(2_000)
+    expect(pollDelay(9_999)).toBe(2_000)
+    expect(pollDelay(10_000)).toBe(5_000)
+    expect(pollDelay(30_000)).toBe(15_000)
+    expect(pollDelay(POLL_WINDOW_MS - 1)).toBe(15_000)
+    expect(pollDelay(POLL_WINDOW_MS)).toBe(false)
+    // A server clock slightly ahead counts as just started.
+    expect(pollDelay(-500)).toBe(2_000)
+  })
+})

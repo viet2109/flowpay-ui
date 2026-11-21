@@ -40,7 +40,7 @@ function PaymentDetail({ id }: { id: string }) {
   const { t } = useTranslation('payments')
   const errorMessage = useErrorMessage()
   const fmt = useFormat()
-  const { data: payment, isPending, error, refetch } = usePayment(id)
+  const { data: payment, isPending, isFetching, error, refetch, pollingStopped } = usePayment(id)
   // Offered again in the command menu's "Recent".
   const remember = useRecentItems((s) => s.remember)
   useEffect(() => {
@@ -53,7 +53,7 @@ function PaymentDetail({ id }: { id: string }) {
         currency: payment.currency,
       })
   }, [payment, remember])
-  const { data: attempts } = usePaymentTransactions(id)
+  const { data: attempts } = usePaymentTransactions(id, payment?.updatedAt)
   // Page 0 is what the refunds panel shows too (same query), so this costs nothing extra.
   const { data: refunds } = usePaymentRefunds(id, 0)
   const [refunding, setRefunding] = useState(false)
@@ -133,15 +133,31 @@ function PaymentDetail({ id }: { id: string }) {
               refunds && { items: refunds.items, complete: !refunds.meta.hasNext },
             )}
           />
-          {unknownOutcome && (
-            <Callout tone="warning" className="mt-5" title="Waiting for a definitive provider outcome">
-              The provider timed out ({latest.failureCode ?? 'UNKNOWN'}). FlowPay keeps the payment Processing
-              instead of guessing it failed, because the charge may have gone through. Automatic
-              reconciliation is not part of this simulator, so the status will not change on its own.
+          {unknownOutcome ? (
+            <Callout
+              tone="warning"
+              className="mt-5"
+              title={t('detail.unknownTitle')}
+              action={<RefreshButton onClick={() => void refetch()} loading={isFetching} />}
+            >
+              {t('detail.unknownBody', { code: latest.failureCode ?? 'UNKNOWN' })}
             </Callout>
+          ) : (
+            // Processing without an unknown outcome usually settles in seconds; past the
+            // polling budget, say that checking stopped instead of looking live.
+            pollingStopped && (
+              <Callout
+                tone="info"
+                className="mt-5"
+                action={<RefreshButton onClick={() => void refetch()} loading={isFetching} />}
+              >
+                {t('detail.pollingStopped')}
+              </Callout>
+            )
           )}
+          {/* A decline and a technical failure both end FAILED: the code says which. */}
           {payment.status === 'FAILED' && latest?.failureCode && (
-            <Callout tone="danger" className="mt-5" title={`Declined by ${latest.provider}`}>
+            <Callout tone="danger" className="mt-5" title={t('detail.failedTitle')}>
               <span className="font-mono text-xs">{latest.failureCode}</span>
               {latest.failureMessage && ` · ${latest.failureMessage}`}
             </Callout>
@@ -162,7 +178,7 @@ function PaymentDetail({ id }: { id: string }) {
             </Panel>
             <Panel>
               <PanelHeader title={t('detail.attempts')} description={t('detail.attemptsHint')} />
-              <AttemptsList paymentId={payment.id} />
+              <AttemptsList paymentId={payment.id} version={payment.updatedAt} />
             </Panel>
           </div>
 
@@ -219,5 +235,14 @@ function DetailSkeleton() {
         <Skeleton className="h-56 rounded-lg" />
       </div>
     </div>
+  )
+}
+
+function RefreshButton({ onClick, loading }: { onClick: () => void; loading: boolean }) {
+  const { t } = useTranslation('payments')
+  return (
+    <Button size="sm" onClick={onClick} loading={loading}>
+      {t('detail.refresh')}
+    </Button>
   )
 }

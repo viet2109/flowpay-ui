@@ -94,7 +94,7 @@ export function EndpointFormDialog({ open, onOpenChange, endpoint }: Props) {
 
   /**
    * Field violations land on their field. The backend's URL policy answers with a
-   * VALIDATION_ERROR that has no field list (finding F10); this form only sends
+   * VALIDATION_ERROR that has no field list; this form only sends
    * known, unique events and never an empty patch, so when the request carried a
    * URL, that rejection is about the URL and is shown on it.
    */

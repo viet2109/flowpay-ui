@@ -14,7 +14,7 @@ export const status: Messages<typeof en> = {
     PENDING: 'Chờ xử lý',
     PROCESSING: 'Đang xử lý',
     SUCCEEDED: 'Thành công',
-    FAILED: 'Bị từ chối',
+    FAILED: 'Thất bại',
     UNKNOWN: 'Chưa rõ kết quả',
   },
   refund: {

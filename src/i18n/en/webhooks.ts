@@ -49,12 +49,12 @@ export const webhooks = {
     payment: {
       processing: 'Sent to the provider; outcome not known yet.',
       succeeded: 'Provider confirmed the charge.',
-      failed: 'Provider declined the charge.',
+      failed: 'Provider declined the charge or could not process it.',
     },
     refund: {
       processing: 'Refund outcome not known yet.',
       succeeded: 'Money returned to the customer.',
-      failed: 'Provider rejected the refund.',
+      failed: 'Provider rejected the refund or could not process it.',
     },
   },
   detail: {
