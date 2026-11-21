@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { isApiError } from '@/lib/api/errors'
 import { cn } from '@/lib/cn'
 import { useErrorMessage } from '@/i18n'
+import { Callout } from './callout'
 import { CopyableId } from './copyable-id'
 import { Button } from './ui/button'
 
@@ -60,5 +61,25 @@ export function ErrorState({
         </Button>
       )}
     </div>
+  )
+}
+
+/**
+ * A failed action, shown where the person acted (inside its dialog) rather than
+ * in a toast, with the requestId to quote to support.
+ */
+export function ActionError({ error }: { error: unknown }) {
+  const { t } = useTranslation('common')
+  const errorMessage = useErrorMessage()
+  const requestId = isApiError(error) ? error.requestId : undefined
+  return (
+    <Callout tone="danger">
+      {errorMessage(error)}
+      {requestId && (
+        <span className="mt-1 flex items-center gap-1.5 text-xs">
+          {t('errorState.request')} <CopyableId value={requestId} truncate={false} />
+        </span>
+      )}
+    </Callout>
   )
 }

@@ -122,6 +122,17 @@ const TARGETS: Target[] = [
     },
   },
   {
+    name: 'endpoint detail',
+    path: '/developers/webhooks',
+    auth: true,
+    ready: async (p) => {
+      // The healthy seeded endpoint (scripts/seed.ts): delivered deliveries and unsubscribed events.
+      await p.getByRole('link', { name: /\/ok$/ }).click()
+      await expect(p.getByText('Subscribed events')).toBeVisible()
+      await expect(p.getByRole('table')).toBeVisible()
+    },
+  },
+  {
     name: 'deliveries',
     path: '/developers/webhooks/deliveries',
     auth: true,

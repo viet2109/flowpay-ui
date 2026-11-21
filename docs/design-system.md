@@ -222,20 +222,22 @@ feature with its status maps and own components (`PaymentsGallery`,
 | Single-choice filter         | `Segmented`                                                                                             |
 | Modal task                   | `Dialog` + `DialogContent` (title, description, footer)                                                 |
 | Inspect a record from a list | `Sheet` (right drawer); keep the list visible                                                           |
-| Irreversible confirm         | `ConfirmDialog`                                                                                         |
+| Irreversible confirm         | `ConfirmDialog`; its children state the consequence in numbers and an `ActionError` when it fails       |
 | Menus                        | `Menu`, `MenuItem tone="danger"`                                                                        |
 | Inline message               | `Callout` (info, success, warning, danger)                                                              |
 | Transient result             | `toast` from `sonner`                                                                                   |
 | Container                    | `Panel` + `PanelHeader`                                                                                 |
 | Data                         | `Table`/`Th`/`Tr interactive`/`Td`, `Pagination`, `DescriptionList`                                     |
 | Loading                      | `TableSkeleton`, `Skeleton` shaped like the content                                                     |
-| Empty / error                | `EmptyState`, `ErrorState` (shows `requestId`)                                                          |
+| Empty / error                | `EmptyState`, `ErrorState` (shows `requestId`); `ActionError` for a failed action inside its dialog     |
 
 Choosing between toast, callout and dialog:
 
 - **Toast**: the result of an action the person just took (refund succeeded).
 - **Callout**: a persistent condition of what's on screen (payment outcome unknown).
 - **Dialog**: the person must decide or must not miss it (secret reveal, confirm).
+- A failed confirmed action stays in its dialog as an `ActionError` (message and
+  `requestId`), not a toast: the person sees what failed where they acted and can retry.
 
 ## 7. Page anatomy
 

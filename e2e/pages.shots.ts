@@ -60,6 +60,28 @@ const TARGETS: ShotTarget[] = [
     },
   },
   {
+    name: 'webhook-endpoint',
+    path: '/developers/webhooks',
+    auth: true,
+    ready: async (page) => {
+      await page.getByRole('link', { name: /\/ok$/ }).click()
+      await expect(page.getByRole('table')).toBeVisible()
+    },
+  },
+  {
+    name: 'webhook-disable',
+    path: '/developers/webhooks',
+    auth: true,
+    fullPage: false,
+    // The failing seeded endpoint has retrying deliveries, so the consequence line shows. Not confirmed.
+    ready: async (page) => {
+      await page.getByRole('link', { name: /\/payments-broken$/ }).click()
+      await page.getByRole('button', { name: /^(More actions|Thao tác khác)$/ }).click()
+      await page.getByRole('menuitem', { name: /^(Disable endpoint|Tắt endpoint)$/ }).click()
+      await expect(page.getByRole('alertdialog').locator('p.num')).toBeVisible()
+    },
+  },
+  {
     name: 'command-menu',
     path: '/',
     auth: true,

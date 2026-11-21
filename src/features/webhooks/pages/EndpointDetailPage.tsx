@@ -8,7 +8,7 @@ import { CopyableId } from '@/components/copyable-id'
 import { DescriptionList } from '@/components/description-list'
 import { PageHeader } from '@/components/page-header'
 import { SecretReveal } from '@/components/secret-reveal'
-import { ErrorState } from '@/components/states'
+import { ActionError, ErrorState } from '@/components/states'
 import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -17,19 +17,18 @@ import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/compo
 import { Panel, PanelHeader } from '@/components/ui/panel'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/cn'
-import { useErrorMessage, useFormat } from '@/i18n'
+import { useFormat } from '@/i18n'
 import { useRecentItems } from '@/lib/recent-items'
 import { endpointStatus } from '../catalog'
 import { DeliveriesView } from '../components/DeliveriesView'
 import { EndpointFormDialog } from '../components/EndpointFormDialog'
 import { EndpointUrl } from '../components/EndpointUrl'
 import { SignatureGuide } from '../components/SignatureGuide'
-import { useDisableEndpoint, useEndpoint, useRotateSecret } from '../queries'
+import { useDeliveryCounts, useDisableEndpoint, useEndpoint, useRotateSecret } from '../queries'
 import { EVENT_TYPES } from '../types'
 
 export function EndpointDetailPage() {
   const { t } = useTranslation('webhooks')
-  const errorMessage = useErrorMessage()
   const fmt = useFormat()
   const { endpointId = '' } = useParams()
   const { data: endpoint, isPending, error, refetch } = useEndpoint(endpointId)
@@ -51,8 +50,13 @@ export function EndpointDetailPage() {
   const [newSecret, setNewSecret] = useState<string | null>(null)
   const rotate = useRotateSecret()
   const disable = useDisableEndpoint()
+  // What disabling cancels (backend: PENDING and RETRYING become DEAD), asked only when it is about to happen.
+  const cancellable = useDeliveryCounts(endpointId, ['PENDING', 'RETRYING'], {
+    enabled: confirm === 'disable',
+  })
+  const cancelled = cancellable.counts.PENDING + cancellable.counts.RETRYING
 
-  const back = { to: '/developers/webhooks', label: 'Webhooks' }
+  const back = { to: '/developers/webhooks', label: t('title') }
 
   if (isPending) {
     return (
@@ -66,7 +70,7 @@ export function EndpointDetailPage() {
   if (error) {
     return (
       <>
-        <PageHeader title="Endpoint" back={back} />
+        <PageHeader title={t('detail.title')} back={back} />
         <Panel>
           <ErrorState error={error} onRetry={refetch} />
         </Panel>
@@ -76,21 +80,28 @@ export function EndpointDetailPage() {
 
   const active = endpoint.status === 'ACTIVE'
 
+  // Failures stay in the open dialog (with their requestId) so the person can retry in place.
+  function closeConfirm() {
+    setConfirm(null)
+    rotate.reset()
+    disable.reset()
+  }
+
   function runRotate() {
     rotate.mutate(endpoint!.id, {
       onSuccess: (result) => {
-        setConfirm(null)
+        closeConfirm()
         setNewSecret(result.secret)
       },
-      onError: (e) => toast.error(errorMessage(e)),
     })
   }
 
   function runDisable() {
     disable.mutate(endpoint!.id, {
-      onSuccess: () => toast.success('Endpoint disabled'),
-      onError: (e) => toast.error(errorMessage(e)),
-      onSettled: () => setConfirm(null),
+      onSuccess: () => {
+        closeConfirm()
+        toast.success(t('disable.done'))
+      },
     })
   }
 
@@ -110,23 +121,23 @@ export function EndpointDetailPage() {
             <>
               <Button onClick={startEditing}>
                 <PencilSimpleIcon />
-                Edit
+                {t('detail.edit')}
               </Button>
               <Menu>
                 <MenuTrigger asChild>
-                  <Button size="icon" aria-label="More actions">
+                  <Button size="icon" aria-label={t('detail.moreActions')}>
                     <DotsThreeIcon weight="bold" />
                   </Button>
                 </MenuTrigger>
                 <MenuContent>
                   <MenuItem onSelect={() => setConfirm('rotate')}>
                     <ArrowsClockwiseIcon />
-                    Rotate signing secret
+                    {t('detail.rotate')}
                   </MenuItem>
                   <MenuSeparator />
                   <MenuItem tone="danger" onSelect={() => setConfirm('disable')}>
                     <ProhibitIcon />
-                    Disable endpoint
+                    {t('detail.disable')}
                   </MenuItem>
                 </MenuContent>
               </Menu>
@@ -136,18 +147,14 @@ export function EndpointDetailPage() {
       />
 
       {!active && (
-        <Callout tone="info" className="mb-5" title="This endpoint is disabled">
-          It no longer receives events and cannot be re-enabled. Its configuration and delivery history are
-          kept. Add a new endpoint to resume delivery.
+        <Callout tone="info" className="mb-5" title={t('detail.disabledTitle')}>
+          {t('detail.disabledBody')}
         </Callout>
       )}
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <Panel className="min-w-0">
-          <PanelHeader
-            title="Deliveries"
-            description="Newest first. Moving deliveries refresh automatically."
-          />
+          <PanelHeader title={t('detail.deliveries')} description={t('detail.deliveriesHint')} />
           <div className="p-4">
             <DeliveriesView endpointId={endpoint.id} />
           </div>
@@ -155,21 +162,24 @@ export function EndpointDetailPage() {
 
         <aside className="space-y-5">
           <Panel>
-            <PanelHeader title="Subscribed events" />
+            <PanelHeader title={t('detail.subscribed')} />
             <ul className="divide-y divide-line">
               {EVENT_TYPES.map((event) => {
                 const on = endpoint.events.includes(event)
                 return (
-                  <li key={event} className={cn('flex items-start gap-3 px-4 py-2.5', !on && 'opacity-40')}>
+                  <li key={event} className="flex items-start gap-3 px-4 py-2.5">
                     <span
                       className={cn(
                         'mt-1.5 size-1.5 shrink-0 rounded-full',
                         on ? 'bg-success' : 'bg-line-strong',
                       )}
                     />
+                    {/* Muted with tokens, not opacity, so the text keeps its contrast. */}
                     <div className="min-w-0">
-                      <div className="font-mono text-xs">{event}</div>
-                      <div className="text-xs text-ink-3">{t(`event.${event}`)}</div>
+                      <div className={cn('font-mono text-xs', on ? 'text-ink' : 'text-ink-3')}>{event}</div>
+                      <div className="text-xs text-ink-3">
+                        {on ? t(`event.${event}`) : t('detail.notSubscribed')}
+                      </div>
                     </div>
                   </li>
                 )
@@ -177,18 +187,19 @@ export function EndpointDetailPage() {
             </ul>
           </Panel>
           <Panel>
-            <PanelHeader title="Verify signatures" />
+            <PanelHeader title={t('detail.verify')} />
             <SignatureGuide />
           </Panel>
           <Panel>
-            <PanelHeader title="Details" />
+            <PanelHeader title={t('detail.details')} />
             <DescriptionList
               className="px-4 py-1"
               items={[
-                { label: 'Created', value: fmt.dateTime(endpoint.createdAt) },
-                { label: 'Updated', value: fmt.dateTime(endpoint.updatedAt) },
-                { label: 'Timeouts', value: '2 s connect · 5 s request' },
-                { label: 'Redirects', value: 'Never followed' },
+                { label: t('detail.created'), value: fmt.dateTime(endpoint.createdAt) },
+                { label: t('detail.updated'), value: fmt.dateTime(endpoint.updatedAt) },
+                // docs/api-contract.md §14: connect/request timeouts default to 2 s / 5 s; redirects never followed.
+                { label: t('detail.timeouts'), value: t('detail.timeoutsValue') },
+                { label: t('detail.redirects'), value: t('detail.redirectsValue') },
               ]}
             />
           </Panel>
@@ -199,35 +210,42 @@ export function EndpointDetailPage() {
 
       <ConfirmDialog
         open={confirm === 'rotate'}
-        onOpenChange={(o) => !o && setConfirm(null)}
+        onOpenChange={(o) => !o && closeConfirm()}
         tone="default"
-        title="Rotate signing secret?"
-        description="The old secret stops working for new attempts immediately. There is no grace period, so update your receiver right after."
-        confirmLabel="Rotate secret"
+        title={t('rotate.title')}
+        description={t('rotate.body')}
+        confirmLabel={t('rotate.confirm')}
         onConfirm={runRotate}
         loading={rotate.isPending}
-      />
+      >
+        {rotate.isError && <ActionError error={rotate.error} />}
+      </ConfirmDialog>
       <ConfirmDialog
         open={confirm === 'disable'}
-        onOpenChange={(o) => !o && setConfirm(null)}
-        title="Disable this endpoint?"
-        description="Pending and retrying deliveries are cancelled and marked dead. Disabled endpoints cannot be re-enabled."
-        confirmLabel="Disable endpoint"
+        onOpenChange={(o) => !o && closeConfirm()}
+        title={t('disable.title')}
+        description={t('disable.body')}
+        confirmLabel={t('disable.confirm')}
         onConfirm={runDisable}
         loading={disable.isPending}
-      />
+      >
+        {!cancellable.isPending && !cancellable.error && cancelled > 0 && (
+          <p className="num text-sm font-medium text-danger">{t('disable.cancels', { count: cancelled })}</p>
+        )}
+        {disable.isError && <ActionError error={disable.error} />}
+      </ConfirmDialog>
       <Dialog open={Boolean(newSecret)} onOpenChange={(o) => !o && setNewSecret(null)}>
         <DialogContent
-          title="New signing secret"
-          description="Requests from now on are signed with this secret."
+          title={t('rotate.newTitle')}
+          description={t('rotate.newBody')}
           onInteractOutside={(e) => e.preventDefault()}
           footer={
             <Button variant="primary" onClick={() => setNewSecret(null)}>
-              I’ve stored it
+              {t('form.stored')}
             </Button>
           }
         >
-          {newSecret && <SecretReveal label="Signing secret" secret={newSecret} />}
+          {newSecret && <SecretReveal label={t('form.secretLabel')} secret={newSecret} />}
         </DialogContent>
       </Dialog>
     </>

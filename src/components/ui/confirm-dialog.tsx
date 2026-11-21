@@ -12,6 +12,8 @@ interface ConfirmDialogProps {
   onConfirm: () => void
   loading?: boolean
   tone?: 'danger' | 'default'
+  /** Shown between the description and the buttons, e.g. the consequence in numbers or a failure. */
+  children?: ReactNode
 }
 
 /**
@@ -27,6 +29,7 @@ export function ConfirmDialog({
   onConfirm,
   loading,
   tone = 'danger',
+  children,
 }: ConfirmDialogProps) {
   const { t } = useTranslation('common')
   return (
@@ -38,6 +41,7 @@ export function ConfirmDialog({
           <AlertDialog.Description className="mt-1.5 text-sm text-ink-2">
             {description}
           </AlertDialog.Description>
+          {children && <div className="mt-4 space-y-3">{children}</div>}
           <div className="mt-5 flex justify-end gap-2">
             <AlertDialog.Cancel asChild>
               <Button variant="ghost" disabled={loading}>

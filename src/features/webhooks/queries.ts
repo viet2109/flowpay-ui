@@ -53,6 +53,7 @@ export function useDelivery(id: string | null) {
 export function useDeliveryCounts(
   endpointId?: string,
   statuses: readonly DeliveryStatus[] = DELIVERY_STATUSES,
+  { enabled = true }: { enabled?: boolean } = {},
 ) {
   return useQueries({
     queries: statuses.map((status) => ({
@@ -60,6 +61,7 @@ export function useDeliveryCounts(
       queryFn: ({ signal }: { signal: AbortSignal }) =>
         webhooksApi.deliveries({ status, endpointId, size: 1 }, signal),
       staleTime: 30_000,
+      enabled,
     })),
     combine: (results) => ({
       isPending: results.some((r) => r.isPending),
