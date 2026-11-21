@@ -117,22 +117,22 @@ export function usePaymentStatusCounts() {
   })
 }
 
+/** Create only; confirming is a separate step (useConfirmPayment), so a failed confirm never hides a created payment. */
 export function useCreatePayment() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (vars: { input: CreatePaymentInput; createKey: string; confirmKey?: string }) => {
-      const created = await paymentsApi.create(vars.input, vars.createKey)
-      const confirmed = vars.confirmKey ? await paymentsApi.confirm(created.data.id, vars.confirmKey) : null
-      return { created, confirmed }
-    },
+    mutationFn: (vars: { input: CreatePaymentInput; idempotencyKey: string }) =>
+      paymentsApi.create(vars.input, vars.idempotencyKey),
     onSettled: () => queryClient.invalidateQueries({ queryKey: paymentKeys.all }),
   })
 }
 
-export function useConfirmPayment(paymentId: string) {
+/** Confirm a payment. The key belongs to that payment's confirmation, not to a click. */
+export function useConfirmPayment() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (idempotencyKey: string) => paymentsApi.confirm(paymentId, idempotencyKey),
+    mutationFn: (vars: { paymentId: string; idempotencyKey: string }) =>
+      paymentsApi.confirm(vars.paymentId, vars.idempotencyKey),
     onSettled: () => queryClient.invalidateQueries({ queryKey: paymentKeys.all }),
   })
 }

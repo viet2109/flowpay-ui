@@ -27,6 +27,7 @@ import { RefundsPanel } from '../components/RefundsPanel'
 import { lifecycleTimes } from '../lifecycle'
 import { useConfirmPayment, usePayment, usePaymentRefunds, usePaymentTransactions } from '../queries'
 import { canConfirm, canRefund, paymentStatus } from '../status'
+import { useOutcomeToast } from '../use-outcome-toast'
 
 export function PaymentDetailPage() {
   const { paymentId = '' } = useParams()
@@ -57,7 +58,8 @@ function PaymentDetail({ id }: { id: string }) {
   // Page 0 is what the refunds panel shows too (same query), so this costs nothing extra.
   const { data: refunds } = usePaymentRefunds(id, 0)
   const [refunding, setRefunding] = useState(false)
-  const confirm = useConfirmPayment(id)
+  const confirm = useConfirmPayment()
+  const outcome = useOutcomeToast()
   const confirmKey = useIdempotencyKey('confirm')
   const canRun = useCanRunPayments()
 
@@ -77,16 +79,15 @@ function PaymentDetail({ id }: { id: string }) {
   const latest = attempts?.at(-1)
   const unknownOutcome = payment.status === 'PROCESSING' && latest?.status === 'UNKNOWN'
 
+  /** The key belongs to confirming this payment: a retry after a failure reuses it. */
   function runConfirm() {
-    confirm.mutate(confirmKey.keyFor(id), {
-      onSuccess: (result) => {
-        if (result.status === 202)
-          toast.warning('Provider outcome unknown', { description: 'The payment stays Processing.' })
-        else if (result.data.paymentStatus === 'SUCCEEDED') toast.success('Payment succeeded')
-        else toast.error('Payment declined', { description: result.data.failureMessage ?? undefined })
+    confirm.mutate(
+      { paymentId: id, idempotencyKey: confirmKey.keyFor(id) },
+      {
+        onSuccess: (result) => outcome.confirmed(result, payment!),
+        onError: (e) => toast.error(errorMessage(e)),
       },
-      onError: (e) => toast.error(errorMessage(e)),
-    })
+    )
   }
 
   return (

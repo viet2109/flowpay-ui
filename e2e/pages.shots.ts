@@ -46,6 +46,23 @@ const TARGETS: ShotTarget[] = [
     },
   },
   {
+    name: 'payment-create',
+    path: '/payments',
+    auth: true,
+    fullPage: false,
+    // The dialog with an amount typed, so the minor-units preview shows. Not submitted.
+    ready: async (page) => {
+      await page.getByRole('button', { name: /^(New test payment|Tạo thanh toán test)$/ }).click()
+      await page.getByRole('dialog').locator('input[inputmode=decimal]').fill('1250000')
+      await expect(
+        page
+          .getByRole('dialog')
+          .getByText(/1250000|1,250,000|1\.250\.000/)
+          .first(),
+      ).toBeVisible()
+    },
+  },
+  {
     name: 'payment',
     path: '/payments?orderId=ORD-1012',
     auth: true,
