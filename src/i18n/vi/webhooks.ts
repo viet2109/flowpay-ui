@@ -81,6 +81,18 @@ export const webhooks: Messages<typeof en> = {
     redirects: 'Chuyển hướng',
     redirectsValue: 'Không bao giờ theo',
   },
+  guide: {
+    read: 'Đọc nguyên body thô của yêu cầu và header <code>FlowPay-Signature: t=…,v1=…</code>, trước khi parse JSON.',
+    compute:
+      'Tính HMAC-SHA256 của <code>t + "." + body</code>, khoá là toàn bộ signing secret (<code>whsec_…</code>), kết quả dạng hex chữ thường.',
+    compare:
+      'So sánh với <code>v1</code> bằng phép so sánh thời gian hằng định. Từ chối yêu cầu nếu khác nhau hoặc <code>t</code> lệch quá 5 phút so với đồng hồ của bạn.',
+    respond:
+      'Trả về một mã 2xx bất kỳ, thật nhanh. Mã khác, chuyển hướng và quá thời gian chờ đều làm lượt thử thất bại, và FlowPay sẽ thử lại.',
+    dedupe:
+      'Loại trùng theo <code>FlowPay-Event-Id</code>: cùng một sự kiện có thể đến nhiều lần, và các sự kiện có thể đến không theo thứ tự.',
+    sample: 'Node.js',
+  },
   rotate: {
     title: 'Xoay signing secret?',
     body: 'Từ lần gửi tiếp theo, yêu cầu được ký bằng secret mới và secret cũ hết hiệu lực ngay: không có thời gian ân hạn. Yêu cầu đang gửi dở vẫn giữ chữ ký cũ. Hãy cập nhật máy nhận ngay sau đó.',

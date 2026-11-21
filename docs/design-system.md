@@ -253,6 +253,11 @@ Detail pages: identity (amount/status/ID) first, then lifecycle, then a main
 column of activity (refunds, attempts, deliveries) and a 20–22rem aside of
 static facts (details, code sample).
 
+The page never scrolls sideways, at 375px included; wide content (tables, code)
+scrolls inside its own box. Grid and flex children that hold such content need
+`min-w-0`, or the longest line widens the whole column. `npm run shots` fails
+any page that overflows the viewport.
+
 ## 8. States checklist
 
 Every data view handles all of these:

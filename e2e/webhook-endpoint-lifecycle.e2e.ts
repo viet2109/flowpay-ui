@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { expect, test } from './fixtures'
+import { expect, freshMerchant, succeededPayment, test } from './fixtures'
 
 /**
  * Rotation and disabling against the real backend. The endpoint points at a closed
@@ -9,27 +9,6 @@ import { expect, test } from './fixtures'
  * Each test signs up its own merchant: the payment it creates would otherwise also
  * reach the seeded endpoints and change what other tests expect of them.
  */
-async function freshMerchant(page: Page) {
-  const csrf = { 'X-FlowPay-CSRF': '1' }
-  const email = `e2e-lifecycle+${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}@example.com`
-  const password = 'FlowPay-e2e-2026'
-  const registered = await page.request.post('/api/v1/auth/register', {
-    headers: csrf,
-    data: { email, password, firstName: 'Webhook', lastName: 'Lifecycle', merchantName: 'Lifecycle Store' },
-  })
-  expect(registered.status(), 'register').toBe(201)
-  // Login also sets the refresh cookie in this browser context, so the app restores the session.
-  const login = await page.request.post('/api/v1/auth/login', { headers: csrf, data: { email, password } })
-  expect(login.status(), 'login').toBe(200)
-  const { data: session } = (await login.json()) as { data: { accessToken: string } }
-  const key = await page.request.post('/api/v1/merchant/api-keys', {
-    headers: { Authorization: `Bearer ${session.accessToken}` },
-    data: { name: 'E2E lifecycle' },
-  })
-  expect(key.status(), 'api key').toBe(201)
-  return ((await key.json()) as { data: { key: string } }).data.key
-}
-
 async function createEndpoint(page: Page, url: string) {
   await page.goto('/developers/webhooks')
   await page.getByRole('button', { name: 'Add endpoint' }).click()
@@ -43,28 +22,8 @@ async function createEndpoint(page: Page, url: string) {
   await expect(page).toHaveURL(/\/developers\/webhooks\/wep_\w+$/)
 }
 
-/** A succeeded payment through the Merchant API, which emits payment.succeeded. */
-async function succeededPayment(page: Page, apiKey: string) {
-  const auth = { Authorization: `Bearer ${apiKey}` }
-  const created = await page.request.post('/api/v1/payment-intents', {
-    headers: { ...auth, 'Idempotency-Key': crypto.randomUUID() },
-    data: {
-      amount: 125000,
-      currency: 'VND',
-      orderId: `E2E-LIFECYCLE-${Date.now()}`,
-      description: 'Webhook lifecycle',
-    },
-  })
-  expect(created.status()).toBe(201)
-  const { data } = (await created.json()) as { data: { id: string } }
-  const confirmed = await page.request.post(`/api/v1/payment-intents/${data.id}/confirm`, {
-    headers: { ...auth, 'Idempotency-Key': crypto.randomUUID() },
-  })
-  expect(confirmed.status()).toBe(200)
-}
-
 test('rotating the secret shows the new one once', async ({ page }) => {
-  await freshMerchant(page)
+  await freshMerchant(page, 'lifecycle')
   await createEndpoint(page, `http://localhost:9/rotate-${Date.now().toString(36)}`)
 
   await page.getByRole('button', { name: 'More actions' }).click()
@@ -82,7 +41,7 @@ test('rotating the secret shows the new one once', async ({ page }) => {
 test('disabling cancels the retrying delivery and cannot be undone', async ({ page }) => {
   // Waits for the outbox relay, the webhook consumer and one failed attempt.
   test.slow()
-  const apiKey = await freshMerchant(page)
+  const apiKey = await freshMerchant(page, 'lifecycle')
   await createEndpoint(page, `http://localhost:9/disable-${Date.now().toString(36)}`)
   await succeededPayment(page, apiKey)
 

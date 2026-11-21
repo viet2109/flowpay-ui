@@ -10,7 +10,7 @@ export interface DescriptionItem {
 /** Label/value grid for record details. Labels align, values wrap. */
 export function DescriptionList({ items, className }: { items: DescriptionItem[]; className?: string }) {
   return (
-    <dl className={cn('grid grid-cols-[minmax(7rem,auto)_1fr] gap-x-6 text-sm', className)}>
+    <dl className={cn('grid grid-cols-[minmax(7rem,auto)_minmax(0,1fr)] gap-x-6 text-sm', className)}>
       {items
         .filter((item) => !item.hidden)
         .map((item) => (

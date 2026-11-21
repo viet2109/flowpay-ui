@@ -79,6 +79,19 @@ export const webhooks = {
     redirects: 'Redirects',
     redirectsValue: 'Never followed',
   },
+  // docs/api-contract.md §14. <code> marks protocol text.
+  guide: {
+    read: 'Read the raw request body and the <code>FlowPay-Signature: t=…,v1=…</code> header, before any JSON parsing.',
+    compute:
+      'Compute HMAC-SHA256 of <code>t + "." + body</code>, keyed with the whole signing secret (<code>whsec_…</code>), as lowercase hex.',
+    compare:
+      'Compare it with <code>v1</code> in constant time. Reject the request if they differ or <code>t</code> is more than 5 minutes from your clock.',
+    respond:
+      'Answer with any 2xx, quickly. Other statuses, redirects and timeouts fail the attempt, and FlowPay retries it.',
+    dedupe:
+      'Deduplicate by <code>FlowPay-Event-Id</code>: the same event can arrive more than once, and events can arrive out of order.',
+    sample: 'Node.js',
+  },
   rotate: {
     title: 'Rotate signing secret?',
     body: 'From the next attempt on, requests are signed with a new secret and the old one stops working at once: there is no grace period. A request already being sent keeps its signature. Update your receiver right after.',

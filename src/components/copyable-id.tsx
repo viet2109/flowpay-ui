@@ -36,11 +36,12 @@ export function CopyableId({
       onClick={copy}
       title={value}
       className={cn(
-        'group inline-flex items-center gap-1 rounded-sm font-mono text-xs text-ink-2 hover:text-ink',
+        'group inline-flex max-w-full items-center gap-1 rounded-sm font-mono text-xs text-ink-2 hover:text-ink',
         className,
       )}
     >
-      <span>
+      {/* A full ID wraps on a narrow screen rather than widening the page. */}
+      <span className={truncate ? undefined : 'min-w-0 text-left break-all'}>
         <span className="text-ink-3">{prefix}</span>
         {shown}
       </span>

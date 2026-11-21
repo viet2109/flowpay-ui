@@ -1,4 +1,4 @@
-import type { Browser, Page } from '@playwright/test'
+import { expect, type Browser, type Page } from '@playwright/test'
 import { signIn } from './fixtures'
 
 /**
@@ -62,6 +62,14 @@ export async function capture(browser: Browser, baseURL: string, target: ShotTar
       fullPage: target.fullPage ?? true,
       animations: 'disabled',
     })
+    // design-system §7: no horizontal page scroll at any width. Checked after the
+    // screenshot so the overflowing page can still be reviewed.
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    )
+    expect(overflow, `page is ${overflow}px wider than the ${variant.width}px viewport`).toBeLessThanOrEqual(
+      0,
+    )
   } finally {
     await context.close()
   }

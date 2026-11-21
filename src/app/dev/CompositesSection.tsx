@@ -132,7 +132,7 @@ export function CompositesSection() {
       </GallerySection>
 
       <GallerySection title="Record details" description="DescriptionList, CodeBlock and SecretReveal.">
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2">
           <DescriptionList
             items={[
               { label: 'Payment', value: <CopyableId value="pi_01KAR7Q9XWB5S3M8ZK2Y6T4N1F" /> },
@@ -153,7 +153,7 @@ export function CompositesSection() {
       </GallerySection>
 
       <GallerySection title="Empty, error and paging" description="Every data view handles these states.">
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-2">
           <Panel>
             <EmptyState
               icon={<WebhooksLogoIcon />}

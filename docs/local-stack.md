@@ -155,6 +155,27 @@ the top of `scripts/seed.ts`.
 checks every endpoint the dashboard calls against the frontend types in about
 5 seconds. Point it elsewhere with `CONTRACT_API_URL`.
 
+### Webhook receiver
+
+A receiver that checks `FlowPay-Signature` with the exact code the endpoint page
+shows (`src/features/webhooks/signature/verify-signature.js`):
+
+```sh
+FLOWPAY_WEBHOOK_SECRET='whsec_…' npm run receiver   # http://localhost:4243
+```
+
+```powershell
+$env:FLOWPAY_WEBHOOK_SECRET = 'whsec_…'; npm run receiver
+```
+
+Add an endpoint at `http://localhost:4243/<any path>` and give the receiver the
+secret shown when it was created. It answers `204` when the signature verifies and
+`401` when it does not (wrong or rotated secret, changed body, timestamp more than
+5 minutes off) and prints one line per request, never the secret. To make deliveries
+fail, start it with `RECEIVER_FAIL=500` or type `fail 500` while it runs; `ok`
+returns to verifying. `RECEIVER_PORT` changes the port. The `webhook-signature`
+E2E runs the same receiver in process.
+
 ### E2E and review screenshots
 
 ```sh

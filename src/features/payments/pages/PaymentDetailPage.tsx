@@ -141,7 +141,7 @@ function PaymentDetail({ id }: { id: string }) {
           )}
         </Panel>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <div className="min-w-0 space-y-5">
             <Panel>
               <PanelHeader
@@ -211,7 +211,7 @@ function DetailSkeleton() {
       <Skeleton className="h-3 w-20" />
       <Skeleton className="h-9 w-64" />
       <Skeleton className="h-24 w-full rounded-lg" />
-      <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <Skeleton className="h-56 rounded-lg" />
         <Skeleton className="h-56 rounded-lg" />
       </div>

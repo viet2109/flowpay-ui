@@ -160,6 +160,18 @@ describe('EndpointDetailPage', () => {
     await waitFor(() => expect(countRequests()).toHaveLength(2))
   })
 
+  it('shows the signature check the local receiver runs, with protocol names as code', async () => {
+    renderPage()
+    expect(await screen.findByText('Verify signatures')).toBeInTheDocument()
+    expect(document.querySelector('pre code')?.textContent).toContain(
+      'export function verifyFlowPaySignature(',
+    )
+    const codes = [...document.querySelectorAll('ol code')].map((c) => c.textContent)
+    expect(codes).toEqual(
+      expect.arrayContaining(['FlowPay-Signature: t=…,v1=…', 'whsec_…', 'FlowPay-Event-Id']),
+    )
+  })
+
   it('shows unsubscribed events as such, without dimming them', async () => {
     renderPage()
     expect(await screen.findByText('Provider confirmed the charge.')).toBeInTheDocument()

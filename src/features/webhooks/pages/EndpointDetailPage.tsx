@@ -109,7 +109,7 @@ export function EndpointDetailPage() {
     <>
       <PageHeader
         back={back}
-        title={<EndpointUrl url={endpoint.url} className="text-lg" />}
+        title={<EndpointUrl url={endpoint.url} className="block text-lg" />}
         description={
           <span className="flex flex-wrap items-center gap-3">
             <StatusBadge {...endpointStatus[endpoint.status]} />
@@ -152,7 +152,7 @@ export function EndpointDetailPage() {
         </Callout>
       )}
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <Panel className="min-w-0">
           <PanelHeader title={t('detail.deliveries')} description={t('detail.deliveriesHint')} />
           <div className="p-4">
@@ -160,7 +160,7 @@ export function EndpointDetailPage() {
           </div>
         </Panel>
 
-        <aside className="space-y-5">
+        <aside className="min-w-0 space-y-5">
           <Panel>
             <PanelHeader title={t('detail.subscribed')} />
             <ul className="divide-y divide-line">
