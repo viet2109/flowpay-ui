@@ -1,7 +1,6 @@
 import { act, render, screen } from '@testing-library/react'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { restoreSession } from '@/features/auth'
-import { useTestKey } from '@/features/test-mode'
 import { App } from './App'
 import { setupHttp } from './http-setup'
 import { router } from './router'
@@ -64,10 +63,10 @@ const routes: [RegExp, unknown][] = [
   [/\/merchant\/webhook-endpoints$/, { data: [endpoint] }],
   [/\/merchant\/webhook-endpoints\/wep_1$/, { data: endpoint }],
   [/\/merchant\/webhook-deliveries(\?.*)?$/, page([delivery])],
-  [/\/payment-intents\/pi_01KTEST\/transactions$/, { data: [] }],
-  [/\/payment-intents\/pi_01KTEST\/refunds(\?.*)?$/, page([])],
-  [/\/payment-intents\/pi_01KTEST$/, { data: payment }],
-  [/\/payment-intents(\?.*)?$/, page([payment])],
+  [/\/merchant\/payments\/pi_01KTEST\/transactions$/, { data: [] }],
+  [/\/merchant\/payments\/pi_01KTEST\/refunds(\?.*)?$/, page([])],
+  [/\/merchant\/payments\/pi_01KTEST$/, { data: payment }],
+  [/\/merchant\/payments(\?.*)?$/, page([payment])],
 ]
 
 beforeAll(async () => {
@@ -85,7 +84,6 @@ beforeAll(async () => {
     }),
   )
   setupHttp()
-  useTestKey.getState().connect('fp_test_A7xSMOKE')
   await restoreSession()
 })
 

@@ -141,7 +141,6 @@ beforeEach(() => {
   configureHttp({
     getAccessToken: () => 'token',
     refreshAccessToken: () => Promise.reject(new Error('no refresh in tests')),
-    getMerchantKey: () => null,
     onSessionExpired: () => {},
   })
   list = () => ({ items: [delivery], total: 1 })

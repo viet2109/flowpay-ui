@@ -7,7 +7,7 @@ export const apiKeys = {
     'Requests authenticate with <code>Authorization: Bearer fp_test_…</code>. Revoking a key is permanent and takes effect on the next request.',
   empty: {
     title: 'No API keys yet',
-    body: 'Create a key to call the Payment API from your backend, or to view payments in this dashboard.',
+    body: 'Create a key to call the Payment and Refund APIs from your backend.',
     action: 'Create your first key',
   },
   columns: {
@@ -17,7 +17,6 @@ export const apiKeys = {
     id: 'ID',
     created: 'Created',
   },
-  connected: 'Connected to this dashboard tab',
   revoke: 'Revoke',
   revokeTitle: 'Revoke “{{name}}”?',
   revokeBody:
@@ -35,9 +34,5 @@ export const apiKeys = {
     createdDescription: '“{{name}}” is active. Use it as a Bearer token from your backend.',
     secretLabel: 'Secret key',
     stored: 'I’ve stored it',
-    useInDashboard: 'Use in dashboard',
-    connectHint: 'Connect this key so this tab can show payments and refunds.',
-    replaceHint: 'Replace the currently connected key so this tab can show payments and refunds.',
-    connectedToast: 'Key connected to this dashboard tab',
   },
 }

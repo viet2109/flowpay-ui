@@ -113,10 +113,7 @@ npm run dev
 
 1. Open <http://localhost:5173>. You are sent to the sign-in page.
 2. **Create account**, then sign in with it. You land on Overview.
-3. **Developers → API keys → Create key** with "Use in dashboard" checked.
-   Payments are read with an API key until the backend has dashboard
-   endpoints for them; a dashboard token on `/payment-intents` returns `401`.
-4. **Payments → New test payment.** With the default simulator outcome it ends
+3. **Payments → New test payment.** With the default simulator outcome it ends
    `Succeeded`; an amount ending in `901` ends `Failed` (section 6).
 
 Or skip the manual steps and load a full dataset with `npm run seed` (section 5).
@@ -265,7 +262,7 @@ docker compose -f docker-compose.yaml down -v     # wipe Postgres and RabbitMQ d
 | Signed out after restarting the backend                 | The `dev` profile generates new JWT signing keys on every start; old access tokens are rejected. Sign in again.                                 |
 | Backend fails at startup mentioning the encryption key  | `WEBHOOK_SECRET_ENCRYPTION_KEY` is missing, not Base64, or not 32 bytes. A new terminal/VS Code window is needed after setting a user variable. |
 | `403 ACCESS_DENIED` on `/auth/*` from curl              | Every auth POST needs exactly one `X-FlowPay-CSRF: 1` header. The dashboard adds it.                                                            |
-| `401` on payments with a dashboard token                | Expected today: payment and refund APIs accept merchant API keys only.                                                                          |
+| `401 INVALID_API_KEY` on `/payment-intents` from curl   | That is the Merchant API, for API keys. With a dashboard token use `/merchant/payments` (the dashboard does).                                   |
 | Webhook endpoint rejected for an `http://localhost` URL | The backend was started without `WEBHOOK_ALLOW_INSECURE_LOCALHOST=true`.                                                                        |
 | New endpoint shows no deliveries for older payments     | Subscriptions are snapshotted when an event is first materialized; only events after the endpoint was created are delivered to it.              |
 | Payment confirm outcome is not the one you wanted       | The amount ends in 901/902/903 (section 6), or the default outcome was set at backend startup.                                                  |

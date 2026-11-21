@@ -265,7 +265,7 @@ Every data view handles all of these:
 - [ ] Loading: skeleton with the real layout (no spinners for whole pages)
 - [ ] Empty, never used: explain what will appear and the one action to start
 - [ ] Empty, filtered: say nothing matches and offer "Clear filters"
-- [ ] Error: specific message + `requestId` + retry; invalid test key → reconnect
+- [ ] Error: specific message + `requestId` + retry
 - [ ] Stale while refetching: keep previous rows (`placeholderData`), dim slightly
 - [ ] Moving states auto-refresh (PROCESSING payments, RETRYING deliveries)
 - [ ] A failed background refresh keeps what is on screen and adds `RefreshFailed`

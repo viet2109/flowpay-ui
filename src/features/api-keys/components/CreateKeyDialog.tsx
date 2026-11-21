@@ -2,16 +2,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
 import { z } from 'zod'
 import { SecretReveal } from '@/components/secret-reveal'
 import { ActionError } from '@/components/states'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { useTestKey } from '@/features/test-mode'
 import { useFieldError, vmsg } from '@/i18n'
 import { applyServerErrors } from '@/lib/form'
 import type { CreatedApiKey } from '../api'
@@ -43,22 +40,14 @@ export function CreateKeyDialog({
   const { t } = useTranslation('apiKeys')
   const fieldError = useFieldError()
   const [created, setCreated] = useState<CreatedApiKey | null>(null)
-  const [useInDashboard, setUseInDashboard] = useState(true)
-  const connect = useTestKey((s) => s.connect)
-  const hasConnectedKey = useTestKey((s) => Boolean(s.key))
   const create = useCreateApiKey()
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { name: '' } })
   const { errors } = form.formState
 
   function close() {
-    if (created && useInDashboard) {
-      connect(created.key, created.name)
-      toast.success(t('form.connectedToast'))
-    }
     onOpenChange(false)
     form.reset()
     setCreated(null)
-    setUseInDashboard(true)
     create.reset()
   }
 
@@ -83,22 +72,7 @@ export function CreateKeyDialog({
             </Button>
           }
         >
-          <div className="space-y-5">
-            <SecretReveal label={t('form.secretLabel')} secret={created.key} />
-            <label className="flex cursor-pointer items-start gap-2.5 rounded-md border border-line p-3">
-              <Checkbox
-                checked={useInDashboard}
-                onCheckedChange={(v) => setUseInDashboard(v === true)}
-                className="mt-0.5"
-              />
-              <span className="text-sm">
-                <span className="font-medium">{t('form.useInDashboard')}</span>
-                <span className="mt-0.5 block text-ink-2">
-                  {hasConnectedKey ? t('form.replaceHint') : t('form.connectHint')}
-                </span>
-              </span>
-            </label>
-          </div>
+          <SecretReveal label={t('form.secretLabel')} secret={created.key} />
         </DialogContent>
       ) : (
         <DialogContent

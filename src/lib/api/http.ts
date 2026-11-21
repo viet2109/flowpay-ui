@@ -2,20 +2,20 @@ import { ApiError, isSessionRejected, type ProblemDetails } from './errors'
 import type { Page, PageMeta } from './types'
 
 /**
- * Thin fetch wrapper for FlowPay's auth models (docs/api-contract.md §4):
+ * Thin fetch wrapper for the dashboard's two auth models (docs/api-contract.md §4):
  *  - `dashboard`: JWT bearer for /merchant/** routes, refreshed transparently on 401.
- *  - `merchant`:  API-key bearer for /payment-intents and /refunds.
  *  - `none`:      auth endpoints (cookie based, needs the CSRF marker header).
+ * The dashboard never sends merchant API keys: payments and refunds have their own
+ * JWT routes (§18).
  *
  * Token storage is injected via `configureHttp`, so this file has no React/store imports.
  */
-export type AuthMode = 'dashboard' | 'merchant' | 'none'
+export type AuthMode = 'dashboard' | 'none'
 
 interface HttpConfig {
   getAccessToken: () => string | null
   /** Must resolve to a fresh access token or throw. */
   refreshAccessToken: () => Promise<string>
-  getMerchantKey: () => string | null
   onSessionExpired: () => void
 }
 
@@ -33,8 +33,6 @@ export interface RequestOptions {
   body?: unknown
   query?: Record<string, string | number | boolean | undefined | null>
   idempotencyKey?: string
-  /** Use this API key instead of the connected one (e.g. to verify a key before saving it). */
-  merchantKey?: string
   signal?: AbortSignal
 }
 
@@ -67,14 +65,8 @@ function headersFor(options: RequestOptions, token: string | null): Headers {
   return headers
 }
 
-function resolveToken(auth: AuthMode, options: RequestOptions): string | null {
-  if (auth === 'dashboard') return config?.getAccessToken() ?? null
-  if (auth === 'merchant') {
-    const key = options.merchantKey ?? config?.getMerchantKey() ?? null
-    if (!key) throw ApiError.client('SANDBOX_KEY_MISSING', 'Connect a test API key to work with payments.')
-    return key
-  }
-  return null
+function resolveToken(auth: AuthMode): string | null {
+  return auth === 'dashboard' ? (config?.getAccessToken() ?? null) : null
 }
 
 async function send(path: string, options: RequestOptions, token: string | null) {
@@ -125,7 +117,7 @@ function refreshOnce(): Promise<string> {
 
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<HttpResult<T>> {
   const auth = options.auth ?? 'dashboard'
-  let response = await send(path, options, resolveToken(auth, options))
+  let response = await send(path, options, resolveToken(auth))
 
   if (response.status === 401 && auth === 'dashboard') {
     let fresh: string

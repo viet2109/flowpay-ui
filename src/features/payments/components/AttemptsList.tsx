@@ -1,10 +1,10 @@
 import { CopyableId } from '@/components/copyable-id'
+import { ErrorState } from '@/components/states'
 import { StatusBadge } from '@/components/status-badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useFormat } from '@/i18n'
 import { usePaymentTransactions } from '../queries'
 import { transactionStatus } from '../status'
-import { MerchantApiError } from './MerchantApiError'
 
 /** Provider attempts (PaymentTransaction). One payment may have several. */
 export function AttemptsList({ paymentId }: { paymentId: string }) {
@@ -12,7 +12,7 @@ export function AttemptsList({ paymentId }: { paymentId: string }) {
   const { data, isPending, error, refetch } = usePaymentTransactions(paymentId)
 
   if (isPending) return <Skeleton className="m-4 h-12" />
-  if (error) return <MerchantApiError error={error} onRetry={refetch} />
+  if (error) return <ErrorState error={error} onRetry={refetch} />
   if (data.length === 0) {
     return (
       <p className="px-4 py-6 text-sm text-ink-3">

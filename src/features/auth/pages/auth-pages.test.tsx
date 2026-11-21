@@ -55,7 +55,6 @@ beforeEach(() => {
   configureHttp({
     getAccessToken: () => null,
     refreshAccessToken: () => Promise.reject(new Error('none')),
-    getMerchantKey: () => null,
     onSessionExpired: () => {},
   })
 })

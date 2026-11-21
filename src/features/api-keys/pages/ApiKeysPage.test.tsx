@@ -69,7 +69,6 @@ beforeEach(() => {
   configureHttp({
     getAccessToken: () => 'token',
     refreshAccessToken: () => Promise.reject(new Error('no refresh in tests')),
-    getMerchantKey: () => null,
     onSessionExpired: () => {},
   })
   sessionStorage.clear()
@@ -108,7 +107,6 @@ describe('ApiKeysPage', () => {
     await user.keyboard('{Escape}')
     expect(screen.getByRole('dialog', { name: 'Copy your new key' })).toBeInTheDocument()
 
-    await user.click(within(reveal).getByRole('checkbox'))
     await user.click(within(reveal).getByRole('button', { name: 'I’ve stored it' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(document.body.textContent).not.toContain(SECRET)

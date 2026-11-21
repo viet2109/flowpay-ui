@@ -12,13 +12,13 @@ import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { Panel, PanelHeader } from '@/components/ui/panel'
 import { Skeleton } from '@/components/ui/skeleton'
-import { RequireTestKey } from '@/features/test-mode'
+import { ErrorState } from '@/components/states'
+import { useCanRunPayments } from '@/features/auth'
 import { useIdempotencyKey } from '@/lib/idempotency'
 import { useErrorMessage, useFormat } from '@/i18n'
 import { useRecentItems } from '@/lib/recent-items'
 import { AttemptsList } from '../components/AttemptsList'
 import { LifecycleRail } from '../components/LifecycleRail'
-import { MerchantApiError } from '../components/MerchantApiError'
 import { RefundCapacity } from '../components/RefundCapacity'
 import { RefundDialog } from '../components/RefundDialog'
 import { RefundsPanel } from '../components/RefundsPanel'
@@ -28,10 +28,8 @@ import { canConfirm, canRefund, paymentStatus } from '../status'
 export function PaymentDetailPage() {
   const { paymentId = '' } = useParams()
   return (
-    <RequireTestKey>
-      {/* key: switching payments (e.g. via ⌘K) starts from a clean slate */}
-      <PaymentDetail key={paymentId} id={paymentId} />
-    </RequireTestKey>
+    // key: switching payments (e.g. via ⌘K) starts from a clean slate
+    <PaymentDetail key={paymentId} id={paymentId} />
   )
 }
 
@@ -55,6 +53,7 @@ function PaymentDetail({ id }: { id: string }) {
   const [refunding, setRefunding] = useState(false)
   const confirm = useConfirmPayment(id)
   const confirmKey = useIdempotencyKey('confirm')
+  const canRun = useCanRunPayments()
 
   if (isPending) return <DetailSkeleton />
   if (error) {
@@ -62,7 +61,7 @@ function PaymentDetail({ id }: { id: string }) {
       <>
         <PageHeader title="Payment" back={{ to: '/payments', label: 'Payments' }} />
         <Panel>
-          <MerchantApiError error={error} onRetry={refetch} />
+          <ErrorState error={error} onRetry={refetch} />
         </Panel>
       </>
     )
@@ -102,13 +101,13 @@ function PaymentDetail({ id }: { id: string }) {
         }
         actions={
           <>
-            {canConfirm(payment.status) && (
+            {canRun && canConfirm(payment.status) && (
               <Button variant="primary" onClick={runConfirm} loading={confirm.isPending}>
                 <LightningIcon weight="fill" />
                 Confirm payment
               </Button>
             )}
-            {canRefund(payment.status, payment.refundableAmount) && (
+            {canRun && canRefund(payment.status, payment.refundableAmount) && (
               <Button onClick={() => setRefunding(true)}>
                 <ArrowCounterClockwiseIcon />
                 Refund

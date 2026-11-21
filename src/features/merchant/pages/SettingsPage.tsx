@@ -14,7 +14,6 @@ import { Panel, PanelHeader } from '@/components/ui/panel'
 import { Segmented } from '@/components/ui/segmented'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSession } from '@/features/auth'
-import { keyPrefix, useTestKey } from '@/features/test-mode'
 import { humanize } from '@/lib/format'
 import { LANGUAGES, LANGUAGE_NAMES, setLanguage, type Language, useErrorMessage, useLanguage } from '@/i18n'
 import { useTheme, type ThemePreference } from '@/lib/theme'
@@ -29,7 +28,6 @@ export function SettingsPage() {
       <div className="max-w-3xl space-y-5">
         <BusinessPanel />
         <AccountPanel />
-        <TestKeyPanel />
         <LanguagePanel />
         <AppearancePanel />
       </div>
@@ -116,35 +114,6 @@ function AccountPanel() {
           { label: 'Role', value: humanize(user.role) },
         ]}
       />
-    </Panel>
-  )
-}
-
-function TestKeyPanel() {
-  const { key, label, disconnect } = useTestKey()
-  return (
-    <Panel>
-      <PanelHeader
-        title="Dashboard test key"
-        description="Used only by this browser tab to read payments through the Merchant API."
-        actions={
-          key && (
-            <Button size="sm" variant="danger-outline" onClick={disconnect}>
-              Disconnect
-            </Button>
-          )
-        }
-      />
-      <div className="px-4 py-3 text-sm">
-        {key ? (
-          <span className="flex items-center gap-2">
-            <code className="font-mono text-xs">{keyPrefix(key)}</code>
-            {label && <span className="text-ink-3">· {label}</span>}
-          </span>
-        ) : (
-          <span className="text-ink-3">No key connected.</span>
-        )}
-      </div>
     </Panel>
   )
 }

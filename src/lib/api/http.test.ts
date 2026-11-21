@@ -24,7 +24,6 @@ describe('request', () => {
     configureHttp({
       getAccessToken: () => token,
       refreshAccessToken: refresh,
-      getMerchantKey: () => null,
       onSessionExpired,
     })
   })
@@ -97,9 +96,10 @@ describe('request', () => {
     expect(merchantInit?.get('X-FlowPay-CSRF')).toBeNull()
   })
 
-  it('fails fast without a network call when no test key is connected', async () => {
-    const error = await request('/payment-intents', { auth: 'merchant' }).catch((e: unknown) => e)
-    expect(error).toMatchObject({ code: 'SANDBOX_KEY_MISSING' })
-    expect(fetchMock).not.toHaveBeenCalled()
+  it('sends the session token, never a merchant API key, for payments', async () => {
+    fetchMock.mockImplementation(async () => json(200, { data: {} }))
+    await request('/merchant/payments/pi_1')
+    const headers = new Headers(fetchMock.mock.calls[0]?.[1]?.headers)
+    expect(headers.get('Authorization')).toMatch(/^Bearer (?!fp_)/)
   })
 })

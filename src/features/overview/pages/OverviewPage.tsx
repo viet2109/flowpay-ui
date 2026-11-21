@@ -8,24 +8,22 @@ import { Link } from 'react-router'
 import { PageHeader } from '@/components/page-header'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Panel, PanelHeader } from '@/components/ui/panel'
+import { ErrorState } from '@/components/states'
 import { useApiKeys } from '@/features/api-keys'
 import { useMerchant } from '@/features/merchant'
 import {
-  MerchantApiError,
   PaymentsTable,
   paymentStatus,
   usePayments,
   usePaymentStatusCounts,
   type PaymentStatus,
 } from '@/features/payments'
-import { ConnectKeyPanel, useTestKey } from '@/features/test-mode'
 import { deliveryStatus, useDeliveryCounts, useEndpoints, useRetryableDeadCount } from '@/features/webhooks'
 import { cn } from '@/lib/cn'
 import { useFormat } from '@/i18n'
 
 export function OverviewPage() {
   const { data: merchant } = useMerchant()
-  const hasKey = useTestKey((s) => Boolean(s.key))
 
   return (
     <>
@@ -39,24 +37,17 @@ export function OverviewPage() {
           <AttentionPanel />
           <WebhookHealthPanel />
         </div>
-        {hasKey ? (
-          <>
-            <PaymentMixPanel />
-            <RecentPaymentsPanel />
-          </>
-        ) : (
-          <ConnectKeyPanel />
-        )}
+        <PaymentMixPanel />
+        <RecentPaymentsPanel />
       </div>
     </>
   )
 }
 
-/** Only shown until the four first-run steps are done. */
+/** Only shown until the first-run steps are done. */
 function SetupChecklist() {
   const keys = useApiKeys()
   const endpoints = useEndpoints()
-  const hasTestKey = useTestKey((s) => Boolean(s.key))
   const payments = usePayments({ size: 1 })
 
   if (keys.isPending || endpoints.isPending) return null
@@ -66,7 +57,6 @@ function SetupChecklist() {
       label: 'Create an API key',
       to: '/developers/api-keys',
     },
-    { done: hasTestKey, label: 'Connect a test key to this dashboard', to: '/developers/api-keys' },
     {
       done: endpoints.data?.some((e) => e.status === 'ACTIVE') ?? false,
       label: 'Add a webhook endpoint',
@@ -85,10 +75,14 @@ function SetupChecklist() {
     <Panel>
       <PanelHeader
         title="Get set up"
-        description="Four steps to see the full payment, ledger and webhook flow against the simulator."
-        actions={<span className="num text-sm text-ink-3">{doneCount}/4</span>}
+        description="See the full payment, ledger and webhook flow against the simulator."
+        actions={
+          <span className="num text-sm text-ink-3">
+            {doneCount}/{steps.length}
+          </span>
+        }
       />
-      <ol className="grid divide-y divide-line sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4 lg:divide-x">
+      <ol className="grid divide-y divide-line sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-3 lg:divide-x">
         {steps.map((step, i) => (
           <li key={step.label}>
             <Link
@@ -142,7 +136,6 @@ function AttentionRow({
 }
 
 function AttentionPanel() {
-  const hasKey = useTestKey((s) => Boolean(s.key))
   const payments = usePaymentStatusCounts()
   const deliveries = useDeliveryCounts(undefined, ['RETRYING'])
   // Only dead deliveries a manual retry can reach: those on disabled endpoints stay dead.
@@ -151,9 +144,9 @@ function AttentionPanel() {
     dead.endpointIds.length === 1
       ? `/developers/webhooks/deliveries?status=DEAD&endpointId=${dead.endpointIds[0]}`
       : '/developers/webhooks/deliveries?status=DEAD'
-  const processing = hasKey ? payments.counts.PROCESSING : 0
+  const processing = payments.counts.PROCESSING
   const total = processing + dead.count + deliveries.counts.RETRYING
-  const pending = deliveries.isPending || dead.isPending || (hasKey && payments.isPending)
+  const pending = deliveries.isPending || dead.isPending || payments.isPending
   const { t } = useTranslation('overview')
 
   return (
@@ -173,11 +166,9 @@ function AttentionPanel() {
         }
       />
       <div className="divide-y divide-line">
-        {hasKey && (
-          <AttentionRow count={processing} pending={payments.isPending} to="/payments?status=PROCESSING">
-            {t('attention.unknownOutcome', { count: processing })}
-          </AttentionRow>
-        )}
+        <AttentionRow count={processing} pending={payments.isPending} to="/payments?status=PROCESSING">
+          {t('attention.unknownOutcome', { count: processing })}
+        </AttentionRow>
         <AttentionRow count={dead.count} pending={dead.isPending} to={deadLink}>
           {t('attention.deadDeliveries', { count: dead.count })}
         </AttentionRow>
@@ -286,12 +277,12 @@ function PaymentMixPanel() {
   ]
   return (
     <Panel>
-      <PanelHeader title="Payments by status" description="All payments for the connected key's merchant." />
+      <PanelHeader title="Payments by status" description="All payments of this merchant." />
       <div className="p-4">
         {isPending ? (
           <Skeleton className="h-16 w-full" />
         ) : error ? (
-          <MerchantApiError error={error} />
+          <ErrorState error={error} />
         ) : (
           <DistributionBar
             counts={counts}
@@ -322,7 +313,7 @@ function RecentPaymentsPanel() {
           <Skeleton className="h-32 w-full" />
         </div>
       ) : error ? (
-        <MerchantApiError error={error} onRetry={refetch} />
+        <ErrorState error={error} onRetry={refetch} />
       ) : data.items.length === 0 ? (
         <p className="px-4 py-6 text-sm text-ink-3">No payments yet.</p>
       ) : (

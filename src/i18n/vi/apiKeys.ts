@@ -10,7 +10,7 @@ export const apiKeys: Messages<typeof en> = {
     'Yêu cầu xác thực bằng <code>Authorization: Bearer fp_test_…</code>. Thu hồi khóa là vĩnh viễn và có hiệu lực từ yêu cầu tiếp theo.',
   empty: {
     title: 'Chưa có khóa API nào',
-    body: 'Tạo khóa để gọi Payment API từ backend của bạn, hoặc để xem thanh toán trong dashboard này.',
+    body: 'Tạo khóa để gọi Payment API và Refund API từ backend của bạn.',
     action: 'Tạo khóa đầu tiên',
   },
   columns: {
@@ -20,7 +20,6 @@ export const apiKeys: Messages<typeof en> = {
     id: 'ID',
     created: 'Tạo lúc',
   },
-  connected: 'Đang kết nối với tab dashboard này',
   revoke: 'Thu hồi',
   revokeTitle: 'Thu hồi “{{name}}”?',
   revokeBody:
@@ -38,9 +37,5 @@ export const apiKeys: Messages<typeof en> = {
     createdDescription: '“{{name}}” đang hoạt động. Dùng nó làm Bearer token từ backend của bạn.',
     secretLabel: 'Khóa bí mật',
     stored: 'Tôi đã lưu khóa',
-    useInDashboard: 'Dùng trong dashboard',
-    connectHint: 'Kết nối khóa này để tab này hiển thị được thanh toán và hoàn tiền.',
-    replaceHint: 'Thay khóa đang kết nối để tab này hiển thị được thanh toán và hoàn tiền.',
-    connectedToast: 'Đã kết nối khóa với tab dashboard này',
   },
 }

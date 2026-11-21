@@ -1,4 +1,4 @@
-import { KeyIcon, PlusIcon, PlugsConnectedIcon } from '@phosphor-icons/react'
+import { KeyIcon, PlusIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -13,8 +13,6 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Panel } from '@/components/ui/panel'
 import { TableSkeleton } from '@/components/ui/skeleton'
 import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/table'
-import { Tooltip } from '@/components/ui/tooltip'
-import { useTestKey } from '@/features/test-mode'
 import type { ApiKey } from '../api'
 import { CreateKeyDialog } from '../components/CreateKeyDialog'
 import { useApiKeys, useRevokeApiKey } from '../queries'
@@ -26,8 +24,6 @@ export function ApiKeysPage() {
   const [revoking, setRevoking] = useState<ApiKey | null>(null)
   const { data, isPending, error, refetch } = useApiKeys()
   const revoke = useRevokeApiKey()
-  const connectedKey = useTestKey((s) => s.key)
-  const disconnect = useTestKey((s) => s.disconnect)
 
   function closeRevoke() {
     setRevoking(null)
@@ -44,8 +40,6 @@ export function ApiKeysPage() {
     revoke.mutate(target.id, {
       onSuccess: () => {
         toast.success(t('revoked', { name: target.name }))
-        // The connected dashboard key would stop working; drop it right away.
-        if (connectedKey?.startsWith(target.prefix)) disconnect()
         closeRevoke()
       },
     })
@@ -99,19 +93,9 @@ export function ApiKeysPage() {
             </THead>
             <TBody>
               {data.map((key) => {
-                const inDashboard = connectedKey?.startsWith(key.prefix) && key.status === 'ACTIVE'
                 return (
                   <Tr key={key.id} className={key.status === 'REVOKED' ? 'text-ink-3' : undefined}>
-                    <Td className="font-medium">
-                      <span className="flex items-center gap-2">
-                        {key.name}
-                        {inDashboard && (
-                          <Tooltip content={t('connected')}>
-                            <PlugsConnectedIcon className="size-4 text-accent" />
-                          </Tooltip>
-                        )}
-                      </span>
-                    </Td>
+                    <Td className="font-medium">{key.name}</Td>
                     <Td>
                       <code className="font-mono text-xs">{key.prefix}…</code>
                     </Td>

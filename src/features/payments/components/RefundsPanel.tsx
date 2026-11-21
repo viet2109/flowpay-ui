@@ -4,7 +4,7 @@ import { CopyableId } from '@/components/copyable-id'
 import { DescriptionList } from '@/components/description-list'
 import { Money } from '@/components/money'
 import { RelativeTime } from '@/components/relative-time'
-import { EmptyState } from '@/components/states'
+import { EmptyState, ErrorState } from '@/components/states'
 import { StatusBadge } from '@/components/status-badge'
 import { Pagination } from '@/components/pagination'
 import { Sheet } from '@/components/ui/sheet'
@@ -15,7 +15,6 @@ import { useFormat } from '@/i18n'
 import { usePaymentRefunds, useRefund } from '../queries'
 import { refundStatus } from '../status'
 import type { Refund } from '../types'
-import { MerchantApiError } from './MerchantApiError'
 
 export function RefundsPanel({ paymentId }: { paymentId: string }) {
   const [page, setPage] = useState(0)
@@ -23,7 +22,7 @@ export function RefundsPanel({ paymentId }: { paymentId: string }) {
   const { data, isPending, isFetching, error, refetch } = usePaymentRefunds(paymentId, page)
 
   if (isPending) return <TableSkeleton rows={2} columns={4} />
-  if (error) return <MerchantApiError error={error} onRetry={refetch} />
+  if (error) return <ErrorState error={error} onRetry={refetch} />
   if (data.items.length === 0) {
     return (
       <EmptyState icon={<ArrowCounterClockwiseIcon />} title="No refunds" className="py-8">

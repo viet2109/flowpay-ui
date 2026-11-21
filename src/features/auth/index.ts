@@ -5,7 +5,13 @@
  */
 export const loadAuthPages = () => import('./pages')
 export { AuthAside } from './components/AuthAside'
-export { useSession, sessionSnapshot, type SessionEnd, type SessionUser } from './session-store'
+export {
+  useCanRunPayments,
+  useSession,
+  sessionSnapshot,
+  type SessionEnd,
+  type SessionUser,
+} from './session-store'
 export {
   completeSignIn,
   logout,

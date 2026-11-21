@@ -67,7 +67,6 @@ beforeEach(() => {
   configureHttp({
     getAccessToken: () => 'token',
     refreshAccessToken: () => Promise.reject(new Error('no refresh in tests')),
-    getMerchantKey: () => null,
     onSessionExpired: () => {},
   })
   endpoint = {

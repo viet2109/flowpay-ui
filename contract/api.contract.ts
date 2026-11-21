@@ -224,10 +224,8 @@ describe('API keys', () => {
     problem(await call('GET', '/payment-intents', { token: 'fp_test_notarealkey' }), 401, 'INVALID_API_KEY')
   })
 
-  it('a dashboard token cannot read payments (401)', async () => {
-    const res = await call('GET', '/payment-intents', { token: jwt })
-    expectStatus(res, 401)
-    S.problem.parse(res.json)
+  it('a dashboard token is not a Merchant API key (401 INVALID_API_KEY)', async () => {
+    problem(await call('GET', '/payment-intents', { token: jwt }), 401, 'INVALID_API_KEY')
   })
 })
 
@@ -610,6 +608,113 @@ describe('refunds', () => {
       await call('GET', '/refunds/re_01ARZ3NDEKTSV4RRFFQ69G5FAV', { token: apiKey }),
       404,
       'REFUND_NOT_FOUND',
+    )
+  })
+})
+
+/** docs/api-contract.md §18: what the dashboard calls, with its session token. */
+describe('dashboard payments and refunds', () => {
+  it('reads return the Merchant API bodies, by path and credential only', async () => {
+    const list = page(
+      await call('GET', '/merchant/payments', { token: jwt, query: { size: 5 } }),
+      S.paymentIntent,
+    )
+    const viaKey = page(
+      await call('GET', '/payment-intents', { token: apiKey, query: { size: 5 } }),
+      S.paymentIntent,
+    )
+    expect(list).toEqual(viaKey)
+
+    const payment = data(
+      await call('GET', `/merchant/payments/${succeeded}`, { token: jwt }),
+      200,
+      S.paymentIntent,
+    )
+    expect(payment).toEqual(
+      data(await call('GET', `/payment-intents/${succeeded}`, { token: apiKey }), 200, S.paymentIntent),
+    )
+    data(
+      await call('GET', `/merchant/payments/${succeeded}/transactions`, { token: jwt }),
+      200,
+      S.paymentTransaction.array(),
+    )
+    const refunds = page(
+      await call('GET', `/merchant/payments/${succeeded}/refunds`, { token: jwt }),
+      S.refund,
+    )
+    expect(refunds.data.length).toBeGreaterThan(0)
+    const refund = refunds.data[0]!
+    expect(data(await call('GET', `/merchant/refunds/${refund.id}`, { token: jwt }), 200, S.refund)).toEqual(
+      refund,
+    )
+
+    problem(
+      await call('GET', '/merchant/payments/pi_01ARZ3NDEKTSV4RRFFQ69G5FAV', { token: jwt }),
+      404,
+      'PAYMENT_NOT_FOUND',
+    )
+    problem(
+      await call('GET', '/merchant/refunds/re_01ARZ3NDEKTSV4RRFFQ69G5FAV', { token: jwt }),
+      404,
+      'REFUND_NOT_FOUND',
+    )
+    problem(
+      await call('GET', '/merchant/payments', { token: jwt, query: { status: 'LOST' } }),
+      400,
+      'VALIDATION_ERROR',
+    )
+  })
+
+  it('a merchant API key is not a dashboard credential (401 AUTHENTICATION_REQUIRED)', async () => {
+    problem(await call('GET', '/merchant/payments', { token: apiKey }), 401, 'AUTHENTICATION_REQUIRED')
+  })
+
+  it('create, confirm and refund (owner) with dashboard Locations', async () => {
+    const created = await call('POST', '/merchant/payments', {
+      token: jwt,
+      idempotencyKey: key('dash-create'),
+      body: { amount: 300_000, currency: 'VND', orderId: `DASH-${run}` },
+    })
+    const payment = data(created, 201, S.createdPaymentIntent)
+    expect(created.headers.get('location')).toBe(`/api/v1/merchant/payments/${payment.id}`)
+
+    const confirmed = await call('POST', `/merchant/payments/${payment.id}/confirm`, {
+      token: jwt,
+      idempotencyKey: key('dash-confirm'),
+    })
+    expect(data(confirmed, 200, S.confirmResult)).toMatchObject({ paymentStatus: 'SUCCEEDED' })
+
+    const refunded = await call('POST', `/merchant/payments/${payment.id}/refunds`, {
+      token: jwt,
+      idempotencyKey: key('dash-refund'),
+      body: { amount: 100_000 },
+    })
+    const refund = data(refunded, 201, S.refund)
+    expect(refunded.headers.get('location')).toBe(`/api/v1/merchant/refunds/${refund.id}`)
+  })
+
+  it('one idempotency key means one request across both entry points', async () => {
+    const body = { amount: 200_000, currency: 'VND', orderId: `CROSS-${run}` }
+    const viaKey = data(
+      await call('POST', '/payment-intents', { token: apiKey, idempotencyKey: key('cross'), body }),
+      201,
+      S.createdPaymentIntent,
+    )
+    const viaDashboard = await call('POST', '/merchant/payments', {
+      token: jwt,
+      idempotencyKey: key('cross'),
+      body,
+    })
+    expect(data(viaDashboard, 201, S.createdPaymentIntent)).toEqual(viaKey)
+    expect(viaDashboard.headers.get('idempotency-replayed')).toBe('true')
+    problem(
+      await call('POST', '/merchant/payments', {
+        token: jwt,
+        idempotencyKey: key('cross'),
+        body: { ...body, amount: 250_000 },
+      }),
+      409,
+      'IDEMPOTENCY_KEY_REUSED',
     )
   })
 })

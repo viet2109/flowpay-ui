@@ -19,7 +19,7 @@ test('a Vietnamese amount reaches the API as the right minor units', async ({ au
   await expect(dialog.getByText('= 1.250,50 USD · 125.050 minor units')).toBeVisible()
 
   const request = page.waitForRequest(
-    (r) => r.method() === 'POST' && r.url().endsWith('/api/v1/payment-intents'),
+    (r) => r.method() === 'POST' && r.url().endsWith('/api/v1/merchant/payments'),
   )
   await dialog.getByRole('button', { name: 'Create payment' }).click()
   expect((await request).postDataJSON()).toMatchObject({ amount: 125050, currency: 'USD' })
@@ -29,7 +29,7 @@ test('an ambiguous amount is rejected instead of being read 100x too large', asy
   const dialog = await openCreatePayment(page, 'en')
   let sent = false
   page.on('request', (r) => {
-    if (r.method() === 'POST' && r.url().endsWith('/api/v1/payment-intents')) sent = true
+    if (r.method() === 'POST' && r.url().endsWith('/api/v1/merchant/payments')) sent = true
   })
 
   await dialog.getByLabel('Amount').fill('12,50')

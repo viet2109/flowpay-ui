@@ -59,7 +59,7 @@ export const SERVER_ERROR_CODES = [
 export type ServerErrorCode = (typeof SERVER_ERROR_CODES)[number]
 
 /** Client-side codes that never come from the server. */
-export type ClientErrorCode = 'NETWORK_ERROR' | 'SANDBOX_KEY_MISSING' | 'UNEXPECTED_RESPONSE'
+export type ClientErrorCode = 'NETWORK_ERROR' | 'UNEXPECTED_RESPONSE'
 
 export class ApiError extends Error {
   readonly status: number

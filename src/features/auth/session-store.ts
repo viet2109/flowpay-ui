@@ -114,3 +114,9 @@ export const useSession = create<SessionState & SessionActions>()((set) => ({
 
 /** Non-React access for the HTTP layer. */
 export const sessionSnapshot = () => useSession.getState()
+
+/**
+ * docs/api-contract.md §18: only OWNER may create, confirm or refund payments;
+ * other roles get 403 ACCESS_DENIED. The UI hides those actions for them.
+ */
+export const useCanRunPayments = () => useSession((s) => s.user?.role === 'OWNER')

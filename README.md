@@ -20,12 +20,9 @@ Full setup with Docker, the backend's environment and simulator outcomes:
 First run:
 
 1. Register a merchant, then sign in.
-2. **Developers → API keys → Create key**, keep "Use in dashboard" checked.
-   Payments are served by the Merchant API, which requires an API key
-   ([why](docs/architecture.md#why-a-test-key-for-payments)).
-3. **Payments → New test payment**. The outcome is set by the backend's
+2. **Payments → New test payment**. The outcome is set by the backend's
    `PAYMENT_SIMULATOR_DEFAULT_OUTCOME` (`SUCCESS`, `DECLINED`, `UNKNOWN`, `TECHNICAL_FAILURE`).
-4. **Developers → Webhooks → Add endpoint** to see signed deliveries and retries.
+3. **Developers → Webhooks → Add endpoint** to see signed deliveries and retries.
    Local receivers need the backend's `WEBHOOK_ALLOW_INSECURE_LOCALHOST=true`.
 
 ## Scripts
@@ -51,7 +48,7 @@ First run:
 | UI           | React 19                                          | —                                                        |
 | Routing      | React Router 8 (data router, lazy routes)         | Widely known; per-feature code splitting                 |
 | Server state | TanStack Query 5                                  | Caching, polling of moving states, invalidation          |
-| Client state | Zustand (session, test key, theme)                | Tiny, works outside React (HTTP client)                  |
+| Client state | Zustand (session, theme)                          | Tiny, works outside React (HTTP client)                  |
 | Forms        | React Hook Form + Zod 4                           | Typed validation that mirrors backend rules              |
 | Styling      | Tailwind CSS 4 + CSS-variable tokens              | Semantic tokens, light/dark from one source              |
 | Primitives   | Radix UI (`radix-ui`)                             | Accessible dialogs, menus, tooltips; we own the styling  |

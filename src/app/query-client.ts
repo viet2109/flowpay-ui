@@ -10,7 +10,6 @@ export const queryClient = new QueryClient({
         if (error instanceof ApiError && error.status === 429)
           return failureCount < 1 && error.retryAfter !== undefined
         if (error instanceof ApiError && error.status >= 400 && error.status < 500) return false
-        if (error instanceof ApiError && error.code === 'SANDBOX_KEY_MISSING') return false
         return failureCount < 2
       },
       retryDelay: (attempt, error) =>

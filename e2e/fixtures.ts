@@ -12,8 +12,6 @@ export const STORAGE = {
   theme: 'flowpay.theme',
   /** features/auth/session-store.ts — email shown in the account menu. */
   lastEmail: 'flowpay.lastEmail',
-  /** features/test-mode/store.ts — zustand persist, sessionStorage. */
-  testKey: 'flowpay.testKey',
   /** i18n/index.ts — chosen UI language. */
   language: 'flowpay.language',
 } as const
@@ -30,7 +28,7 @@ export function seeded(): SeedResult {
  * its own: refresh tokens rotate, so a shared storage state would be revoked by
  * whichever test refreshed first.
  */
-export async function signIn(page: Page, options: { connectTestKey?: boolean } = {}) {
+export async function signIn(page: Page) {
   const data = seeded()
   const res = await page.request.post('/api/v1/auth/login', {
     headers: { 'X-FlowPay-CSRF': '1' },
@@ -40,16 +38,14 @@ export async function signIn(page: Page, options: { connectTestKey?: boolean } =
   const { data: login } = (await res.json()) as { data: { user: { id: string; email: string } } }
 
   await page.addInitScript(
-    ({ storage, user, key }) => {
+    ({ storage, user }) => {
       localStorage.setItem(storage.lastEmail, JSON.stringify({ userId: user.id, email: user.email }))
-      if (key)
-        sessionStorage.setItem(storage.testKey, JSON.stringify({ state: { key, label: null }, version: 0 }))
     },
-    { storage: STORAGE, user: login.user, key: options.connectTestKey === false ? null : data.apiKey },
+    { storage: STORAGE, user: login.user },
   )
 }
 
-/** `authedPage`: a page whose context is signed in as the seeded merchant, test key connected. */
+/** `authedPage`: a page whose context is signed in as the seeded merchant. */
 export const test = base.extend<{ authedPage: Page }>({
   // Playwright's fixture callback; named `provide` so the React hooks lint rule
   // does not mistake it for React's `use`.

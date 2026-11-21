@@ -17,7 +17,6 @@ src/
 ├── app/                  composition: providers, router, layouts, guards, command menu
 ├── features/             one folder per business capability
 │   ├── auth/             login/register, session store, refresh
-│   ├── test-mode/        connected test API key for Merchant API reads
 │   ├── overview/         "needs attention" home
 │   ├── payments/         payments + refunds (refund is a payment sub-resource)
 │   ├── api-keys/
@@ -109,7 +108,7 @@ Several tabs share the refresh cookie (`features/auth/session.ts`):
   fires per cycle; signing in in one tab opens the dashboard in the others) and
   sign-outs (every tab signs out). Tokens are never persisted.
 - Whenever a session ends, `watchSessionEnd` (`app/http-setup.ts`) clears the
-  query cache, the connected test key and the recently opened records.
+  query cache and the recently opened records.
 - After sign-in, the person returns to the page that sent them there (`from`);
   `GuestOnly` and `LoginPage` must agree on it, as both redirect at that moment.
 - A suspended merchant (`MERCHANT_SUSPENDED` on dashboard APIs) is explained once,
@@ -129,21 +128,14 @@ the first visit. It offers:
   "Cài đặt") against the label and synonyms in both languages
   (`shell` `command.keywords`).
 
-### Why a "test key" for payments
+### Payments and roles
 
-The backend exposes Payment/Refund APIs only to merchant **API keys**, not to
-dashboard JWTs (`SecurityConfig.merchantApiSecurityFilterChain`). To show payments
-in the dashboard without changing the backend contract, a person connects one of
-their `fp_test_` keys for the current tab (`features/test-mode`):
-
-- verified with a `GET /payment-intents?size=1` before it is stored;
-- kept in `sessionStorage` (cleared with the tab), never bundled;
-- part of every payments query key, so switching keys can't show stale data;
-- cleared on sign-out and when the key is revoked from the dashboard.
-
-**Recommended backend follow-up:** add JWT-scoped read endpoints (e.g.
-`GET /api/v1/merchant/payments`). Then delete `features/test-mode` and change
-`auth` in `features/payments/api.ts`; nothing else needs to change.
+Payments and refunds use the dashboard routes (`/merchant/payments…`,
+`/merchant/refunds/{id}`, docs/api-contract.md §18) with the session's JWT. Their
+bodies and filters are those of the Merchant API; the dashboard never holds a
+merchant API key. Every role may read. Creating, confirming and refunding are
+OWNER only (`403 ACCESS_DENIED` otherwise, before anything is written), so the UI
+offers those actions only when `useCanRunPayments()` (`features/auth`) is true.
 
 ## 3. Server state (TanStack Query)
 

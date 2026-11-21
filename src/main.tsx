@@ -4,9 +4,10 @@ import { restoreSession, startProactiveRefresh } from '@/features/auth'
 import '@/i18n' // before anything renders: the first paint is already translated
 import { watchSystemTheme } from '@/lib/theme'
 import { App } from './app/App'
-import { setupHttp, watchSessionEnd } from './app/http-setup'
+import { forgetLegacyTestKey, setupHttp, watchSessionEnd } from './app/http-setup'
 import './styles/globals.css'
 
+forgetLegacyTestKey()
 setupHttp()
 watchSessionEnd()
 watchSystemTheme()

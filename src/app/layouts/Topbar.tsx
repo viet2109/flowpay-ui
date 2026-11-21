@@ -13,13 +13,11 @@ import { Kbd } from '@/components/ui/kbd'
 import { Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator, MenuTrigger } from '@/components/ui/menu'
 import { Tooltip } from '@/components/ui/tooltip'
 import { logout, useSession } from '@/features/auth'
-import { keyPrefix, useTestKey } from '@/features/test-mode'
 import { LANGUAGE_NAMES, setLanguage, useLanguage } from '@/i18n'
 import { useTheme } from '@/lib/theme'
 
 export function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onOpenSearch: () => void }) {
   const user = useSession((s) => s.user)
-  const testKey = useTestKey((s) => s.key)
   const toggleTheme = useTheme((s) => s.toggle)
   const navigate = useNavigate()
   const { t } = useTranslation('shell')
@@ -58,9 +56,7 @@ export function Topbar({ onOpenNav, onOpenSearch }: { onOpenNav: () => void; onO
       </button>
 
       <div className="ml-auto flex items-center gap-1 sm:gap-1.5">
-        <Tooltip
-          content={testKey ? t('topbar.testModeKey', { key: keyPrefix(testKey) }) : t('topbar.testModeNoKey')}
-        >
+        <Tooltip content={t('topbar.testModeHint')}>
           {/* Always visible, phones included: nothing here is real money. */}
           <span className="inline-flex shrink-0 items-center gap-1.5 rounded-sm border border-sim/50 bg-sim/10 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-sim-ink">
             <span className="hatch-sim size-2 rounded-full" />

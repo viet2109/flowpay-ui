@@ -2,13 +2,12 @@ import { PlusIcon, ReceiptIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { PageHeader } from '@/components/page-header'
 import { Pagination } from '@/components/pagination'
-import { EmptyState } from '@/components/states'
+import { EmptyState, ErrorState } from '@/components/states'
 import { Button } from '@/components/ui/button'
 import { Panel } from '@/components/ui/panel'
 import { TableSkeleton } from '@/components/ui/skeleton'
-import { RequireTestKey } from '@/features/test-mode'
+import { useCanRunPayments } from '@/features/auth'
 import { CreatePaymentDialog } from '../components/CreatePaymentDialog'
-import { MerchantApiError } from '../components/MerchantApiError'
 import { PaymentFiltersBar } from '../components/PaymentFiltersBar'
 import { PaymentsTable } from '../components/PaymentsTable'
 import { usePayments } from '../queries'
@@ -16,6 +15,7 @@ import { usePaymentFilters } from '../use-payment-filters'
 
 export function PaymentsPage() {
   const [creating, setCreating] = useState(false)
+  const canRun = useCanRunPayments()
 
   return (
     <>
@@ -23,21 +23,21 @@ export function PaymentsPage() {
         title="Payments"
         description="Every PaymentIntent created with your keys, newest first."
         actions={
-          <Button variant="primary" onClick={() => setCreating(true)}>
-            <PlusIcon weight="bold" />
-            New test payment
-          </Button>
+          canRun && (
+            <Button variant="primary" onClick={() => setCreating(true)}>
+              <PlusIcon weight="bold" />
+              New test payment
+            </Button>
+          )
         }
       />
-      <RequireTestKey>
-        <PaymentsList onCreate={() => setCreating(true)} />
-        <CreatePaymentDialog open={creating} onOpenChange={setCreating} />
-      </RequireTestKey>
+      <PaymentsList onCreate={canRun ? () => setCreating(true) : undefined} />
+      {canRun && <CreatePaymentDialog open={creating} onOpenChange={setCreating} />}
     </>
   )
 }
 
-function PaymentsList({ onCreate }: { onCreate: () => void }) {
+function PaymentsList({ onCreate }: { onCreate?: () => void }) {
   const filters = usePaymentFilters()
   const { data, isPending, isFetching, isPlaceholderData, error, refetch } = usePayments(filters.apiFilters)
 
@@ -53,7 +53,7 @@ function PaymentsList({ onCreate }: { onCreate: () => void }) {
         {isPending ? (
           <TableSkeleton />
         ) : error ? (
-          <MerchantApiError error={error} onRetry={refetch} />
+          <ErrorState error={error} onRetry={refetch} />
         ) : data.items.length === 0 ? (
           filters.isFiltered ? (
             <EmptyState
@@ -72,9 +72,11 @@ function PaymentsList({ onCreate }: { onCreate: () => void }) {
               icon={<ReceiptIcon />}
               title="No payments yet"
               action={
-                <Button size="sm" variant="primary" onClick={onCreate}>
-                  Create a test payment
-                </Button>
+                onCreate && (
+                  <Button size="sm" variant="primary" onClick={onCreate}>
+                    Create a test payment
+                  </Button>
+                )
               }
             >
               Payments appear here when your backend calls{' '}
