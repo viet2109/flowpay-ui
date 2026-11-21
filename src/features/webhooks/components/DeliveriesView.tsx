@@ -1,7 +1,7 @@
 import { PaperPlaneTiltIcon } from '@phosphor-icons/react'
 import { useTranslation } from 'react-i18next'
 import { Pagination } from '@/components/pagination'
-import { EmptyState, ErrorState } from '@/components/states'
+import { EmptyState, ErrorState, RefreshFailed } from '@/components/states'
 import { Button } from '@/components/ui/button'
 import { NativeSelect } from '@/components/ui/input'
 import { Segmented } from '@/components/ui/segmented'
@@ -27,6 +27,8 @@ export function DeliveriesView({ endpointId: fixedEndpoint }: { endpointId?: str
   const { status, eventType, urlEndpoint, isFiltered } = filters
 
   const endpoints = useEndpoints()
+  // On error, data is what an earlier successful fetch of these filters returned;
+  // placeholder rows from other filters are never kept past an error.
   const { data, isPending, isFetching, isPlaceholderData, error, refetch } = useDeliveries(filters.apiFilters)
   // A link can name an endpoint that is not in the list (another merchant's, or a
   // typo): the backend then returns nothing, and the select must still show the filter.
@@ -88,9 +90,11 @@ export function DeliveriesView({ endpointId: fixedEndpoint }: { endpointId?: str
       </div>
 
       <div className={isPlaceholderData ? 'opacity-70 transition-opacity' : 'transition-opacity'}>
+        {/* Polling failed with rows on screen: keep them, say they may be stale. */}
+        {error && data && <RefreshFailed error={error} onRetry={refetch} className="mb-4" />}
         {isPending ? (
           <TableSkeleton columns={6} />
-        ) : error ? (
+        ) : !data ? (
           <ErrorState error={error} onRetry={refetch} />
         ) : pastEnd ? (
           <EmptyState

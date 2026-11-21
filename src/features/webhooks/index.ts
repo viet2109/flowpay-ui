@@ -1,7 +1,7 @@
 export { WebhooksPage } from './pages/WebhooksPage'
 export { EndpointDetailPage } from './pages/EndpointDetailPage'
 export { DeliveriesPage } from './pages/DeliveriesPage'
-export { useDeliveryCounts, useEndpoints } from './queries'
+export { useDeliveryCounts, useEndpoints, useRetryableDeadCount } from './queries'
 export { deliveryStatus } from './catalog'
 export type {
   CreatedEndpoint,

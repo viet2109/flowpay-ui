@@ -81,8 +81,10 @@ test.describe('session', () => {
 
   test('a refused session returns to sign-in, then back to the same page', async ({ page }) => {
     await signIn(page)
-    await page.goto('/developers/webhooks')
-    await expect(page.getByRole('heading', { level: 1, name: 'Webhooks' })).toBeVisible()
+    // A page that does not poll: the webhooks pages refresh moving deliveries on their
+    // own, which would hit the refusal below before the navigation does.
+    await page.goto('/developers/api-keys')
+    await expect(page.getByRole('heading', { level: 1, name: 'API keys' })).toBeVisible()
 
     // The server now refuses both the access token and the refresh token.
     await page.route(REFRESH, (route) => problem(route, 401, 'REFRESH_TOKEN_EXPIRED'))
@@ -90,8 +92,8 @@ test.describe('session', () => {
       (url) => url.pathname.startsWith('/api/v1/merchant'),
       (route) => problem(route, 401, 'AUTHENTICATION_REQUIRED'),
     )
-    // The delivery list is not cached yet, so opening it asks the server.
-    await page.getByRole('navigation', { name: 'Webhooks' }).getByRole('link', { name: 'Deliveries' }).click()
+    // The endpoint list is not cached yet, so opening it asks the server.
+    await page.getByRole('link', { name: 'Webhooks' }).click()
 
     await expect(page).toHaveURL(/\/login$/)
     await expect(
@@ -103,7 +105,7 @@ test.describe('session', () => {
     await page.getByLabel('Email').fill(email)
     await page.getByLabel('Password', { exact: true }).fill(password)
     await page.getByRole('button', { name: 'Sign in' }).click()
-    await expect(page).toHaveURL(/\/developers\/webhooks\/deliveries$/)
+    await expect(page).toHaveURL(/\/developers\/webhooks$/)
   })
 
   test('an unreachable backend at start-up is not treated as signed out', async ({ page }) => {

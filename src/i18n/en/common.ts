@@ -20,6 +20,7 @@ export const common = {
     previous: 'Previous page',
     next: 'Next page',
   },
+  refreshFailed: 'Could not refresh. What you see may be out of date.',
   errorState: {
     title: 'Could not load this',
     request: 'Request',

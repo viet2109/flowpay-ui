@@ -5,41 +5,47 @@ import { toast } from 'sonner'
 import { Callout } from '@/components/callout'
 import { CopyableId } from '@/components/copyable-id'
 import { DescriptionList } from '@/components/description-list'
-import { ErrorState } from '@/components/states'
+import { ActionError, ErrorState, RefreshFailed } from '@/components/states'
 import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { Sheet } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { isApiError } from '@/lib/api/errors'
-import { useErrorMessage, useFormat } from '@/i18n'
+import { useFormat } from '@/i18n'
 import { deliveryStatus } from '../catalog'
-import { useDelivery, useEndpoints, useRetryDelivery } from '../queries'
+import { useDelivery, useEndpoint, useRetryDelivery } from '../queries'
+import type { WebhookEndpoint } from '../types'
 import { AttemptTimeline } from './AttemptTimeline'
 import { RetryTrack } from './RetryTrack'
 
 export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | null; onClose: () => void }) {
   const { t } = useTranslation('webhooks')
-  const errorMessage = useErrorMessage()
   const fmt = useFormat()
   const { data, isPending, error, refetch } = useDelivery(deliveryId)
-  const endpoints = useEndpoints()
+  // The endpoint itself, not the list: whether a retry is allowed must not depend
+  // on another query having loaded.
+  const endpoint = useEndpoint(data?.endpointId)
   const retry = useRetryDelivery()
-  const endpoint = endpoints.data?.find((e) => e.id === data?.endpointId)
-  const canRetry = data?.status === 'DEAD' && endpoint?.status === 'ACTIVE'
+  // docs/api-contract.md §14: manual retry only for a DEAD delivery whose endpoint is ACTIVE.
+  const canRetry = data?.status === 'DEAD' && endpoint.data?.status === 'ACTIVE'
 
   function runRetry() {
     if (!data) return
     retry.mutate(data.id, {
       onSuccess: () =>
         toast.success(t('sheet.retryScheduled'), { description: t('sheet.retryScheduledBody') }),
-      onError: (e) => toast.error(errorMessage(e)),
     })
+  }
+
+  function close() {
+    retry.reset()
+    onClose()
   }
 
   return (
     <Sheet
       open={Boolean(deliveryId)}
-      onOpenChange={(open) => !open && onClose()}
+      onOpenChange={(open) => !open && close()}
       eyebrow={t('sheet.eyebrow')}
       title={data ? <span className="font-mono text-sm">{data.eventType}</span> : t('sheet.loading')}
       actions={
@@ -51,12 +57,12 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
         )
       }
     >
-      {isPending ? (
+      {isPending && !data ? (
         <div className="space-y-3 p-5">
           <Skeleton className="h-6 w-32" />
           <Skeleton className="h-40 w-full" />
         </div>
-      ) : error ? (
+      ) : !data ? (
         // Asking again for a delivery that does not exist cannot help.
         <ErrorState
           error={error}
@@ -64,6 +70,8 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
         />
       ) : (
         <div className="space-y-6 p-5">
+          {/* A failed refresh while polling keeps what was loaded instead of blanking it. */}
+          {error && <RefreshFailed error={error} onRetry={refetch} />}
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge {...deliveryStatus[data.status]} />
             <span className="text-sm text-ink-2">{t(`event.${data.eventType}`)}</span>
@@ -76,8 +84,17 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
                 data.lastError === 'ENDPOINT_DISABLED' ? t('sheet.cancelledTitle') : t('sheet.exhaustedTitle')
               }
             >
-              {endpoint?.status === 'ACTIVE' ? t('sheet.fixThenRetry') : t('sheet.cannotRetry')}
+              <RetryRule endpoint={endpoint} />
             </Callout>
+          )}
+          {retry.error && (
+            <ActionError
+              error={retry.error}
+              // Someone else retried it, or the endpoint was disabled, since this loaded.
+              message={
+                isApiError(retry.error, 'WEBHOOK_INVALID_STATE') ? t('sheet.retryConflict') : undefined
+              }
+            />
           )}
 
           <section>
@@ -119,7 +136,7 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
                     to={`/developers/webhooks/${data.endpointId}`}
                     className="font-mono text-xs text-accent hover:underline"
                   >
-                    {endpoint?.url ?? data.endpointId}
+                    {endpoint.data?.url ?? data.endpointId}
                   </Link>
                 ),
               },
@@ -140,4 +157,17 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
       )}
     </Sheet>
   )
+}
+
+/** Why a dead delivery can or cannot be retried, once the endpoint is known. */
+function RetryRule({
+  endpoint,
+}: {
+  endpoint: { data?: WebhookEndpoint; isPending: boolean; error: Error | null }
+}) {
+  const { t } = useTranslation('webhooks')
+  if (endpoint.data?.status === 'ACTIVE') return t('sheet.fixThenRetry')
+  if (endpoint.data) return t('sheet.cannotRetry')
+  if (endpoint.error) return t('sheet.endpointUnknown')
+  return <Skeleton className="mt-1 h-4 w-64" />
 }

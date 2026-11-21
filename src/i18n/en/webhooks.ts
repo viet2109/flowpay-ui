@@ -144,6 +144,10 @@ export const webhooks = {
     exhaustedTitle: 'Automatic retries exhausted',
     fixThenRetry: 'Fix the receiver, then retry. A manual retry adds one attempt and keeps the full history.',
     cannotRetry: 'The endpoint is disabled, so this delivery cannot be retried.',
+    retryConflict:
+      'This delivery can no longer be retried: it was already retried, or its endpoint was disabled. Its current state is shown below.',
+    endpointUnknown:
+      'The endpoint could not be loaded, so FlowPay cannot tell whether this delivery can be retried.',
     schedule: 'Retry schedule',
     attempts: 'Attempts',
     noAttempts: 'No attempt has started yet.',

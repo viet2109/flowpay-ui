@@ -268,6 +268,9 @@ Every data view handles all of these:
 - [ ] Error: specific message + `requestId` + retry; invalid test key → reconnect
 - [ ] Stale while refetching: keep previous rows (`placeholderData`), dim slightly
 - [ ] Moving states auto-refresh (PROCESSING payments, RETRYING deliveries)
+- [ ] A failed background refresh keeps what is on screen and adds `RefreshFailed`
+      (may be out of date + retry); `ErrorState` only when there is nothing to show
+- [ ] A link past the last page offers the first page, not the empty state
 
 ## 9. Voice and copy
 

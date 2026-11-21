@@ -68,18 +68,50 @@ export function ErrorState({
  * A failed action, shown where the person acted (inside its dialog) rather than
  * in a toast, with the requestId to quote to support.
  */
-export function ActionError({ error }: { error: unknown }) {
+export function ActionError({ error, message }: { error: unknown; message?: string }) {
   const { t } = useTranslation('common')
   const errorMessage = useErrorMessage()
   const requestId = isApiError(error) ? error.requestId : undefined
   return (
     <Callout tone="danger">
-      {errorMessage(error)}
+      {/* `message` explains a code in the context of this action; the requestId still shows. */}
+      {message ?? errorMessage(error)}
       {requestId && (
         <span className="mt-1 flex items-center gap-1.5 text-xs">
           {t('errorState.request')} <CopyableId value={requestId} truncate={false} />
         </span>
       )}
+    </Callout>
+  )
+}
+
+/**
+ * A background refresh (polling) failed while earlier data is still on screen:
+ * keep the data, say it may be out of date, and offer to ask again.
+ */
+export function RefreshFailed({
+  error,
+  onRetry,
+  className,
+}: {
+  error: unknown
+  onRetry: () => void
+  className?: string
+}) {
+  const { t } = useTranslation('common')
+  const errorMessage = useErrorMessage()
+  return (
+    <Callout
+      tone="warning"
+      className={className}
+      title={t('refreshFailed')}
+      action={
+        <Button size="sm" onClick={onRetry}>
+          {t('errorState.retry')}
+        </Button>
+      }
+    >
+      {errorMessage(error)}
     </Callout>
   )
 }

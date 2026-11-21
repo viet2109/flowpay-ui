@@ -19,7 +19,7 @@ import {
   type PaymentStatus,
 } from '@/features/payments'
 import { ConnectKeyPanel, useTestKey } from '@/features/test-mode'
-import { deliveryStatus, useDeliveryCounts, useEndpoints } from '@/features/webhooks'
+import { deliveryStatus, useDeliveryCounts, useEndpoints, useRetryableDeadCount } from '@/features/webhooks'
 import { cn } from '@/lib/cn'
 import { useFormat } from '@/i18n'
 
@@ -144,10 +144,16 @@ function AttentionRow({
 function AttentionPanel() {
   const hasKey = useTestKey((s) => Boolean(s.key))
   const payments = usePaymentStatusCounts()
-  const deliveries = useDeliveryCounts(undefined, ['DEAD', 'RETRYING'])
+  const deliveries = useDeliveryCounts(undefined, ['RETRYING'])
+  // Only dead deliveries a manual retry can reach: those on disabled endpoints stay dead.
+  const dead = useRetryableDeadCount()
+  const deadLink =
+    dead.endpointIds.length === 1
+      ? `/developers/webhooks/deliveries?status=DEAD&endpointId=${dead.endpointIds[0]}`
+      : '/developers/webhooks/deliveries?status=DEAD'
   const processing = hasKey ? payments.counts.PROCESSING : 0
-  const total = processing + deliveries.counts.DEAD + deliveries.counts.RETRYING
-  const pending = deliveries.isPending || (hasKey && payments.isPending)
+  const total = processing + dead.count + deliveries.counts.RETRYING
+  const pending = deliveries.isPending || dead.isPending || (hasKey && payments.isPending)
   const { t } = useTranslation('overview')
 
   return (
@@ -172,12 +178,8 @@ function AttentionPanel() {
             {t('attention.unknownOutcome', { count: processing })}
           </AttentionRow>
         )}
-        <AttentionRow
-          count={deliveries.counts.DEAD}
-          pending={deliveries.isPending}
-          to="/developers/webhooks/deliveries?status=DEAD"
-        >
-          {t('attention.deadDeliveries', { count: deliveries.counts.DEAD })}
+        <AttentionRow count={dead.count} pending={dead.isPending} to={deadLink}>
+          {t('attention.deadDeliveries', { count: dead.count })}
         </AttentionRow>
         <AttentionRow
           count={deliveries.counts.RETRYING}

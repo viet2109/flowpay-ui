@@ -145,6 +145,9 @@ export const webhooks: Messages<typeof en> = {
     fixThenRetry:
       'Sửa máy nhận rồi gửi lại. Gửi lại thủ công thêm một lượt thử và giữ nguyên toàn bộ lịch sử.',
     cannotRetry: 'Endpoint đã tắt nên không thể gửi lại lượt này.',
+    retryConflict:
+      'Không thể gửi lại lượt này nữa: nó đã được gửi lại, hoặc endpoint đã bị tắt. Trạng thái hiện tại hiển thị bên dưới.',
+    endpointUnknown: 'Không tải được endpoint nên FlowPay không biết lượt gửi này có gửi lại được hay không.',
     schedule: 'Lịch thử lại',
     attempts: 'Các lượt thử',
     noAttempts: 'Chưa có lượt thử nào bắt đầu.',

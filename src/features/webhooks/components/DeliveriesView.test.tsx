@@ -52,6 +52,8 @@ const detail: WebhookDeliveryDetail = {
 
 /** List replies per request; tests override for empty and past-the-end pages. */
 let list: (query: URLSearchParams) => { items: WebhookDelivery[]; total: number }
+/** Makes the list request fail for these filters. */
+let failList: (query: URLSearchParams) => boolean
 const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
   const url = new URL(String(input), 'http://localhost')
   const json = (status: number, body: unknown) =>
@@ -68,6 +70,8 @@ const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       title: 'Webhook delivery not found',
       requestId: 'req_MISSING',
     })
+  if (failList(url.searchParams))
+    return json(500, { status: 500, code: 'INTERNAL_ERROR', title: 'Internal error', requestId: 'req_LIST' })
   const { items, total } = list(url.searchParams)
   const pageNo = Number(url.searchParams.get('page') ?? 0)
   return json(200, {
@@ -141,6 +145,7 @@ beforeEach(() => {
     onSessionExpired: () => {},
   })
   list = () => ({ items: [delivery], total: 1 })
+  failList = () => false
 })
 
 afterEach(() => vi.unstubAllGlobals())
@@ -235,5 +240,15 @@ describe('DeliveriesView', () => {
     expect(within(select).getByRole('option', { name: 'Endpoint wep_elsewhere' })).toBeInTheDocument()
     expect(within(select).getByRole('option', { name: 'abc.store/hooks/old (disabled)' })).toBeInTheDocument()
     expect(await screen.findByText('No deliveries match these filters')).toBeInTheDocument()
+  })
+
+  it('does not show the previous filter’s rows when the new filter fails to load', async () => {
+    failList = (query) => query.get('status') === 'DEAD'
+    const user = renderView()
+    await screen.findByRole('row', { name: /payment.succeeded/ })
+    await user.click(screen.getByRole('radio', { name: 'Dead' }))
+    expect(await screen.findByText('Could not load this')).toBeInTheDocument()
+    expect(screen.queryByRole('row', { name: /payment.succeeded/ })).not.toBeInTheDocument()
+    expect(screen.queryByText('Could not refresh. What you see may be out of date.')).not.toBeInTheDocument()
   })
 })

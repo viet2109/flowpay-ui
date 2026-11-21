@@ -22,6 +22,7 @@ export const common: Messages<typeof en> = {
     previous: 'Trang trước',
     next: 'Trang sau',
   },
+  refreshFailed: 'Không làm mới được. Dữ liệu đang hiển thị có thể đã cũ.',
   errorState: {
     title: 'Không tải được dữ liệu',
     request: 'Mã yêu cầu',

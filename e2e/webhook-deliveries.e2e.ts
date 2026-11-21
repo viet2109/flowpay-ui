@@ -40,3 +40,19 @@ test('a link to a delivery that does not exist says so', async ({ authedPage: pa
   await expect(sheet.getByText('There is no delivery with this ID in your account.')).toBeVisible()
   await expect(sheet.getByRole('button', { name: 'Try again' })).toHaveCount(0)
 })
+
+test('dead deliveries on a disabled endpoint are not offered or counted as retryable', async ({
+  authedPage: page,
+}) => {
+  // The seeded merchant's only dead deliveries were cancelled by disabling their endpoint.
+  await page.goto('/')
+  const deadRow = page.getByRole('link', { name: /dead webhook deliver(y|ies) you can retry/ })
+  await expect(deadRow).toContainText('0')
+
+  await page.goto('/developers/webhooks/deliveries?status=DEAD')
+  const rows = page.getByRole('row').filter({ has: page.getByRole('cell') })
+  await rows.first().getByRole('cell').first().click()
+  const sheet = page.getByRole('dialog')
+  await expect(sheet.getByText('The endpoint is disabled, so this delivery cannot be retried.')).toBeVisible()
+  await expect(sheet.getByRole('button', { name: 'Retry' })).toHaveCount(0)
+})

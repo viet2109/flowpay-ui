@@ -1,6 +1,12 @@
 import { keepPreviousData, useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { webhooksApi } from './api'
-import { DELIVERY_STATUSES, type DeliveryFilters, type DeliveryStatus, type EndpointInput } from './types'
+import {
+  DELIVERY_STATUSES,
+  type DeliveryFilters,
+  type DeliveryStatus,
+  type EndpointInput,
+  type WebhookDeliveryDetail,
+} from './types'
 
 export const webhookKeys = {
   endpoints: ['webhooks', 'endpoints'] as const,
@@ -24,10 +30,43 @@ export function useEndpoints() {
   return useQuery({ queryKey: webhookKeys.endpoints, queryFn: ({ signal }) => webhooksApi.endpoints(signal) })
 }
 
-export function useEndpoint(id: string) {
+/** `id` may arrive later (e.g. from a delivery still loading); nothing is asked until then. */
+export function useEndpoint(id: string | undefined) {
   return useQuery({
-    queryKey: webhookKeys.endpoint(id),
-    queryFn: ({ signal }) => webhooksApi.endpoint(id, signal),
+    queryKey: webhookKeys.endpoint(id ?? ''),
+    queryFn: ({ signal }) => webhooksApi.endpoint(id!, signal),
+    enabled: Boolean(id),
+  })
+}
+
+/**
+ * DEAD deliveries that a manual retry can actually reach: only those on ACTIVE
+ * endpoints (a disabled endpoint cannot be re-enabled, so its dead deliveries stay
+ * dead). No aggregate API: one size=1 count per active endpoint, sharing the
+ * endpoint list's health cache.
+ */
+export function useRetryableDeadCount() {
+  const endpoints = useEndpoints()
+  const active = endpoints.data?.filter((e) => e.status === 'ACTIVE') ?? []
+  return useQueries({
+    queries: active.map((endpoint) => ({
+      queryKey: webhookKeys.deliveryCount('DEAD', endpoint.id),
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        webhooksApi.deliveries({ status: 'DEAD', endpointId: endpoint.id, size: 1 }, signal),
+      staleTime: 30_000,
+    })),
+    combine: (results) => {
+      const counts = active.map((endpoint, i) => ({
+        endpointId: endpoint.id,
+        count: results[i]?.data?.meta.totalElements ?? 0,
+      }))
+      return {
+        isPending: endpoints.isPending || results.some((r) => r.isPending),
+        count: counts.reduce((sum, c) => sum + c.count, 0),
+        /** Active endpoints that have dead deliveries. */
+        endpointIds: counts.filter((c) => c.count > 0).map((c) => c.endpointId),
+      }
+    },
   })
 }
 
@@ -147,6 +186,16 @@ export function useRotateSecret() {
 }
 
 export function useRetryDelivery() {
+  const queryClient = useQueryClient()
   const invalidate = useInvalidateWebhooks()
-  return useMutation({ mutationFn: webhooksApi.retry, onSettled: invalidate })
+  return useMutation({
+    mutationFn: webhooksApi.retry,
+    // The 202 body is the rescheduled summary (RETRYING, next attempt now). Show it at
+    // once so the Retry button goes away; attempt history is unchanged by a retry.
+    onSuccess: (summary) =>
+      queryClient.setQueryData<WebhookDeliveryDetail>(webhookKeys.delivery(summary.id), (old) =>
+        old ? { ...old, ...summary } : old,
+      ),
+    onSettled: invalidate,
+  })
 }
