@@ -11,12 +11,10 @@ import { Button } from '@/components/ui/button'
 import { Sheet } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { isApiError } from '@/lib/api/errors'
-import { cn } from '@/lib/cn'
 import { useErrorMessage, useFormat } from '@/i18n'
 import { deliveryStatus } from '../catalog'
 import { useDelivery, useEndpoints, useRetryDelivery } from '../queries'
-import type { DeliveryAttempt } from '../types'
-import { HttpResult } from './DeliveriesTable'
+import { AttemptTimeline } from './AttemptTimeline'
 import { RetryTrack } from './RetryTrack'
 
 export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | null; onClose: () => void }) {
@@ -92,11 +90,7 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
             {data.attempts.length === 0 ? (
               <p className="text-sm text-ink-3">{t('sheet.noAttempts')}</p>
             ) : (
-              <ol className="relative space-y-0 border-l border-line pl-4">
-                {data.attempts.map((attempt) => (
-                  <AttemptRow key={attempt.attemptNo} attempt={attempt} />
-                ))}
-              </ol>
+              <AttemptTimeline attempts={data.attempts} />
             )}
           </section>
 
@@ -145,35 +139,5 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
         </div>
       )}
     </Sheet>
-  )
-}
-
-function AttemptRow({ attempt }: { attempt: DeliveryAttempt }) {
-  const { t } = useTranslation('webhooks')
-  const fmt = useFormat()
-  const ok = attempt.httpStatus !== null && attempt.httpStatus >= 200 && attempt.httpStatus < 300
-  return (
-    <li className="relative pb-4 last:pb-0">
-      <span
-        className={cn(
-          'absolute top-1.5 -left-[21px] size-2.5 rounded-full border-2 border-surface',
-          ok ? 'bg-success' : attempt.finishedAt ? 'bg-danger' : 'bg-progress',
-        )}
-      />
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="text-sm">
-          {t('sheet.attempt')} <span className="num">#{attempt.attemptNo}</span>
-        </span>
-        <span className="num text-xs text-ink-3">{fmt.dateTime(attempt.startedAt)}</span>
-      </div>
-      <div className="mt-0.5 flex items-center gap-2 text-xs text-ink-3">
-        <HttpResult status={attempt.httpStatus} />
-        <span>·</span>
-        <span className="num">{fmt.duration(attempt.durationMs)}</span>
-      </div>
-      {attempt.errorMessage && (
-        <p className="mt-1 font-mono text-xs break-all text-danger">{attempt.errorMessage}</p>
-      )}
-    </li>
   )
 }

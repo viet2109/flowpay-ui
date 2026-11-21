@@ -98,6 +98,8 @@ const TARGETS: ShotTarget[] = [
         .getByRole('row')
         .filter({ has: page.getByRole('cell') })
         .first()
+        .getByRole('cell')
+        .first()
         .click()
       await expect(page.getByRole('dialog').locator('ol li').first()).toBeVisible()
     },

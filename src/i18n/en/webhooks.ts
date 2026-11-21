@@ -156,6 +156,36 @@ export const webhooks = {
     delivered: 'Delivered',
     nextAttempt: 'Next attempt',
   },
+  attempts: {
+    manual: 'manual retry',
+    inFlight: 'Sending now',
+    unknown: 'Outcome unknown',
+  },
+  // Backend diagnostic codes; the code itself is always shown next to these.
+  diagnostic: {
+    CONNECT_TIMEOUT: 'No connection within the connect timeout (2 s by default).',
+    REQUEST_TIMEOUT: 'No response within the request timeout (5 s by default).',
+    TLS_FAILURE: 'The TLS handshake failed. Check the certificate on your server.',
+    TRANSPORT_FAILURE: 'The request could not be sent, or the connection broke before a response.',
+    INTERRUPTED: 'FlowPay interrupted the attempt on its side.',
+    INVALID_URL: 'The endpoint URL could not be used for this request.',
+    DELIVERY_LEASE_EXPIRED:
+      'FlowPay stopped waiting for this attempt, so its result is unknown. Your receiver may still have got it: deduplicate by FlowPay-Event-Id.',
+    ENDPOINT_DISABLED: 'The endpoint was disabled before this delivery could be sent.',
+  },
+  track: {
+    now: 'now',
+    manual: 'manual',
+    pending: 'First attempt <time/>',
+    delivering: 'Attempt {{n}} is being sent',
+    delivered: 'Delivered on attempt {{n}}',
+    retrying_one: '{{count}} of {{max}} automatic attempts used · next <time/>',
+    retrying_other: '{{count}} of {{max}} automatic attempts used · next <time/>',
+    manualScheduled: 'Manual retry scheduled <time/>',
+    dead_one: '{{count}} attempt, none delivered',
+    dead_other: '{{count}} attempts, none delivered',
+    jitter: 'Base delays; each retry adds up to 20% jitter.',
+  },
   health: {
     lastDelivery: 'Last delivery',
     noDeliveries: 'No deliveries yet',

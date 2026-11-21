@@ -157,6 +157,33 @@ export const webhooks: Messages<typeof en> = {
     delivered: 'Đã gửi lúc',
     nextAttempt: 'Lượt thử tới',
   },
+  attempts: {
+    manual: 'gửi lại thủ công',
+    inFlight: 'Đang gửi',
+    unknown: 'Không rõ kết quả',
+  },
+  diagnostic: {
+    CONNECT_TIMEOUT: 'Không kết nối được trong thời gian chờ kết nối (mặc định 2 giây).',
+    REQUEST_TIMEOUT: 'Không có phản hồi trong thời gian chờ yêu cầu (mặc định 5 giây).',
+    TLS_FAILURE: 'Bắt tay TLS thất bại. Hãy kiểm tra chứng chỉ trên máy chủ của bạn.',
+    TRANSPORT_FAILURE: 'Không gửi được yêu cầu, hoặc kết nối bị ngắt trước khi có phản hồi.',
+    INTERRUPTED: 'FlowPay đã ngắt lượt thử này ở phía mình.',
+    INVALID_URL: 'Không dùng được URL của endpoint cho yêu cầu này.',
+    DELIVERY_LEASE_EXPIRED:
+      'FlowPay đã ngừng chờ lượt thử này nên không rõ kết quả. Máy nhận của bạn có thể vẫn đã nhận được: hãy loại trùng theo FlowPay-Event-Id.',
+    ENDPOINT_DISABLED: 'Endpoint đã bị tắt trước khi lượt gửi này kịp được gửi.',
+  },
+  track: {
+    now: 'ngay',
+    manual: 'thủ công',
+    pending: 'Lượt thử đầu tiên <time/>',
+    delivering: 'Đang gửi lượt thử {{n}}',
+    delivered: 'Đã gửi thành công ở lượt thử {{n}}',
+    retrying_other: 'Đã dùng {{count}}/{{max}} lượt thử tự động · lượt tới <time/>',
+    manualScheduled: 'Đã lên lịch gửi lại thủ công <time/>',
+    dead_other: '{{count}} lượt thử, chưa lượt nào thành công',
+    jitter: 'Độ trễ cơ bản; mỗi lần thử lại cộng thêm tối đa 20% ngẫu nhiên.',
+  },
   health: {
     lastDelivery: 'Lần gửi gần nhất',
     noDeliveries: 'Chưa có lượt gửi nào',

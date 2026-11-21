@@ -97,4 +97,20 @@ test('the guide’s code verifies real deliveries, and only with the current sec
     .toBe(true)
   await reloadUntilVisible(page, deliveryRow(page, 'Delivered', 204).nth(1), 15_000)
   await expect(page.getByRole('row').filter({ hasText: 'Retrying' })).toHaveCount(0)
+
+  // Its sheet tells the story from the backend's attempts: rejected once, then delivered.
+  // The event cell: the row's middle holds a copy button, which does not open the sheet.
+  await page
+    .getByRole('row')
+    .filter({ hasText: 'Delivered' })
+    .filter({ hasText: '2/6' })
+    .getByRole('cell')
+    .first()
+    .click()
+  const sheet = page.getByRole('dialog')
+  await expect(sheet.getByText('Delivered on attempt 2')).toBeVisible()
+  const attempts = sheet.getByRole('listitem')
+  await expect(attempts).toHaveCount(2)
+  await expect(attempts.nth(0)).toContainText('HTTP 401')
+  await expect(attempts.nth(1)).toContainText('HTTP 204')
 })

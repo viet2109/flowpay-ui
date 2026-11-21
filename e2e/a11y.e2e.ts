@@ -150,6 +150,8 @@ const TARGETS: Target[] = [
         .getByRole('row')
         .filter({ has: p.getByRole('cell') })
         .first()
+        .getByRole('cell')
+        .first()
         .click()
       await expect(p.getByRole('dialog').getByText('Attempts', { exact: true })).toBeVisible()
     },

@@ -15,7 +15,8 @@ test('a filtered list and an open delivery survive reload, and Back closes the d
   await expect(rows.filter({ hasNotText: 'Dead' })).toHaveCount(0)
   await expect(rows.first()).toContainText('Dead')
 
-  await rows.first().click()
+  // The event cell: the row's middle holds a copy button, which does not open the sheet.
+  await rows.first().getByRole('cell').first().click()
   await expect(page).toHaveURL(/[?&]delivery=wdl_\w+/)
   const deliveryId = new URL(page.url()).searchParams.get('delivery')!
   const sheet = page.getByRole('dialog')

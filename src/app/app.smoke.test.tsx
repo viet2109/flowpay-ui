@@ -137,6 +137,7 @@ describe('app routes', () => {
       'LifecycleRail',
       'RefundCapacity',
       'RetryTrack',
+      'AttemptTimeline',
       'API key statuses',
       'Merchant statuses',
     ])

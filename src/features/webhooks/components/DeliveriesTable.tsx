@@ -4,7 +4,7 @@ import { RelativeTime } from '@/components/relative-time'
 import { StatusBadge } from '@/components/status-badge'
 import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/table'
 import { cn } from '@/lib/cn'
-import { deliveryStatus, MAX_AUTOMATIC_ATTEMPTS } from '../catalog'
+import { deliveryStatus, LEASE_EXPIRED, MAX_AUTOMATIC_ATTEMPTS } from '../catalog'
 import type { WebhookDelivery } from '../types'
 
 export function HttpResult({ status, error }: { status: number | null; error?: string | null }) {
@@ -16,7 +16,13 @@ export function HttpResult({ status, error }: { status: number | null; error?: s
   }
   if (error)
     return (
-      <span className="block max-w-56 truncate text-xs text-danger" title={error}>
+      <span
+        className={cn(
+          'block max-w-56 truncate text-xs',
+          error === LEASE_EXPIRED ? 'text-warning' : 'text-danger',
+        )}
+        title={error}
+      >
         {error}
       </span>
     )
