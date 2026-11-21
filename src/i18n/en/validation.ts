@@ -17,6 +17,8 @@ export const validation = {
   urlScheme: 'Use an https:// URL.',
   urlFragment: 'Remove the #fragment.',
   urlCredentials: 'Credentials in the URL are not allowed.',
+  urlRejected:
+    'FlowPay will not send to this address. Use a public URL; private, local and metadata addresses are rejected.',
   urlInvalid: 'This is not a valid URL.',
   eventsRequired: 'Choose at least one event.',
 }

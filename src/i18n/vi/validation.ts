@@ -19,6 +19,8 @@ export const validation: Messages<typeof en> = {
   urlScheme: 'Dùng URL https://.',
   urlFragment: 'Bỏ phần #fragment.',
   urlCredentials: 'URL không được chứa thông tin đăng nhập.',
+  urlRejected:
+    'FlowPay không gửi tới địa chỉ này. Hãy dùng URL công khai; địa chỉ nội bộ, local và metadata đều bị từ chối.',
   urlInvalid: 'URL không hợp lệ.',
   eventsRequired: 'Chọn ít nhất một sự kiện.',
 }

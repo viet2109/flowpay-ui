@@ -1,5 +1,6 @@
 import { ArrowsClockwiseIcon, DotsThreeIcon, PencilSimpleIcon, ProhibitIcon } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
 import { toast } from 'sonner'
 import { Callout } from '@/components/callout'
@@ -18,7 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/cn'
 import { useErrorMessage, useFormat } from '@/i18n'
 import { useRecentItems } from '@/lib/recent-items'
-import { endpointStatus, EVENT_INFO } from '../catalog'
+import { endpointStatus } from '../catalog'
 import { DeliveriesView } from '../components/DeliveriesView'
 import { EndpointFormDialog } from '../components/EndpointFormDialog'
 import { EndpointUrl } from '../components/EndpointUrl'
@@ -27,6 +28,7 @@ import { useDisableEndpoint, useEndpoint, useRotateSecret } from '../queries'
 import { EVENT_TYPES } from '../types'
 
 export function EndpointDetailPage() {
+  const { t } = useTranslation('webhooks')
   const errorMessage = useErrorMessage()
   const fmt = useFormat()
   const { endpointId = '' } = useParams()
@@ -37,6 +39,14 @@ export function EndpointDetailPage() {
     if (endpoint) remember({ kind: 'endpoint', id: endpoint.id, url: endpoint.url })
   }, [endpoint, remember])
   const [editing, setEditing] = useState(false)
+  // Each opening starts a fresh form from the current endpoint. Keyed by session, not
+  // by updatedAt: saving refetches the endpoint before the save's own callbacks run,
+  // and a new key would replace the dialog mid-save, dropping its toast and close.
+  const [editSession, setEditSession] = useState(0)
+  function startEditing() {
+    setEditSession((n) => n + 1)
+    setEditing(true)
+  }
   const [confirm, setConfirm] = useState<'rotate' | 'disable' | null>(null)
   const [newSecret, setNewSecret] = useState<string | null>(null)
   const rotate = useRotateSecret()
@@ -98,7 +108,7 @@ export function EndpointDetailPage() {
         actions={
           active && (
             <>
-              <Button onClick={() => setEditing(true)}>
+              <Button onClick={startEditing}>
                 <PencilSimpleIcon />
                 Edit
               </Button>
@@ -159,7 +169,7 @@ export function EndpointDetailPage() {
                     />
                     <div className="min-w-0">
                       <div className="font-mono text-xs">{event}</div>
-                      <div className="text-xs text-ink-3">{EVENT_INFO[event].description}</div>
+                      <div className="text-xs text-ink-3">{t(`event.${event}`)}</div>
                     </div>
                   </li>
                 )
@@ -185,13 +195,7 @@ export function EndpointDetailPage() {
         </aside>
       </div>
 
-      {/* key: re-initialise the form from fresh endpoint data on each edit */}
-      <EndpointFormDialog
-        key={endpoint.updatedAt}
-        open={editing}
-        onOpenChange={setEditing}
-        endpoint={endpoint}
-      />
+      <EndpointFormDialog key={editSession} open={editing} onOpenChange={setEditing} endpoint={endpoint} />
 
       <ConfirmDialog
         open={confirm === 'rotate'}

@@ -45,6 +45,21 @@ const TARGETS: ShotTarget[] = [
     ready: (page) => expect(page.getByText('HTTP 200')).toBeVisible(),
   },
   {
+    name: 'webhook-form',
+    path: '/developers/webhooks',
+    auth: true,
+    fullPage: false,
+    // The add dialog with the server's URL-policy rejection shown on the URL field.
+    ready: async (page) => {
+      await expect(page.getByText('HTTP 200')).toBeVisible()
+      await page.getByRole('button', { name: /^(Add endpoint|Thêm endpoint)$/ }).click()
+      const dialog = page.getByRole('dialog')
+      await dialog.locator('input[name=url]').fill('http://169.254.169.254/latest/meta-data')
+      await dialog.locator('button[type=submit]').click()
+      await expect(dialog.locator('input[name=url][aria-invalid=true]')).toBeVisible()
+    },
+  },
+  {
     name: 'command-menu',
     path: '/',
     auth: true,

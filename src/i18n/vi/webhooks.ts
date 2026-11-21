@@ -23,6 +23,42 @@ export const webhooks: Messages<typeof en> = {
     updated: 'cập nhật',
     disabled: 'Không còn nhận sự kiện',
   },
+  form: {
+    addTitle: 'Thêm webhook endpoint',
+    editTitle: 'Sửa endpoint',
+    description:
+      'FlowPay gửi JSON có chữ ký bằng POST tới URL này. Mỗi sự kiện được gửi ít nhất một lần: hãy loại trùng theo FlowPay-Event-Id.',
+    url: 'URL của endpoint',
+    urlHint: 'Môi trường production bắt buộc HTTPS. Địa chỉ nội bộ, local và metadata đều bị từ chối.',
+    events: 'Sự kiện',
+    selected: 'Đã chọn {{count}}/{{total}}',
+    add: 'Thêm endpoint',
+    save: 'Lưu thay đổi',
+    updated: 'Đã cập nhật endpoint',
+    createdTitle: 'Đã tạo endpoint',
+    createdDescription: 'Dùng secret này để xác minh header FlowPay-Signature trên mọi yêu cầu.',
+    secretLabel: 'Signing secret',
+    stored: 'Tôi đã lưu lại',
+  },
+  picker: {
+    selectAll: 'Chọn tất cả',
+    clearAll: 'Bỏ chọn tất cả',
+    none: 'Chưa chọn sự kiện nào',
+    resource: { payment: 'Thanh toán', refund: 'Hoàn tiền' },
+    outcome: { processing: 'Đang xử lý', succeeded: 'Thành công', failed: 'Thất bại' },
+  },
+  event: {
+    payment: {
+      processing: 'Đã gửi tới nhà cung cấp; chưa biết kết quả.',
+      succeeded: 'Nhà cung cấp đã xác nhận khoản thanh toán.',
+      failed: 'Nhà cung cấp đã từ chối khoản thanh toán.',
+    },
+    refund: {
+      processing: 'Chưa biết kết quả hoàn tiền.',
+      succeeded: 'Tiền đã được trả lại cho khách.',
+      failed: 'Nhà cung cấp đã từ chối hoàn tiền.',
+    },
+  },
   health: {
     lastDelivery: 'Lần gửi gần nhất',
     noDeliveries: 'Chưa có lượt gửi nào',

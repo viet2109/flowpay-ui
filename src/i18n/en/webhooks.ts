@@ -20,6 +20,43 @@ export const webhooks = {
     updated: 'updated',
     disabled: 'Receives no events',
   },
+  form: {
+    addTitle: 'Add webhook endpoint',
+    editTitle: 'Edit endpoint',
+    description:
+      'FlowPay POSTs signed JSON to this URL. Delivery is at-least-once: deduplicate by FlowPay-Event-Id.',
+    url: 'Endpoint URL',
+    urlHint: 'HTTPS required in production. Private, local and metadata addresses are rejected.',
+    events: 'Events',
+    selected: '{{count}} of {{total}} selected',
+    add: 'Add endpoint',
+    save: 'Save changes',
+    updated: 'Endpoint updated',
+    createdTitle: 'Endpoint created',
+    createdDescription: 'Use this secret to verify the FlowPay-Signature header on every request.',
+    secretLabel: 'Signing secret',
+    stored: 'I’ve stored it',
+  },
+  picker: {
+    selectAll: 'Select all',
+    clearAll: 'Clear all',
+    none: 'No events selected',
+    resource: { payment: 'Payment', refund: 'Refund' },
+    outcome: { processing: 'Processing', succeeded: 'Succeeded', failed: 'Failed' },
+  },
+  /** Keyed by event name: t(`event.${type}`) reads e.g. event.payment.succeeded. */
+  event: {
+    payment: {
+      processing: 'Sent to the provider; outcome not known yet.',
+      succeeded: 'Provider confirmed the charge.',
+      failed: 'Provider declined the charge.',
+    },
+    refund: {
+      processing: 'Refund outcome not known yet.',
+      succeeded: 'Money returned to the customer.',
+      failed: 'Provider rejected the refund.',
+    },
+  },
   health: {
     lastDelivery: 'Last delivery',
     noDeliveries: 'No deliveries yet',

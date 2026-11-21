@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { Controller, useForm, useWatch } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -11,6 +12,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { useErrorMessage, useFieldError, vmsg } from '@/i18n'
+import { isApiError } from '@/lib/api/errors'
 import { applyServerErrors } from '@/lib/form'
 import { useCreateEndpoint, useUpdateEndpoint } from '../queries'
 import { EVENT_TYPES, type CreatedEndpoint, type EventType, type WebhookEndpoint } from '../types'
@@ -68,6 +70,8 @@ const valuesFor = (endpoint?: WebhookEndpoint): Values => ({
 const sameEvents = (a: EventType[], b: EventType[]) => [...a].sort().join() === [...b].sort().join()
 
 export function EndpointFormDialog({ open, onOpenChange, endpoint }: Props) {
+  const { t } = useTranslation('webhooks')
+  const { t: tc } = useTranslation('common')
   const errorMessage = useErrorMessage()
   const navigate = useNavigate()
   const [created, setCreated] = useState<CreatedEndpoint | null>(null)
@@ -88,10 +92,22 @@ export function EndpointFormDialog({ open, onOpenChange, endpoint }: Props) {
     mutation.reset()
   }
 
+  /**
+   * Field violations land on their field. The backend's URL policy answers with a
+   * VALIDATION_ERROR that has no field list (finding F10); this form only sends
+   * known, unique events and never an empty patch, so when the request carried a
+   * URL, that rejection is about the URL and is shown on it.
+   */
+  function serverError(error: unknown, sentUrl: boolean) {
+    if (applyServerErrors(error, form.setError)) return
+    if (sentUrl && isApiError(error, 'VALIDATION_ERROR')) {
+      form.setError('url', { type: 'server', message: vmsg('urlRejected') })
+    }
+  }
+
   function submit(values: Values) {
-    const onError = (error: unknown) => applyServerErrors(error, form.setError)
     if (!endpoint) {
-      create.mutate(values, { onSuccess: setCreated, onError })
+      create.mutate(values, { onSuccess: setCreated, onError: (error) => serverError(error, true) })
       return
     }
     // PATCH only what changed; an untouched form just closes.
@@ -101,55 +117,50 @@ export function EndpointFormDialog({ open, onOpenChange, endpoint }: Props) {
     if (!patch.url && !patch.events) return close()
     update.mutate(patch, {
       onSuccess: () => {
-        toast.success('Endpoint updated')
+        toast.success(t('form.updated'))
         close()
       },
-      onError,
+      onError: (error) => serverError(error, patch.url !== undefined),
     })
   }
 
-  // Field-level server errors are shown on their field; anything else (including
-  // URL-policy rejections, which carry no `errors[]`) goes in the callout.
+  // Anything not shown on a field (conflicts, network, rate limits) goes in the callout.
   const showCallout = mutation.isError && !errors.url && !errors.events
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && !mutation.isPending && close()}>
       {created ? (
         <DialogContent
-          title="Endpoint created"
-          description="Use this secret to verify the FlowPay-Signature header on every request."
+          title={t('form.createdTitle')}
+          description={t('form.createdDescription')}
           onInteractOutside={(e) => e.preventDefault()}
           footer={
             <Button variant="primary" onClick={close}>
-              I’ve stored it
+              {t('form.stored')}
             </Button>
           }
         >
-          <SecretReveal label="Signing secret" secret={created.secret} />
+          <SecretReveal label={t('form.secretLabel')} secret={created.secret} />
         </DialogContent>
       ) : (
         <DialogContent
           width="lg"
-          title={endpoint ? 'Edit endpoint' : 'Add webhook endpoint'}
-          description="FlowPay POSTs signed JSON to this URL. Delivery is at-least-once: deduplicate by FlowPay-Event-Id."
+          title={endpoint ? t('form.editTitle') : t('form.addTitle')}
+          description={t('form.description')}
           footer={
             <>
               <Button variant="ghost" onClick={close} disabled={mutation.isPending}>
-                Cancel
+                {tc('cancel')}
               </Button>
               <Button variant="primary" type="submit" form="endpoint-form" loading={mutation.isPending}>
-                {endpoint ? 'Save changes' : 'Add endpoint'}
+                {endpoint ? t('form.save') : t('form.add')}
               </Button>
             </>
           }
         >
           <form id="endpoint-form" onSubmit={form.handleSubmit(submit)} className="space-y-5" noValidate>
             {showCallout && <Callout tone="danger">{errorMessage(mutation.error)}</Callout>}
-            <Field
-              label="Endpoint URL"
-              hint="HTTPS required in production. Private, local and metadata addresses are rejected."
-              error={fieldError(errors.url?.message)}
-            >
+            <Field label={t('form.url')} hint={t('form.urlHint')} error={fieldError(errors.url?.message)}>
               <Input
                 {...form.register('url')}
                 placeholder="https://example.com/webhooks/flowpay"
@@ -160,9 +171,9 @@ export function EndpointFormDialog({ open, onOpenChange, endpoint }: Props) {
             </Field>
             <div className="space-y-1.5">
               <div className="flex items-baseline justify-between">
-                <span className="text-sm font-medium">Events</span>
+                <span className="text-sm font-medium">{t('form.events')}</span>
                 <span className="num text-xs text-ink-3">
-                  {events.length} of {EVENT_TYPES.length} selected
+                  {t('form.selected', { count: events.length, total: EVENT_TYPES.length })}
                 </span>
               </div>
               <Controller

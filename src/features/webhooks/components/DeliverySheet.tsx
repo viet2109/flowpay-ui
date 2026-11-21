@@ -1,4 +1,5 @@
 import { ArrowClockwiseIcon } from '@phosphor-icons/react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { Callout } from '@/components/callout'
@@ -11,13 +12,14 @@ import { Sheet } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/cn'
 import { useErrorMessage, useFormat } from '@/i18n'
-import { deliveryStatus, EVENT_INFO } from '../catalog'
+import { deliveryStatus } from '../catalog'
 import { useDelivery, useEndpoints, useRetryDelivery } from '../queries'
 import type { DeliveryAttempt } from '../types'
 import { HttpResult } from './DeliveriesTable'
 import { RetryTrack } from './RetryTrack'
 
 export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | null; onClose: () => void }) {
+  const { t } = useTranslation('webhooks')
   const errorMessage = useErrorMessage()
   const fmt = useFormat()
   const { data, isPending, error, refetch } = useDelivery(deliveryId)
@@ -61,7 +63,7 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
         <div className="space-y-6 p-5">
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge {...deliveryStatus[data.status]} />
-            <span className="text-sm text-ink-2">{EVENT_INFO[data.eventType].description}</span>
+            <span className="text-sm text-ink-2">{t(`event.${data.eventType}`)}</span>
           </div>
 
           {data.status === 'DEAD' && (
