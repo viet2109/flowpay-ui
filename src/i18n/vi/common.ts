@@ -21,6 +21,7 @@ export const common: Messages<typeof en> = {
     range: '{{from}}–{{to}} trên {{total}}',
     previous: 'Trang trước',
     next: 'Trang sau',
+    pageSize: 'Số dòng mỗi trang',
   },
   refreshFailed: 'Không làm mới được. Dữ liệu đang hiển thị có thể đã cũ.',
   errorState: {

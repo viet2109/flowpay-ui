@@ -19,6 +19,7 @@ export const common = {
     range: '{{from}}–{{to}} of {{total}}',
     previous: 'Previous page',
     next: 'Next page',
+    pageSize: 'Rows per page',
   },
   refreshFailed: 'Could not refresh. What you see may be out of date.',
   errorState: {

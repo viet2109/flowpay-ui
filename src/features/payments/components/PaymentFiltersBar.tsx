@@ -1,19 +1,21 @@
 import { MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Segmented } from '@/components/ui/segmented'
+import { paymentStatus } from '../status'
 import type { PaymentStatus } from '../types'
 import type { PaymentFilterState } from '../use-payment-filters'
 
-const STATUS_OPTIONS: { value: PaymentStatus | 'ALL'; label: string }[] = [
-  { value: 'ALL', label: 'All' },
-  { value: 'SUCCEEDED', label: 'Succeeded' },
-  { value: 'PROCESSING', label: 'Processing' },
-  { value: 'FAILED', label: 'Failed' },
-  { value: 'PARTIALLY_REFUNDED', label: 'Partially refunded' },
-  { value: 'REFUNDED', label: 'Refunded' },
-  { value: 'CREATED', label: 'Created' },
+/** Most looked-for first: what settled, what is stuck, what failed. */
+const STATUS_ORDER: PaymentStatus[] = [
+  'SUCCEEDED',
+  'PROCESSING',
+  'FAILED',
+  'PARTIALLY_REFUNDED',
+  'REFUNDED',
+  'CREATED',
 ]
 
 interface Props {
@@ -21,9 +23,13 @@ interface Props {
   onChange: (patch: Partial<PaymentFilterState>) => void
   onClear: () => void
   isFiltered: boolean
+  /** The start date is after the end date; the range is not applied. */
+  rangeInverted: boolean
 }
 
-export function PaymentFiltersBar({ state, onChange, onClear, isFiltered }: Props) {
+export function PaymentFiltersBar({ state, onChange, onClear, isFiltered, rangeInverted }: Props) {
+  const { t } = useTranslation('payments')
+  const { t: tStatus } = useTranslation('status')
   // Local text state so typing is instant; the URL (and the request) follows after a pause.
   const [orderId, setOrderId] = useState(state.orderId)
   // When the URL changes from outside (e.g. "Clear filters"), follow it.
@@ -43,10 +49,13 @@ export function PaymentFiltersBar({ state, onChange, onClear, isFiltered }: Prop
     <div className="flex flex-col gap-3">
       <div className="-mx-1 overflow-x-auto px-1">
         <Segmented
-          aria-label="Filter by status"
+          aria-label={t('filters.status')}
           value={state.status}
           onChange={(status) => onChange({ status })}
-          options={STATUS_OPTIONS}
+          options={[
+            { value: 'ALL' as const, label: t('filters.all') },
+            ...STATUS_ORDER.map((s) => ({ value: s, label: tStatus(paymentStatus[s].label) })),
+          ]}
         />
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -54,8 +63,8 @@ export function PaymentFiltersBar({ state, onChange, onClear, isFiltered }: Prop
           <Input
             value={orderId}
             onChange={(e) => setOrderId(e.target.value)}
-            placeholder="Exact order ID"
-            aria-label="Order ID"
+            placeholder={t('filters.orderIdPlaceholder')}
+            aria-label={t('filters.orderId')}
             leading={<MagnifyingGlassIcon className="size-4" />}
             className="pl-8"
           />
@@ -66,26 +75,35 @@ export function PaymentFiltersBar({ state, onChange, onClear, isFiltered }: Prop
             value={state.from}
             max={state.to || undefined}
             onChange={(e) => onChange({ from: e.target.value })}
-            aria-label="Created from"
+            aria-label={t('filters.from')}
+            aria-invalid={rangeInverted || undefined}
+            aria-describedby={rangeInverted ? 'payment-range-error' : undefined}
             className="w-36"
           />
-          <span>to</span>
+          <span>{t('filters.rangeSeparator')}</span>
           <Input
             type="date"
             value={state.to}
             min={state.from || undefined}
             onChange={(e) => onChange({ to: e.target.value })}
-            aria-label="Created to"
+            aria-label={t('filters.to')}
+            aria-invalid={rangeInverted || undefined}
+            aria-describedby={rangeInverted ? 'payment-range-error' : undefined}
             className="w-36"
           />
         </div>
         {isFiltered && (
           <Button variant="ghost" size="sm" onClick={onClear}>
             <XIcon />
-            Clear filters
+            {t('filters.clear')}
           </Button>
         )}
       </div>
+      {rangeInverted && (
+        <p id="payment-range-error" role="alert" className="text-xs text-danger">
+          {t('filters.rangeInverted')}
+        </p>
+      )}
     </div>
   )
 }

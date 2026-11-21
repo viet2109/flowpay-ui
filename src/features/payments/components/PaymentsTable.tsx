@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { CopyableId } from '@/components/copyable-id'
 import { Money } from '@/components/money'
@@ -7,7 +8,12 @@ import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/table'
 import { paymentStatus } from '../status'
 import type { PaymentIntent } from '../types'
 
+/**
+ * On a phone the order and the time move under the amount, so each row reads
+ * without scrolling sideways; from `sm` they have their own columns.
+ */
 export function PaymentsTable({ payments, compact }: { payments: PaymentIntent[]; compact?: boolean }) {
+  const { t } = useTranslation('payments')
   const navigate = useNavigate()
   const open = (id: string) => navigate(`/payments/${id}`)
 
@@ -15,12 +21,12 @@ export function PaymentsTable({ payments, compact }: { payments: PaymentIntent[]
     <Table>
       <THead>
         <tr>
-          <Th className="text-right">Amount</Th>
-          <Th>Status</Th>
-          <Th>Order</Th>
-          {!compact && <Th className="hidden lg:table-cell">Description</Th>}
-          <Th className="hidden md:table-cell">Payment ID</Th>
-          <Th className="text-right">Created</Th>
+          <Th className="text-right">{t('columns.amount')}</Th>
+          <Th>{t('columns.status')}</Th>
+          <Th className="hidden sm:table-cell">{t('columns.order')}</Th>
+          {!compact && <Th className="hidden lg:table-cell">{t('columns.description')}</Th>}
+          <Th className="hidden md:table-cell">{t('columns.id')}</Th>
+          <Th className="hidden text-right sm:table-cell">{t('columns.created')}</Th>
         </tr>
       </THead>
       <TBody>
@@ -36,11 +42,15 @@ export function PaymentsTable({ payments, compact }: { payments: PaymentIntent[]
             >
               <Td className="w-0 text-right font-medium">
                 <Money amount={payment.amount} currency={payment.currency} size="sm" />
+                <span className="block max-w-44 truncate text-xs font-normal text-ink-3 sm:hidden">
+                  {payment.orderId && <>{payment.orderId} · </>}
+                  <RelativeTime value={payment.createdAt} />
+                </span>
               </Td>
               <Td className="w-0">
                 <StatusBadge {...status} />
               </Td>
-              <Td className="max-w-48 truncate text-ink-2">
+              <Td className="hidden max-w-48 truncate text-ink-2 sm:table-cell">
                 {payment.orderId ?? <span className="text-ink-3">—</span>}
               </Td>
               {!compact && (
@@ -49,7 +59,7 @@ export function PaymentsTable({ payments, compact }: { payments: PaymentIntent[]
               <Td className="hidden md:table-cell">
                 <CopyableId value={payment.id} />
               </Td>
-              <Td className="text-right text-ink-3">
+              <Td className="hidden text-right text-ink-3 sm:table-cell">
                 <RelativeTime value={payment.createdAt} />
               </Td>
             </Tr>

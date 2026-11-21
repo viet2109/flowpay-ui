@@ -5,7 +5,9 @@ import { expect, test } from './fixtures'
 async function openCreatePayment(page: Page, language: 'vi' | 'en') {
   await page.addInitScript((lng) => localStorage.setItem('flowpay.language', lng), language)
   await page.goto('/payments')
-  await page.getByRole('button', { name: 'New test payment' }).click()
+  await page
+    .getByRole('button', { name: language === 'vi' ? 'Tạo thanh toán test' : 'New test payment' })
+    .click()
   const dialog = page.getByRole('dialog', { name: 'New test payment' })
   await dialog.getByLabel('Currency').selectOption('USD')
   // Confirmation is irrelevant here; leave the payment in CREATED.

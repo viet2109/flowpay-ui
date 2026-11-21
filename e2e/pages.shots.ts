@@ -25,7 +25,24 @@ const TARGETS: ShotTarget[] = [
     auth: true,
     ready: async (page) => {
       await expect(page.getByRole('heading', { level: 1, name: 'Overview' })).toBeVisible()
-      await expect(page.getByText('ORD-1012').first()).toBeVisible()
+      await expect(page.getByText('ORD-1012').filter({ visible: true }).first()).toBeVisible()
+    },
+  },
+  {
+    name: 'payments',
+    path: '/payments',
+    auth: true,
+    ready: (page) => expect(page.getByText('ORD-1012').filter({ visible: true }).first()).toBeVisible(),
+  },
+  {
+    name: 'payments-range',
+    path: '/payments?from=2026-11-20&to=2026-11-01',
+    auth: true,
+    fullPage: false,
+    // An inverted date range: the error under the filters, the list not narrowed by it.
+    ready: async (page) => {
+      await expect(page.getByRole('alert')).toBeVisible()
+      await expect(page.getByText('ORD-1012').filter({ visible: true }).first()).toBeVisible()
     },
   },
   {
@@ -131,7 +148,7 @@ const TARGETS: ShotTarget[] = [
     fullPage: false,
     // Opens a payment first so "Recent" has a real entry.
     ready: async (page) => {
-      await page.getByText('ORD-1012').first().click()
+      await page.getByText('ORD-1012').filter({ visible: true }).first().click()
       await expect(page).toHaveURL(/\/payments\/pi_/)
       await page.keyboard.press('Control+K')
       await expect(page.getByRole('dialog').getByRole('option').first()).toBeVisible()

@@ -36,7 +36,7 @@ test('fixture: payments render from the real backend with the connected test key
 }) => {
   await page.goto('/payments')
   await expect(page.getByRole('heading', { level: 1, name: 'Payments' })).toBeVisible()
-  await expect(page.getByText('ORD-1012')).toBeVisible()
+  await expect(page.getByText('ORD-1012').filter({ visible: true })).toBeVisible()
 })
 
 test.describe('create account', () => {

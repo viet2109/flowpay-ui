@@ -85,21 +85,21 @@ const TARGETS: Target[] = [
     auth: true,
     ready: async (p) => {
       await heading(p, 'Overview')
-      await expect(p.getByText('ORD-1012').first()).toBeVisible()
+      await expect(p.getByText('ORD-1012').filter({ visible: true }).first()).toBeVisible()
     },
   },
   {
     name: 'payments',
     path: '/payments',
     auth: true,
-    ready: (p) => expect(p.getByText('ORD-1012').first()).toBeVisible(),
+    ready: (p) => expect(p.getByText('ORD-1012').filter({ visible: true }).first()).toBeVisible(),
   },
   {
     name: 'payment detail',
     path: '/payments',
     auth: true,
     ready: async (p) => {
-      await p.getByText('ORD-1012').first().click()
+      await p.getByText('ORD-1012').filter({ visible: true }).first().click()
       await expect(p.getByText('Refund capacity')).toBeVisible()
     },
   },

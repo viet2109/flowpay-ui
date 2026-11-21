@@ -3,15 +3,19 @@ import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react'
 import { useFormat } from '@/i18n'
 import type { PageMeta } from '@/lib/api/types'
 import { Button } from './ui/button'
+import { NativeSelect } from './ui/input'
 
 interface PaginationProps {
   meta: PageMeta
   onPageChange: (page: number) => void
   /** Dims the controls while the next page is fetching. */
   pending?: boolean
+  /** Offer these page sizes; `onPageSizeChange` gets the chosen one. */
+  pageSizes?: readonly number[]
+  onPageSizeChange?: (size: number) => void
 }
 
-export function Pagination({ meta, onPageChange, pending }: PaginationProps) {
+export function Pagination({ meta, onPageChange, pending, pageSizes, onPageSizeChange }: PaginationProps) {
   const { t } = useTranslation('common')
   const fmt = useFormat()
   if (meta.totalElements === 0) return null
@@ -28,6 +32,20 @@ export function Pagination({ meta, onPageChange, pending }: PaginationProps) {
         })}
       </span>
       <div className="flex items-center gap-1">
+        {pageSizes && onPageSizeChange && (
+          <NativeSelect
+            aria-label={t('pagination.pageSize')}
+            value={meta.size}
+            onChange={(e) => onPageSizeChange(Number(e.target.value))}
+            className="num mr-2 h-7 w-[4.5rem] text-xs"
+          >
+            {pageSizes.map((size) => (
+              <option key={size} value={size}>
+                {fmt.number(size)}
+              </option>
+            ))}
+          </NativeSelect>
+        )}
         <Button
           size="icon-sm"
           variant="ghost"

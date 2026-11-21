@@ -25,7 +25,7 @@ test('an opened payment comes back under Recent, and a pasted ID jumps to it', a
   // Visits the list, a payment and the overview on the dev server.
   test.slow()
   await page.goto('/payments')
-  await page.getByText('ORD-1012').first().click()
+  await page.getByText('ORD-1012').filter({ visible: true }).first().click()
   await expect(page.getByText('Refund capacity')).toBeVisible()
   const paymentId = /\/payments\/(pi_\w+)/.exec(page.url())?.[1]
   expect(paymentId, 'payment detail URL').toBeTruthy()
