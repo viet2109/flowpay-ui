@@ -60,8 +60,8 @@ export const test = base.extend<{ authedPage: Page }>({
 })
 
 /**
- * Registers and signs in a merchant of its own in `page`'s context and returns its
- * raw test API key. For tests whose payments would otherwise reach the seeded
+ * Registers and signs in a merchant of its own in `page`'s context. Returns its raw
+ * test API key and a dashboard access token for direct API checks. For tests whose payments would otherwise reach the seeded
  * endpoints and change what other tests expect of them.
  */
 export async function freshMerchant(page: Page, label: string) {
@@ -82,7 +82,8 @@ export async function freshMerchant(page: Page, label: string) {
     data: { name: `E2E ${label}` },
   })
   expect(key.status(), 'api key').toBe(201)
-  return ((await key.json()) as { data: { key: string } }).data.key
+  const apiKey = ((await key.json()) as { data: { key: string } }).data.key
+  return { apiKey, accessToken: session.accessToken }
 }
 
 /** A succeeded payment through the Merchant API, which emits payment.succeeded. */

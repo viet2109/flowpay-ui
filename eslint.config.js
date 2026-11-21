@@ -53,7 +53,13 @@ export default tseslint.config(
   },
   // Dev scripts and contract tests run on Node, not in the browser.
   {
-    files: ['scripts/**/*.ts', 'contract/**/*.ts', 'e2e/**/*.ts', 'playwright.config.ts'],
+    files: [
+      'scripts/**/*.ts',
+      'contract/**/*.ts',
+      'e2e/**/*.ts',
+      'playwright.config.ts',
+      'playwright.retries.config.ts',
+    ],
     languageOptions: { globals: globals.node },
   },
 )

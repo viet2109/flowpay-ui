@@ -17,6 +17,7 @@
     "verify": "npm run format:check && npm run typecheck && npm run lint && npm run test:run && npm run build && npm run budget",
     "test:contract": "vitest run --config vitest.contract.config.ts",
     "e2e": "playwright test --project=e2e",
+    "e2e:retries": "playwright test -c playwright.retries.config.ts",
     "shots": "playwright test --project=shots",
     "seed": "node scripts/seed.ts",
     "receiver": "node scripts/webhook-receiver.ts"

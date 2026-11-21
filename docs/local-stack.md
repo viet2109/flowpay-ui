@@ -190,6 +190,27 @@ sign each test in through the API. Screenshots land in
 task touches to `e2e/pages.shots.ts`. The `vi` variants only differ once the UI
 is translated.
 
+### Webhook retry E2E
+
+The path a receiver failure takes (500s → automatic retries → dead → receiver fixed
+→ manual retry → delivered) needs a backend with short retry delays; with the default
+schedule a delivery takes about 75 minutes to die. Restart the backend with:
+
+```sh
+WEBHOOK_ALLOW_INSECURE_LOCALHOST=true WEBHOOK_DELIVERY_RETRY_DELAYS=1s,1s,1s,1s,1s \
+  ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+```powershell
+$env:WEBHOOK_ALLOW_INSECURE_LOCALHOST = 'true'; $env:WEBHOOK_DELIVERY_RETRY_DELAYS = '1s,1s,1s,1s,1s'
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"
+```
+
+then run `npm run e2e:retries` (about 30 seconds). It checks the delay first and
+stops with this instruction if the backend still uses the default schedule. Run
+`npm run e2e` against a backend with the default delays: short ones turn the seeded
+retrying deliveries dead within seconds.
+
 The browser is Playwright's Chromium if `npx playwright install chromium`
 succeeded, otherwise the system Microsoft Edge; force one with
 `E2E_BROWSER_CHANNEL=chromium|msedge|chrome`.

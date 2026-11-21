@@ -45,7 +45,7 @@ test('the guide’s code verifies real deliveries, and only with the current sec
   // Outbox relay, consumer and one automatic retry (10 s base delay + up to 20% jitter).
   test.slow()
   const port = await receiver.ready
-  const apiKey = await freshMerchant(page, 'signature')
+  const { apiKey } = await freshMerchant(page, 'signature')
 
   await page.goto('/developers/webhooks')
   await page.getByRole('button', { name: 'Add endpoint' }).click()

@@ -41,7 +41,7 @@ test('rotating the secret shows the new one once', async ({ page }) => {
 test('disabling cancels the retrying delivery and cannot be undone', async ({ page }) => {
   // Waits for the outbox relay, the webhook consumer and one failed attempt.
   test.slow()
-  const apiKey = await freshMerchant(page, 'lifecycle')
+  const { apiKey } = await freshMerchant(page, 'lifecycle')
   await createEndpoint(page, `http://localhost:9/disable-${Date.now().toString(36)}`)
   await succeededPayment(page, apiKey)
 
