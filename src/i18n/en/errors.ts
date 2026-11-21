@@ -18,6 +18,7 @@ export const errors = {
   REFUND_INVALID_PAYMENT_STATE: 'Only succeeded or partially refunded payments can be refunded.',
   IDEMPOTENCY_KEY_REUSED: 'This request was already sent with different details.',
   IDEMPOTENCY_REQUEST_IN_PROGRESS: 'The same request is still being processed. Try again in a moment.',
+  API_KEY_NOT_FOUND: 'This key no longer exists. Reload the list.',
   WEBHOOK_INVALID_STATE: 'The endpoint changed or is disabled. Reload and try again.',
   WEBHOOK_DELIVERY_NOT_FOUND: 'There is no delivery with this ID in your account.',
   RATE_LIMIT_EXCEEDED: 'Too many requests. Wait a moment and retry.',

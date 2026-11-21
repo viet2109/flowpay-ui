@@ -1,21 +1,37 @@
-import { useState, type FormEvent } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { Callout } from '@/components/callout'
+import { z } from 'zod'
 import { SecretReveal } from '@/components/secret-reveal'
+import { ActionError } from '@/components/states'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { useTestKey } from '@/features/test-mode'
-import { useErrorMessage } from '@/i18n'
+import { useFieldError, vmsg } from '@/i18n'
+import { applyServerErrors } from '@/lib/form'
 import type { CreatedApiKey } from '../api'
 import { useCreateApiKey } from '../queries'
 
+/** CreateApiKeyRequest: name not blank, at most 100 characters. */
+const NAME_MAX = 100
+const schema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, vmsg('required'))
+    .max(NAME_MAX, vmsg('tooLong', { max: NAME_MAX })),
+})
+type Values = z.infer<typeof schema>
+
 /**
- * Two steps in one dialog: name the key, then reveal it exactly once.
- * The dialog can't be dismissed by clicking outside on the reveal step, so the
- * secret isn't lost by accident.
+ * Two steps in one dialog: name the key, then reveal it exactly once. The reveal
+ * step ignores outside clicks and Escape, so the secret is not lost by accident;
+ * only "I've stored it" closes it.
  */
 export function CreateKeyDialog({
   open,
@@ -24,46 +40,51 @@ export function CreateKeyDialog({
   open: boolean
   onOpenChange: (open: boolean) => void
 }) {
-  const errorMessage = useErrorMessage()
-  const [name, setName] = useState('')
+  const { t } = useTranslation('apiKeys')
+  const fieldError = useFieldError()
   const [created, setCreated] = useState<CreatedApiKey | null>(null)
   const [useInDashboard, setUseInDashboard] = useState(true)
   const connect = useTestKey((s) => s.connect)
   const hasConnectedKey = useTestKey((s) => Boolean(s.key))
   const create = useCreateApiKey()
+  const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { name: '' } })
+  const { errors } = form.formState
 
   function close() {
     if (created && useInDashboard) {
       connect(created.key, created.name)
-      toast.success('Key connected to this dashboard tab')
+      toast.success(t('form.connectedToast'))
     }
     onOpenChange(false)
-    setName('')
+    form.reset()
     setCreated(null)
     setUseInDashboard(true)
     create.reset()
   }
 
-  function submit(event: FormEvent) {
-    event.preventDefault()
-    if (name.trim()) create.mutate(name.trim(), { onSuccess: setCreated })
+  function submit({ name }: Values) {
+    create.mutate(name, {
+      onSuccess: setCreated,
+      onError: (error) => applyServerErrors(error, form.setError),
+    })
   }
 
   return (
-    <Dialog open={open} onOpenChange={(next) => !next && close()}>
+    <Dialog open={open} onOpenChange={(next) => !next && !create.isPending && close()}>
       {created ? (
         <DialogContent
-          title="Copy your new key"
-          description={`“${created.name}” is active. Use it as a Bearer token from your backend.`}
+          title={t('form.createdTitle')}
+          description={t('form.createdDescription', { name: created.name })}
           onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
           footer={
             <Button variant="primary" onClick={close}>
-              I’ve stored it
+              {t('form.stored')}
             </Button>
           }
         >
           <div className="space-y-5">
-            <SecretReveal label="Secret key" secret={created.key} />
+            <SecretReveal label={t('form.secretLabel')} secret={created.key} />
             <label className="flex cursor-pointer items-start gap-2.5 rounded-md border border-line p-3">
               <Checkbox
                 checked={useInDashboard}
@@ -71,10 +92,9 @@ export function CreateKeyDialog({
                 className="mt-0.5"
               />
               <span className="text-sm">
-                <span className="font-medium">Use in dashboard</span>
+                <span className="font-medium">{t('form.useInDashboard')}</span>
                 <span className="mt-0.5 block text-ink-2">
-                  {hasConnectedKey ? 'Replace the currently connected key' : 'Connect this key'} so this tab
-                  can show payments and refunds.
+                  {hasConnectedKey ? t('form.replaceHint') : t('form.connectHint')}
                 </span>
               </span>
             </label>
@@ -82,29 +102,24 @@ export function CreateKeyDialog({
         </DialogContent>
       ) : (
         <DialogContent
-          title="Create API key"
-          description="Keys authenticate your backend against the Payment and Refund APIs."
+          title={t('form.title')}
+          description={t('form.description')}
           footer={
             <>
-              <Button variant="ghost" onClick={close}>
-                Cancel
+              <Button variant="ghost" onClick={close} disabled={create.isPending}>
+                {t('form.cancel')}
               </Button>
-              <Button
-                variant="primary"
-                type="submit"
-                form="create-key"
-                loading={create.isPending}
-                disabled={!name.trim()}
-              >
-                Create key
+              <Button variant="primary" type="submit" form="create-key" loading={create.isPending}>
+                {t('form.submit')}
               </Button>
             </>
           }
         >
-          <form id="create-key" onSubmit={submit} className="space-y-4">
-            {create.isError && <Callout tone="danger">{errorMessage(create.error)}</Callout>}
-            <Field label="Name" hint="Describe where it will be used, e.g. “Checkout service – staging”.">
-              <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={100} autoFocus />
+          <form id="create-key" onSubmit={form.handleSubmit(submit)} noValidate className="space-y-4">
+            {/* Anything not about the name (network, rate limit) stays here with its requestId. */}
+            {create.isError && !errors.name && <ActionError error={create.error} />}
+            <Field label={t('form.name')} hint={t('form.nameHint')} error={fieldError(errors.name?.message)}>
+              <Input {...form.register('name')} maxLength={NAME_MAX} autoFocus />
             </Field>
           </form>
         </DialogContent>

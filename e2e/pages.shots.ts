@@ -38,6 +38,26 @@ const TARGETS: ShotTarget[] = [
     },
   },
   {
+    name: 'api-keys',
+    path: '/developers/api-keys',
+    auth: true,
+    ready: (page) => expect(page.getByRole('table')).toBeVisible(),
+  },
+  {
+    name: 'api-key-revoke',
+    path: '/developers/api-keys',
+    auth: true,
+    fullPage: false,
+    // The confirm only; not confirmed, so the seeded key stays active.
+    ready: async (page) => {
+      await page
+        .getByRole('button', { name: /^(Revoke|Thu hồi)$/ })
+        .first()
+        .click()
+      await expect(page.getByRole('alertdialog')).toBeVisible()
+    },
+  },
+  {
     name: 'webhooks',
     path: '/developers/webhooks',
     auth: true,

@@ -1,3 +1,4 @@
+import { apiKeys as enApiKeys } from './en/apiKeys'
 import { auth as enAuth } from './en/auth'
 import { common as enCommon } from './en/common'
 import { errors as enErrors } from './en/errors'
@@ -7,6 +8,7 @@ import { shell as enShell } from './en/shell'
 import { status as enStatus } from './en/status'
 import { validation as enValidation } from './en/validation'
 import { webhooks as enWebhooks } from './en/webhooks'
+import { apiKeys as viApiKeys } from './vi/apiKeys'
 import { auth as viAuth } from './vi/auth'
 import { common as viCommon } from './vi/common'
 import { errors as viErrors } from './vi/errors'
@@ -28,6 +30,7 @@ export const en = {
   merchant: enMerchant,
   overview: enOverview,
   webhooks: enWebhooks,
+  apiKeys: enApiKeys,
 }
 export const vi = {
   common: viCommon,
@@ -39,6 +42,7 @@ export const vi = {
   merchant: viMerchant,
   overview: viOverview,
   webhooks: viWebhooks,
+  apiKeys: viApiKeys,
 }
 
 export const resources = { en, vi }

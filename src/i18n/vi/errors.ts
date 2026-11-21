@@ -17,6 +17,7 @@ export const errors: Messages<typeof en> = {
   REFUND_INVALID_PAYMENT_STATE: 'Chỉ hoàn tiền được cho thanh toán thành công hoặc đã hoàn một phần.',
   IDEMPOTENCY_KEY_REUSED: 'Yêu cầu này đã được gửi với thông tin khác.',
   IDEMPOTENCY_REQUEST_IN_PROGRESS: 'Yêu cầu giống hệt vẫn đang được xử lý. Hãy thử lại sau giây lát.',
+  API_KEY_NOT_FOUND: 'Khóa này không còn tồn tại. Hãy tải lại danh sách.',
   WEBHOOK_INVALID_STATE: 'Endpoint đã thay đổi hoặc bị tắt. Tải lại trang rồi thử lại.',
   WEBHOOK_DELIVERY_NOT_FOUND: 'Tài khoản của bạn không có lượt gửi nào với ID này.',
   RATE_LIMIT_EXCEEDED: 'Quá nhiều yêu cầu. Đợi một chút rồi thử lại.',

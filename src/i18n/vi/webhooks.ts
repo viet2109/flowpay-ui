@@ -84,7 +84,7 @@ export const webhooks: Messages<typeof en> = {
   guide: {
     read: 'Đọc nguyên body thô của yêu cầu và header <code>FlowPay-Signature: t=…,v1=…</code>, trước khi parse JSON.',
     compute:
-      'Tính HMAC-SHA256 của <code>t + "." + body</code>, khoá là toàn bộ signing secret (<code>whsec_…</code>), kết quả dạng hex chữ thường.',
+      'Tính HMAC-SHA256 của <code>t + "." + body</code>, khóa là toàn bộ signing secret (<code>whsec_…</code>), kết quả dạng hex chữ thường.',
     compare:
       'So sánh với <code>v1</code> bằng phép so sánh thời gian hằng định. Từ chối yêu cầu nếu khác nhau hoặc <code>t</code> lệch quá 5 phút so với đồng hồ của bạn.',
     respond:
@@ -129,7 +129,7 @@ export const webhooks: Messages<typeof en> = {
     emptyTitle: 'Chưa có lượt gửi nào',
     emptyBody: 'Mỗi khi có sự kiện thanh toán hoặc hoàn tiền, mỗi endpoint đã đăng ký sẽ có một lượt gửi.',
     filteredTitle: 'Không có lượt gửi nào khớp bộ lọc',
-    clearFilters: 'Xoá bộ lọc',
+    clearFilters: 'Xóa bộ lọc',
     pastEndTitle: 'Trang này nằm sau lượt gửi cuối cùng',
     pastEndBody: 'Danh sách ngắn hơn so với liên kết.',
     firstPage: 'Về trang đầu',
@@ -140,7 +140,7 @@ export const webhooks: Messages<typeof en> = {
     retry: 'Gửi lại',
     retryScheduled: 'Đã lên lịch gửi lại',
     retryScheduledBody: 'Worker sẽ gửi lượt thử tiếp theo trong chốc lát.',
-    cancelledTitle: 'Đã huỷ: endpoint bị tắt',
+    cancelledTitle: 'Đã hủy: endpoint bị tắt',
     exhaustedTitle: 'Đã hết lượt thử tự động',
     fixThenRetry:
       'Sửa máy nhận rồi gửi lại. Gửi lại thủ công thêm một lượt thử và giữ nguyên toàn bộ lịch sử.',
