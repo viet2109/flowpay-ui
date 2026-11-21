@@ -142,6 +142,19 @@ const TARGETS: Target[] = [
     },
   },
   {
+    name: 'delivery sheet',
+    path: '/developers/webhooks/deliveries?status=DEAD',
+    auth: true,
+    ready: async (p) => {
+      await p
+        .getByRole('row')
+        .filter({ has: p.getByRole('cell') })
+        .first()
+        .click()
+      await expect(p.getByRole('dialog').getByText('Attempts', { exact: true })).toBeVisible()
+    },
+  },
+  {
     name: 'settings',
     path: '/settings',
     auth: true,

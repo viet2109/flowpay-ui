@@ -1,3 +1,4 @@
+import { Trans, useTranslation } from 'react-i18next'
 import { CopyableId } from '@/components/copyable-id'
 import { RelativeTime } from '@/components/relative-time'
 import { StatusBadge } from '@/components/status-badge'
@@ -29,17 +30,18 @@ export function DeliveriesTable({
   deliveries: WebhookDelivery[]
   onSelect: (delivery: WebhookDelivery) => void
 }) {
+  const { t } = useTranslation('webhooks')
   return (
     <Table>
       <THead>
         <tr>
-          <Th>Event</Th>
-          <Th>Status</Th>
-          <Th className="hidden md:table-cell">Resource</Th>
-          <Th className="text-right">Attempts</Th>
-          <Th>Last result</Th>
-          <Th className="hidden lg:table-cell">Next / delivered</Th>
-          <Th className="text-right">Created</Th>
+          <Th>{t('deliveries.columns.event')}</Th>
+          <Th>{t('deliveries.columns.status')}</Th>
+          <Th className="hidden md:table-cell">{t('deliveries.columns.resource')}</Th>
+          <Th className="text-right">{t('deliveries.columns.attempts')}</Th>
+          <Th>{t('deliveries.columns.lastResult')}</Th>
+          <Th className="hidden lg:table-cell">{t('deliveries.columns.next')}</Th>
+          <Th className="text-right">{t('deliveries.columns.created')}</Th>
         </tr>
       </THead>
       <TBody>
@@ -70,7 +72,11 @@ export function DeliveriesTable({
                 <RelativeTime value={d.deliveredAt} />
               ) : d.nextAttemptAt ? (
                 <span>
-                  retry <RelativeTime value={d.nextAttemptAt} />
+                  <Trans
+                    t={t}
+                    i18nKey="deliveries.retryAt"
+                    components={{ time: <RelativeTime value={d.nextAttemptAt} /> }}
+                  />
                 </span>
               ) : (
                 '—'

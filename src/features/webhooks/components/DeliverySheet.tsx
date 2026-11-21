@@ -10,6 +10,7 @@ import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { Sheet } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
+import { isApiError } from '@/lib/api/errors'
 import { cn } from '@/lib/cn'
 import { useErrorMessage, useFormat } from '@/i18n'
 import { deliveryStatus } from '../catalog'
@@ -32,7 +33,7 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
     if (!data) return
     retry.mutate(data.id, {
       onSuccess: () =>
-        toast.success('Retry scheduled', { description: 'The worker will send the next attempt shortly.' }),
+        toast.success(t('sheet.retryScheduled'), { description: t('sheet.retryScheduledBody') }),
       onError: (e) => toast.error(errorMessage(e)),
     })
   }
@@ -41,13 +42,13 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
     <Sheet
       open={Boolean(deliveryId)}
       onOpenChange={(open) => !open && onClose()}
-      eyebrow="Webhook delivery"
-      title={data ? <span className="font-mono text-sm">{data.eventType}</span> : 'Loading…'}
+      eyebrow={t('sheet.eyebrow')}
+      title={data ? <span className="font-mono text-sm">{data.eventType}</span> : t('sheet.loading')}
       actions={
         canRetry && (
           <Button size="sm" variant="primary" onClick={runRetry} loading={retry.isPending}>
             <ArrowClockwiseIcon />
-            Retry
+            {t('sheet.retry')}
           </Button>
         )
       }
@@ -58,7 +59,11 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
           <Skeleton className="h-40 w-full" />
         </div>
       ) : error ? (
-        <ErrorState error={error} onRetry={refetch} />
+        // Asking again for a delivery that does not exist cannot help.
+        <ErrorState
+          error={error}
+          onRetry={isApiError(error, 'WEBHOOK_DELIVERY_NOT_FOUND') ? undefined : refetch}
+        />
       ) : (
         <div className="space-y-6 p-5">
           <div className="flex flex-wrap items-center gap-2">
@@ -70,26 +75,22 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
             <Callout
               tone="danger"
               title={
-                data.lastError === 'ENDPOINT_DISABLED'
-                  ? 'Cancelled: endpoint disabled'
-                  : 'Automatic retries exhausted'
+                data.lastError === 'ENDPOINT_DISABLED' ? t('sheet.cancelledTitle') : t('sheet.exhaustedTitle')
               }
             >
-              {endpoint?.status === 'ACTIVE'
-                ? 'Fix the receiver, then retry. A manual retry adds one attempt and keeps the full history.'
-                : 'The endpoint is disabled, so this delivery cannot be retried.'}
+              {endpoint?.status === 'ACTIVE' ? t('sheet.fixThenRetry') : t('sheet.cannotRetry')}
             </Callout>
           )}
 
           <section>
-            <h3 className="mb-3 text-xs font-medium text-ink-3">Retry schedule</h3>
+            <h3 className="mb-3 text-xs font-medium text-ink-3">{t('sheet.schedule')}</h3>
             <RetryTrack delivery={data} />
           </section>
 
           <section>
-            <h3 className="mb-2 text-xs font-medium text-ink-3">Attempts</h3>
+            <h3 className="mb-2 text-xs font-medium text-ink-3">{t('sheet.attempts')}</h3>
             {data.attempts.length === 0 ? (
-              <p className="text-sm text-ink-3">No attempt has started yet.</p>
+              <p className="text-sm text-ink-3">{t('sheet.noAttempts')}</p>
             ) : (
               <ol className="relative space-y-0 border-l border-line pl-4">
                 {data.attempts.map((attempt) => (
@@ -101,10 +102,10 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
 
           <DescriptionList
             items={[
-              { label: 'Delivery', value: <CopyableId value={data.id} truncate={false} /> },
-              { label: 'Event ID', value: <CopyableId value={data.eventId} truncate={false} /> },
+              { label: t('sheet.delivery'), value: <CopyableId value={data.id} truncate={false} /> },
+              { label: t('sheet.eventId'), value: <CopyableId value={data.eventId} truncate={false} /> },
               {
-                label: 'Resource',
+                label: t('sheet.resource'),
                 value:
                   data.resourceType === 'PAYMENT_INTENT' ? (
                     <Link
@@ -118,7 +119,7 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
                   ),
               },
               {
-                label: 'Endpoint',
+                label: t('sheet.endpoint'),
                 value: (
                   <Link
                     to={`/developers/webhooks/${data.endpointId}`}
@@ -128,10 +129,14 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
                   </Link>
                 ),
               },
-              { label: 'Created', value: fmt.dateTime(data.createdAt) },
-              { label: 'Delivered', value: fmt.dateTime(data.deliveredAt), hidden: !data.deliveredAt },
+              { label: t('sheet.created'), value: fmt.dateTime(data.createdAt) },
               {
-                label: 'Next attempt',
+                label: t('sheet.delivered'),
+                value: fmt.dateTime(data.deliveredAt),
+                hidden: !data.deliveredAt,
+              },
+              {
+                label: t('sheet.nextAttempt'),
                 value: fmt.dateTime(data.nextAttemptAt),
                 hidden: !data.nextAttemptAt,
               },
@@ -144,6 +149,7 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
 }
 
 function AttemptRow({ attempt }: { attempt: DeliveryAttempt }) {
+  const { t } = useTranslation('webhooks')
   const fmt = useFormat()
   const ok = attempt.httpStatus !== null && attempt.httpStatus >= 200 && attempt.httpStatus < 300
   return (
@@ -156,7 +162,7 @@ function AttemptRow({ attempt }: { attempt: DeliveryAttempt }) {
       />
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-sm">
-          Attempt <span className="num">#{attempt.attemptNo}</span>
+          {t('sheet.attempt')} <span className="num">#{attempt.attemptNo}</span>
         </span>
         <span className="num text-xs text-ink-3">{fmt.dateTime(attempt.startedAt)}</span>
       </div>

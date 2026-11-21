@@ -82,6 +82,27 @@ const TARGETS: ShotTarget[] = [
     },
   },
   {
+    name: 'deliveries',
+    path: '/developers/webhooks/deliveries',
+    auth: true,
+    ready: (page) => expect(page.getByRole('table')).toBeVisible(),
+  },
+  {
+    name: 'delivery-sheet',
+    path: '/developers/webhooks/deliveries?status=DEAD',
+    auth: true,
+    fullPage: false,
+    // A dead delivery: the sheet's callout, retry track and attempts all show.
+    ready: async (page) => {
+      await page
+        .getByRole('row')
+        .filter({ has: page.getByRole('cell') })
+        .first()
+        .click()
+      await expect(page.getByRole('dialog').locator('ol li').first()).toBeVisible()
+    },
+  },
+  {
     name: 'command-menu',
     path: '/',
     auth: true,

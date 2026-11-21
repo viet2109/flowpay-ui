@@ -18,6 +18,7 @@ export const errors: Messages<typeof en> = {
   IDEMPOTENCY_KEY_REUSED: 'Yêu cầu này đã được gửi với thông tin khác.',
   IDEMPOTENCY_REQUEST_IN_PROGRESS: 'Yêu cầu giống hệt vẫn đang được xử lý. Hãy thử lại sau giây lát.',
   WEBHOOK_INVALID_STATE: 'Endpoint đã thay đổi hoặc bị tắt. Tải lại trang rồi thử lại.',
+  WEBHOOK_DELIVERY_NOT_FOUND: 'Tài khoản của bạn không có lượt gửi nào với ID này.',
   RATE_LIMIT_EXCEEDED: 'Quá nhiều yêu cầu. Đợi một chút rồi thử lại.',
   rateLimitedFor_other: 'Quá nhiều yêu cầu. Thử lại sau {{count}} giây.',
   INTERNAL_ERROR: 'FlowPay gặp lỗi không mong muốn.',

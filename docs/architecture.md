@@ -189,7 +189,13 @@ Amounts are integer **minor units** end to end (BR-MONEY-001). `lib/money.ts`:
 
 Filters, pagination and an open delivery sheet live in search params
 (`?status=DEAD&delivery=wdl_…`) so views are shareable and survive reload.
-One hook per list owns the URL format (`use-payment-filters.ts`, `DeliveriesView`).
+One hook per list owns the URL format (`use-payment-filters.ts`, `use-delivery-filters.ts`).
+Values the API would reject are ignored, not sent.
+
+History: filter and page changes replace the current entry. Opening a record in
+a sheet pushes one, so Back closes it; closing replaces it, so a sheet opened from
+a shared link closes without leaving the list. A page number past the end of the
+list offers the first page instead of claiming the list is empty.
 
 ## 7. Code conventions
 

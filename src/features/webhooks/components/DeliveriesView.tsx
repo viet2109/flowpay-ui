@@ -1,78 +1,61 @@
 import { PaperPlaneTiltIcon } from '@phosphor-icons/react'
-import { useSearchParams } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { Pagination } from '@/components/pagination'
 import { EmptyState, ErrorState } from '@/components/states'
 import { Button } from '@/components/ui/button'
 import { NativeSelect } from '@/components/ui/input'
 import { Segmented } from '@/components/ui/segmented'
 import { TableSkeleton } from '@/components/ui/skeleton'
-import { splitUrl } from '../catalog'
+import { deliveryStatus, splitUrl } from '../catalog'
 import { useDeliveries, useEndpoints } from '../queries'
-import { DELIVERY_STATUSES, EVENT_TYPES, type DeliveryStatus, type EventType } from '../types'
+import { EVENT_TYPES, type DeliveryStatus } from '../types'
+import { useDeliveryFilters } from '../use-delivery-filters'
 import { DeliveriesTable } from './DeliveriesTable'
 import { DeliverySheet } from './DeliverySheet'
 
-const STATUS_OPTIONS: { value: DeliveryStatus | 'ALL'; label: string }[] = [
-  { value: 'ALL', label: 'All' },
-  { value: 'DEAD', label: 'Dead' },
-  { value: 'RETRYING', label: 'Retrying' },
-  { value: 'DELIVERED', label: 'Delivered' },
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'DELIVERING', label: 'Delivering' },
-]
+/** Problem deliveries first: they are what people come here for. */
+const STATUS_ORDER: DeliveryStatus[] = ['DEAD', 'RETRYING', 'DELIVERED', 'PENDING', 'DELIVERING']
 
 /**
- * Delivery list with URL-backed filters (?status=DEAD&delivery=…). When
+ * Delivery list with URL-backed filters and sheet (use-delivery-filters.ts). When
  * `endpointId` is fixed (endpoint detail page) the endpoint filter is hidden.
  */
 export function DeliveriesView({ endpointId: fixedEndpoint }: { endpointId?: string }) {
-  const [params, setParams] = useSearchParams()
-  const status = DELIVERY_STATUSES.find((s) => s === params.get('status'))
-  const eventType = EVENT_TYPES.find((e) => e === params.get('eventType'))
-  const endpointId = fixedEndpoint ?? params.get('endpointId') ?? undefined
-  const page = Math.max(0, Number(params.get('page') ?? 0) || 0)
-  const openDelivery = params.get('delivery')
+  const { t } = useTranslation('webhooks')
+  const { t: tStatus } = useTranslation('status')
+  const filters = useDeliveryFilters(fixedEndpoint)
+  const { status, eventType, urlEndpoint, isFiltered } = filters
 
   const endpoints = useEndpoints()
-  const { data, isPending, isFetching, isPlaceholderData, error, refetch } = useDeliveries({
-    status,
-    eventType,
-    endpointId,
-    page,
-    size: 20,
-  })
-
-  function patch(next: Record<string, string | undefined>, resetPage = true) {
-    const out = new URLSearchParams(params)
-    for (const [k, v] of Object.entries(next)) {
-      if (v) out.set(k, v)
-      else out.delete(k)
-    }
-    if (resetPage && !('page' in next)) out.delete('page')
-    setParams(out, { replace: true })
-  }
-
-  const isFiltered = Boolean(status || eventType || (!fixedEndpoint && endpointId))
+  const { data, isPending, isFetching, isPlaceholderData, error, refetch } = useDeliveries(filters.apiFilters)
+  // A link can name an endpoint that is not in the list (another merchant's, or a
+  // typo): the backend then returns nothing, and the select must still show the filter.
+  const unknownEndpoint =
+    !fixedEndpoint && urlEndpoint && endpoints.data && !endpoints.data.some((e) => e.id === urlEndpoint)
+  const pastEnd = data && data.items.length === 0 && data.meta.totalElements > 0
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="-mx-1 overflow-x-auto px-1">
           <Segmented
-            aria-label="Filter by delivery status"
+            aria-label={t('deliveries.filterStatus')}
             value={status ?? 'ALL'}
-            onChange={(v) => patch({ status: v === 'ALL' ? undefined : v })}
-            options={STATUS_OPTIONS}
+            onChange={(v) => filters.update({ status: v === 'ALL' ? undefined : v })}
+            options={[
+              { value: 'ALL' as const, label: t('deliveries.all') },
+              ...STATUS_ORDER.map((s) => ({ value: s, label: tStatus(deliveryStatus[s].label) })),
+            ]}
           />
         </div>
         <div className="flex flex-wrap gap-2">
           <NativeSelect
-            aria-label="Event type"
+            aria-label={t('deliveries.eventType')}
             value={eventType ?? ''}
-            onChange={(e) => patch({ eventType: (e.target.value as EventType) || undefined })}
+            onChange={(e) => filters.update({ eventType: e.target.value })}
             className="w-48 font-mono text-xs"
           >
-            <option value="">All events</option>
+            <option value="">{t('deliveries.allEvents')}</option>
             {EVENT_TYPES.map((e) => (
               <option key={e} value={e}>
                 {e}
@@ -81,18 +64,24 @@ export function DeliveriesView({ endpointId: fixedEndpoint }: { endpointId?: str
           </NativeSelect>
           {!fixedEndpoint && (
             <NativeSelect
-              aria-label="Endpoint"
-              value={endpointId ?? ''}
-              onChange={(e) => patch({ endpointId: e.target.value || undefined })}
+              aria-label={t('deliveries.endpoint')}
+              value={urlEndpoint ?? ''}
+              onChange={(e) => filters.update({ endpointId: e.target.value })}
               className="w-56"
             >
-              <option value="">All endpoints</option>
-              {endpoints.data?.map((ep) => (
-                <option key={ep.id} value={ep.id}>
-                  {splitUrl(ep.url).host}
-                  {splitUrl(ep.url).path}
-                </option>
-              ))}
+              <option value="">{t('deliveries.allEndpoints')}</option>
+              {endpoints.data?.map((ep) => {
+                const { host, path } = splitUrl(ep.url)
+                const url = `${host}${path}`
+                return (
+                  <option key={ep.id} value={ep.id}>
+                    {ep.status === 'DISABLED' ? t('deliveries.endpointDisabled', { url }) : url}
+                  </option>
+                )
+              })}
+              {unknownEndpoint && (
+                <option value={urlEndpoint}>{t('deliveries.unknownEndpoint', { id: urlEndpoint })}</option>
+              )}
             </NativeSelect>
           )}
         </div>
@@ -103,34 +92,41 @@ export function DeliveriesView({ endpointId: fixedEndpoint }: { endpointId?: str
           <TableSkeleton columns={6} />
         ) : error ? (
           <ErrorState error={error} onRetry={refetch} />
+        ) : pastEnd ? (
+          <EmptyState
+            icon={<PaperPlaneTiltIcon />}
+            title={t('deliveries.pastEndTitle')}
+            action={
+              <Button size="sm" onClick={() => filters.setPage(0)}>
+                {t('deliveries.firstPage')}
+              </Button>
+            }
+          >
+            {t('deliveries.pastEndBody')}
+          </EmptyState>
         ) : data.items.length === 0 ? (
           <EmptyState
             icon={<PaperPlaneTiltIcon />}
-            title={isFiltered ? 'No deliveries match these filters' : 'No deliveries yet'}
+            title={isFiltered ? t('deliveries.filteredTitle') : t('deliveries.emptyTitle')}
             action={
               isFiltered && (
-                <Button size="sm" onClick={() => setParams(new URLSearchParams(), { replace: true })}>
-                  Clear filters
+                <Button size="sm" onClick={filters.clear}>
+                  {t('deliveries.clearFilters')}
                 </Button>
               )
             }
           >
-            {!isFiltered &&
-              'A delivery is created for each subscribed endpoint when a payment or refund event happens.'}
+            {!isFiltered && t('deliveries.emptyBody')}
           </EmptyState>
         ) : (
           <>
-            <DeliveriesTable deliveries={data.items} onSelect={(d) => patch({ delivery: d.id }, false)} />
-            <Pagination
-              meta={data.meta}
-              onPageChange={(p) => patch({ page: String(p) }, false)}
-              pending={isFetching}
-            />
+            <DeliveriesTable deliveries={data.items} onSelect={(d) => filters.open(d.id)} />
+            <Pagination meta={data.meta} onPageChange={filters.setPage} pending={isFetching} />
           </>
         )}
       </div>
 
-      <DeliverySheet deliveryId={openDelivery} onClose={() => patch({ delivery: undefined }, false)} />
+      <DeliverySheet deliveryId={filters.openDelivery} onClose={filters.close} />
     </div>
   )
 }
