@@ -1,5 +1,6 @@
 import { ArrowCounterClockwiseIcon, LightningIcon } from '@phosphor-icons/react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
 import { toast } from 'sonner'
 import { Callout } from '@/components/callout'
@@ -14,6 +15,7 @@ import { Panel, PanelHeader } from '@/components/ui/panel'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/states'
 import { useCanRunPayments } from '@/features/auth'
+import { isApiError } from '@/lib/api/errors'
 import { useIdempotencyKey } from '@/lib/idempotency'
 import { useErrorMessage, useFormat } from '@/i18n'
 import { useRecentItems } from '@/lib/recent-items'
@@ -22,7 +24,8 @@ import { LifecycleRail } from '../components/LifecycleRail'
 import { RefundCapacity } from '../components/RefundCapacity'
 import { RefundDialog } from '../components/RefundDialog'
 import { RefundsPanel } from '../components/RefundsPanel'
-import { useConfirmPayment, usePayment, usePaymentTransactions } from '../queries'
+import { lifecycleTimes } from '../lifecycle'
+import { useConfirmPayment, usePayment, usePaymentRefunds, usePaymentTransactions } from '../queries'
 import { canConfirm, canRefund, paymentStatus } from '../status'
 
 export function PaymentDetailPage() {
@@ -34,6 +37,7 @@ export function PaymentDetailPage() {
 }
 
 function PaymentDetail({ id }: { id: string }) {
+  const { t } = useTranslation('payments')
   const errorMessage = useErrorMessage()
   const fmt = useFormat()
   const { data: payment, isPending, error, refetch } = usePayment(id)
@@ -50,6 +54,8 @@ function PaymentDetail({ id }: { id: string }) {
       })
   }, [payment, remember])
   const { data: attempts } = usePaymentTransactions(id)
+  // Page 0 is what the refunds panel shows too (same query), so this costs nothing extra.
+  const { data: refunds } = usePaymentRefunds(id, 0)
   const [refunding, setRefunding] = useState(false)
   const confirm = useConfirmPayment(id)
   const confirmKey = useIdempotencyKey('confirm')
@@ -59,16 +65,16 @@ function PaymentDetail({ id }: { id: string }) {
   if (error) {
     return (
       <>
-        <PageHeader title="Payment" back={{ to: '/payments', label: 'Payments' }} />
+        <PageHeader title={t('detail.title')} back={{ to: '/payments', label: t('detail.back') }} />
         <Panel>
-          <ErrorState error={error} onRetry={refetch} />
+          {/* Asking again for a payment that does not exist cannot help. */}
+          <ErrorState error={error} onRetry={isApiError(error, 'PAYMENT_NOT_FOUND') ? undefined : refetch} />
         </Panel>
       </>
     )
   }
 
   const latest = attempts?.at(-1)
-  const firstAttempt = attempts?.[0]
   const unknownOutcome = payment.status === 'PROCESSING' && latest?.status === 'UNKNOWN'
 
   function runConfirm() {
@@ -86,7 +92,7 @@ function PaymentDetail({ id }: { id: string }) {
   return (
     <>
       <PageHeader
-        back={{ to: '/payments', label: 'Payments' }}
+        back={{ to: '/payments', label: t('detail.back') }}
         title={
           <span className="flex flex-wrap items-center gap-3">
             <Money amount={payment.amount} currency={payment.currency} size="xl" />
@@ -96,7 +102,7 @@ function PaymentDetail({ id }: { id: string }) {
         description={
           <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <CopyableId value={payment.id} truncate={false} />
-            {payment.orderId && <span>Order {payment.orderId}</span>}
+            {payment.orderId && <span>{t('detail.order', { id: payment.orderId })}</span>}
           </span>
         }
         actions={
@@ -104,13 +110,13 @@ function PaymentDetail({ id }: { id: string }) {
             {canRun && canConfirm(payment.status) && (
               <Button variant="primary" onClick={runConfirm} loading={confirm.isPending}>
                 <LightningIcon weight="fill" />
-                Confirm payment
+                {t('detail.confirm')}
               </Button>
             )}
             {canRun && canRefund(payment.status, payment.refundableAmount) && (
               <Button onClick={() => setRefunding(true)}>
                 <ArrowCounterClockwiseIcon />
-                Refund
+                {t('detail.refund')}
               </Button>
             )}
           </>
@@ -121,9 +127,11 @@ function PaymentDetail({ id }: { id: string }) {
         <Panel className="px-5 pt-5 pb-4">
           <LifecycleRail
             status={payment.status}
-            createdAt={payment.createdAt}
-            processingAt={firstAttempt?.startedAt}
-            settledAt={latest?.completedAt}
+            times={lifecycleTimes(
+              payment,
+              attempts,
+              refunds && { items: refunds.items, complete: !refunds.meta.hasNext },
+            )}
           />
           {unknownOutcome && (
             <Callout tone="warning" className="mt-5" title="Waiting for a definitive provider outcome">
@@ -143,51 +151,46 @@ function PaymentDetail({ id }: { id: string }) {
         <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <div className="min-w-0 space-y-5">
             <Panel>
-              <PanelHeader
-                title="Refund capacity"
-                description="Refunded, in-flight and refundable amounts always add up to the payment amount."
-              />
+              <PanelHeader title={t('detail.capacityTitle')} description={t('detail.capacityHint')} />
               <div className="p-4">
                 <RefundCapacity payment={payment} />
               </div>
             </Panel>
             <Panel>
-              <PanelHeader title="Refunds" />
+              <PanelHeader title={t('detail.refunds')} />
               <RefundsPanel paymentId={payment.id} />
             </Panel>
             <Panel>
-              <PanelHeader
-                title="Provider attempts"
-                description="Each confirmation is recorded as a separate attempt."
-              />
+              <PanelHeader title={t('detail.attempts')} description={t('detail.attemptsHint')} />
               <AttemptsList paymentId={payment.id} />
             </Panel>
           </div>
 
-          <aside className="space-y-5">
+          <aside className="min-w-0 space-y-5">
             <Panel>
-              <PanelHeader title="Details" />
+              <PanelHeader title={t('detail.details')} />
               <DescriptionList
                 className="px-4 py-1"
                 items={[
                   {
-                    label: 'Amount',
+                    label: t('detail.amount'),
                     value: <Money amount={payment.amount} currency={payment.currency} size="sm" />,
                   },
                   {
-                    label: 'Minor units',
+                    label: t('detail.minorUnits'),
                     value: <span className="num font-mono text-xs">{payment.amount}</span>,
                   },
-                  { label: 'Order ID', value: payment.orderId },
-                  { label: 'Description', value: payment.description },
-                  { label: 'Created', value: fmt.dateTime(payment.createdAt) },
-                  { label: 'Updated', value: fmt.dateTime(payment.updatedAt) },
+                  { label: t('detail.orderId'), value: payment.orderId },
+                  { label: t('detail.description'), value: payment.description },
+                  { label: t('detail.created'), value: fmt.dateTime(payment.createdAt) },
+                  { label: t('detail.updated'), value: fmt.dateTime(payment.updatedAt) },
                 ]}
               />
             </Panel>
+            {/* The Merchant API, called from a backend; the dashboard's origin also serves /api. */}
             <CodeBlock
-              label="Retrieve via API"
-              code={`curl /api/v1/payment-intents/${payment.id} \\\n  -H "Authorization: Bearer $FLOWPAY_KEY"`}
+              label={t('detail.retrieve')}
+              code={`curl ${window.location.origin}/api/v1/payment-intents/${payment.id} \\\n  -H "Authorization: Bearer $FLOWPAY_API_KEY"`}
             />
           </aside>
         </div>
@@ -205,8 +208,9 @@ function PaymentDetail({ id }: { id: string }) {
 }
 
 function DetailSkeleton() {
+  const { t } = useTranslation('payments')
   return (
-    <div className="space-y-5" role="status" aria-label="Loading payment">
+    <div className="space-y-5" role="status" aria-label={t('detail.loading')}>
       <Skeleton className="h-3 w-20" />
       <Skeleton className="h-9 w-64" />
       <Skeleton className="h-24 w-full rounded-lg" />

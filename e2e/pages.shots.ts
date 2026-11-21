@@ -46,6 +46,31 @@ const TARGETS: ShotTarget[] = [
     },
   },
   {
+    name: 'payment',
+    path: '/payments?orderId=ORD-1012',
+    auth: true,
+    // Partially refunded: every rail step has happened, refunds and capacity filled.
+    ready: async (page) => {
+      await page.getByText('ORD-1012').filter({ visible: true }).first().click()
+      await expect(
+        page.getByRole('list', { name: /^(Payment lifecycle|Vòng đời thanh toán)$/ }),
+      ).toBeVisible()
+      await expect(page.locator('time').first()).toBeVisible()
+    },
+  },
+  {
+    name: 'payment-processing',
+    path: '/payments?orderId=ORD-1006',
+    auth: true,
+    // Provider outcome UNKNOWN: Succeeded is upcoming and must carry no time.
+    ready: async (page) => {
+      await page.getByText('ORD-1006').filter({ visible: true }).first().click()
+      await expect(
+        page.getByRole('list', { name: /^(Payment lifecycle|Vòng đời thanh toán)$/ }),
+      ).toBeVisible()
+    },
+  },
+  {
     name: 'settings',
     path: '/settings',
     auth: true,

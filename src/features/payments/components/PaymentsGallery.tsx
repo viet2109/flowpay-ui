@@ -9,6 +9,7 @@ import { RefundCapacity } from './RefundCapacity'
 const CREATED_AT = '2026-11-18T03:00:00.112Z'
 const PROCESSING_AT = '2026-11-18T03:00:00.240Z'
 const SETTLED_AT = '2026-11-18T03:00:00.601Z'
+const REFUNDED_AT = '2026-11-18T05:12:30.000Z'
 
 function payment(
   status: PaymentStatus,
@@ -66,9 +67,12 @@ export function PaymentsGallery() {
               <div className="w-full">
                 <LifecycleRail
                   status={status}
-                  createdAt={CREATED_AT}
-                  processingAt={status === 'CREATED' ? null : PROCESSING_AT}
-                  settledAt={status === 'CREATED' || status === 'PROCESSING' ? null : SETTLED_AT}
+                  times={{
+                    createdAt: CREATED_AT,
+                    processingAt: status === 'CREATED' ? null : PROCESSING_AT,
+                    settledAt: status === 'CREATED' || status === 'PROCESSING' ? null : SETTLED_AT,
+                    refundedAt: status === 'REFUNDED' || status === 'PARTIALLY_REFUNDED' ? REFUNDED_AT : null,
+                  }}
                 />
               </div>
             </GalleryState>

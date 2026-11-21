@@ -26,8 +26,19 @@ const page = {
 }
 
 let status = 'CREATED'
+let notFound = false
 const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
   const path = new URL(String(input), 'http://localhost').pathname
+  if (notFound && path.endsWith('/pi_1'))
+    return new Response(
+      JSON.stringify({
+        status: 404,
+        code: 'PAYMENT_NOT_FOUND',
+        title: 'Payment not found',
+        requestId: 'req_GONE',
+      }),
+      { status: 404, headers: { 'Content-Type': 'application/problem+json' } },
+    )
   const body = path.endsWith('/pi_1')
     ? { data: payment(status) }
     : path.endsWith('/transactions')
@@ -63,6 +74,7 @@ function renderPage() {
 }
 
 beforeEach(() => {
+  notFound = false
   fetchMock.mockClear()
   vi.stubGlobal('fetch', fetchMock)
   configureHttp({
@@ -108,5 +120,14 @@ describe('PaymentDetailPage', () => {
     renderPage()
     expect(await screen.findByText('Order ORDER-1')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Refund' })).not.toBeInTheDocument()
+  })
+
+  it('says a payment does not exist, without offering to ask again', async () => {
+    notFound = true
+    signInAs('OWNER')
+    renderPage()
+    expect(await screen.findByText('There is no payment with this ID in your account.')).toBeInTheDocument()
+    expect(screen.getByTitle('req_GONE')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument()
   })
 })

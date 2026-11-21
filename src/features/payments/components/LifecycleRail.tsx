@@ -1,58 +1,18 @@
 import { m } from 'motion/react'
+import { useTranslation } from 'react-i18next'
 import { EASE_OUT } from '@/lib/motion'
 import { cn } from '@/lib/cn'
 import { useFormat } from '@/i18n'
+import { buildSteps, type LifecycleTimes } from '../lifecycle'
 import type { PaymentStatus } from '../types'
 
 /**
  * The PaymentIntent state machine drawn as a rail (backend payment state rules):
  *   CREATED -> PROCESSING -> SUCCEEDED -> PARTIALLY_REFUNDED -> REFUNDED
  *                         -> FAILED
- * Merchants see where the payment is and what can still happen to it.
+ * Merchants see where the payment is and what can still happen to it. Only steps
+ * that happened carry a time (lifecycle.ts says where each one comes from).
  */
-type StepState = 'done' | 'current' | 'upcoming'
-interface Step {
-  label: string
-  state: StepState
-  tone: 'ink' | 'success' | 'danger' | 'warning' | 'refund'
-  at?: string | null
-}
-
-interface Props {
-  status: PaymentStatus
-  createdAt: string
-  processingAt?: string | null
-  settledAt?: string | null
-}
-
-function buildSteps({ status, createdAt, processingAt, settledAt }: Props): Step[] {
-  const order: PaymentStatus[] = ['CREATED', 'PROCESSING', 'SUCCEEDED', 'PARTIALLY_REFUNDED', 'REFUNDED']
-  const index = status === 'FAILED' ? 2 : order.indexOf(status)
-  const stateOf = (i: number): StepState => (i < index ? 'done' : i === index ? 'current' : 'upcoming')
-
-  const head: Step[] = [
-    { label: 'Created', state: stateOf(0), tone: 'ink', at: createdAt },
-    { label: 'Processing', state: stateOf(1), tone: 'warning', at: processingAt },
-  ]
-  if (status === 'FAILED')
-    return [...head, { label: 'Failed', state: 'current', tone: 'danger', at: settledAt }]
-
-  return [
-    ...head,
-    { label: 'Succeeded', state: stateOf(2), tone: 'success', at: settledAt },
-    {
-      label:
-        status === 'REFUNDED'
-          ? 'Refunded'
-          : status === 'PARTIALLY_REFUNDED'
-            ? 'Partially refunded'
-            : 'Refunded',
-      state: index >= 3 ? 'current' : 'upcoming',
-      tone: 'refund',
-    },
-  ]
-}
-
 const toneDot = {
   ink: 'bg-ink',
   success: 'bg-success',
@@ -68,21 +28,23 @@ const toneText = {
   refund: 'text-refund',
 }
 
-export function LifecycleRail(props: Props) {
+export function LifecycleRail({ status, times }: { status: PaymentStatus; times: LifecycleTimes }) {
+  const { t } = useTranslation('payments')
+  const { t: tStatus } = useTranslation('status')
   const fmt = useFormat()
-  const steps = buildSteps(props)
+  const steps = buildSteps(status, times)
 
   return (
     <ol
       className="grid"
       style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}
-      aria-label="Payment lifecycle"
+      aria-label={t('detail.lifecycle')}
     >
       {steps.map((step, i) => {
         const isLast = i === steps.length - 1
         return (
           <li
-            key={step.label}
+            key={step.key}
             className="relative pr-3"
             aria-current={step.state === 'current' ? 'step' : undefined}
           >
@@ -119,9 +81,17 @@ export function LifecycleRail(props: Props) {
                     : 'text-ink',
               )}
             >
-              {step.label}
+              {tStatus(step.label)}
             </div>
-            <div className="num text-xs text-ink-3">{step.at ? fmt.shortDate(step.at) : ' '}</div>
+            <div className="num text-xs text-ink-3">
+              {step.at ? (
+                <time dateTime={step.at} title={fmt.dateTime(step.at)}>
+                  {fmt.shortDate(step.at)}
+                </time>
+              ) : (
+                ' '
+              )}
+            </div>
           </li>
         )
       })}
