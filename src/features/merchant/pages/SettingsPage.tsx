@@ -1,11 +1,11 @@
 import { DesktopIcon, MoonIcon, SunIcon } from '@phosphor-icons/react'
 import { useState, type FormEvent } from 'react'
-import { useTranslation } from 'react-i18next'
+import { Trans, useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { CopyableId } from '@/components/copyable-id'
 import { DescriptionList } from '@/components/description-list'
 import { PageHeader } from '@/components/page-header'
-import { ErrorState } from '@/components/states'
+import { ActionError, ErrorState } from '@/components/states'
 import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
@@ -14,17 +14,31 @@ import { Panel, PanelHeader } from '@/components/ui/panel'
 import { Segmented } from '@/components/ui/segmented'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSession } from '@/features/auth'
-import { humanize } from '@/lib/format'
-import { LANGUAGES, LANGUAGE_NAMES, setLanguage, type Language, useErrorMessage, useLanguage } from '@/i18n'
+import {
+  LANGUAGES,
+  LANGUAGE_NAMES,
+  setLanguage,
+  type Language,
+  useFieldError,
+  useFormat,
+  useLanguage,
+  useRoleLabel,
+  vmsg,
+} from '@/i18n'
+import { isApiError } from '@/lib/api/errors'
+import { cn } from '@/lib/cn'
 import { useTheme, type ThemePreference } from '@/lib/theme'
-import { useFormat } from '@/i18n'
 import { useMerchant, useUpdateMerchant } from '../queries'
 import { merchantStatus } from '../status'
 
+/** UpdateMerchantProfileRequest: name required, at most 200 characters after trimming. */
+const NAME_MAX = 200
+
 export function SettingsPage() {
+  const { t } = useTranslation('merchant')
   return (
     <>
-      <PageHeader title="Settings" />
+      <PageHeader title={t('settings.title')} />
       <div className="max-w-3xl space-y-5">
         <BusinessPanel />
         <AccountPanel />
@@ -36,13 +50,18 @@ export function SettingsPage() {
 }
 
 function BusinessPanel() {
-  const errorMessage = useErrorMessage()
+  const { t } = useTranslation('merchant')
+  const fieldError = useFieldError()
   const fmt = useFormat()
   const { data, isPending, error, refetch } = useMerchant()
   const update = useUpdateMerchant()
   const [name, setName] = useState<string | null>(null)
   const value = name ?? data?.name ?? ''
   const dirty = data !== undefined && value.trim() !== data.name
+  // The server's own message for the name; any other failure keeps its requestId below.
+  const nameRejection = isApiError(update.error, 'VALIDATION_ERROR')
+    ? update.error.fieldErrors.find((e) => e.field === 'name')?.message
+    : undefined
 
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -50,14 +69,14 @@ function BusinessPanel() {
     update.mutate(value.trim(), {
       onSuccess: () => {
         setName(null)
-        toast.success('Business name updated')
+        toast.success(t('settings.business.saved'))
       },
     })
   }
 
   return (
     <Panel>
-      <PanelHeader title="Business" description="The merchant that owns your payments, keys and webhooks." />
+      <PanelHeader title={t('settings.business.title')} description={t('settings.business.description')} />
       {isPending ? (
         <div className="space-y-3 p-4">
           <Skeleton className="h-8 w-full" />
@@ -67,15 +86,17 @@ function BusinessPanel() {
         <ErrorState error={error} onRetry={refetch} />
       ) : (
         <div className="p-4">
-          <form onSubmit={submit} className="flex items-end gap-2">
+          {update.isError && !nameRejection && <ActionError error={update.error} />}
+          <form
+            onSubmit={submit}
+            className={cn('flex items-end gap-2', update.isError && !nameRejection && 'mt-3')}
+          >
             <Field
-              label="Business name"
+              label={t('settings.business.name')}
               className="flex-1"
-              error={
-                update.isError ? errorMessage(update.error) : !value.trim() ? 'Name is required.' : undefined
-              }
+              error={nameRejection ?? (!value.trim() ? fieldError(vmsg('required')) : undefined)}
             >
-              <Input value={value} maxLength={200} onChange={(e) => setName(e.target.value)} />
+              <Input value={value} maxLength={NAME_MAX} onChange={(e) => setName(e.target.value)} />
             </Field>
             <Button
               type="submit"
@@ -83,15 +104,18 @@ function BusinessPanel() {
               disabled={!dirty || !value.trim()}
               loading={update.isPending}
             >
-              Save
+              {t('settings.business.save')}
             </Button>
           </form>
           <DescriptionList
             className="mt-4"
             items={[
-              { label: 'Merchant ID', value: <CopyableId value={data.id} truncate={false} /> },
-              { label: 'Status', value: <StatusBadge {...merchantStatus[data.status]} /> },
-              { label: 'Created', value: fmt.dateTime(data.createdAt) },
+              { label: t('settings.business.id'), value: <CopyableId value={data.id} truncate={false} /> },
+              {
+                label: t('settings.business.status'),
+                value: <StatusBadge {...merchantStatus[data.status]} />,
+              },
+              { label: t('settings.business.created'), value: fmt.dateTime(data.createdAt) },
             ]}
           />
         </div>
@@ -101,17 +125,21 @@ function BusinessPanel() {
 }
 
 function AccountPanel() {
+  const { t } = useTranslation('merchant')
+  const roleLabel = useRoleLabel()
   const user = useSession((s) => s.user)
   if (!user) return null
   return (
     <Panel>
-      <PanelHeader title="Your account" />
+      <PanelHeader title={t('settings.account.title')} />
       <DescriptionList
         className="px-4 py-1"
         items={[
-          { label: 'Email', value: user.email },
-          { label: 'User ID', value: <CopyableId value={user.id} truncate={false} /> },
-          { label: 'Role', value: humanize(user.role) },
+          // Known only from the sign-in response (there is no GET /me): "—" when this
+          // browser has not signed in as this user before.
+          { label: t('settings.account.email'), value: user.email },
+          { label: t('settings.account.userId'), value: <CopyableId value={user.id} truncate={false} /> },
+          { label: t('settings.account.role'), value: roleLabel(user.role) },
         ]}
       />
     </Panel>
@@ -141,27 +169,34 @@ function LanguagePanel() {
 }
 
 function AppearancePanel() {
+  const { t } = useTranslation('merchant')
   const { preference, setPreference } = useTheme()
   return (
     <Panel>
       <PanelHeader
-        title="Appearance"
+        title={t('settings.appearance.title')}
         actions={
           <Segmented<ThemePreference>
-            aria-label="Theme"
+            aria-label={t('settings.appearance.theme')}
             value={preference}
             onChange={setPreference}
             options={[
-              { value: 'system', label: 'System' },
-              { value: 'light', label: 'Light' },
-              { value: 'dark', label: 'Dark' },
+              { value: 'system', label: t('settings.appearance.system') },
+              { value: 'light', label: t('settings.appearance.light') },
+              { value: 'dark', label: t('settings.appearance.dark') },
             ]}
           />
         }
       />
       <p className="flex items-center gap-2 px-4 py-3 text-sm text-ink-3">
         {preference === 'dark' ? <MoonIcon /> : preference === 'light' ? <SunIcon /> : <DesktopIcon />}
-        Shortcut: press <kbd className="font-mono text-xs">⇧ D</kbd> anywhere to toggle.
+        <span>
+          <Trans
+            t={t}
+            i18nKey="settings.appearance.shortcut"
+            components={{ kbd: <kbd className="font-mono text-xs" /> }}
+          />
+        </span>
       </p>
     </Panel>
   )

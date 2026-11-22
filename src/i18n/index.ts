@@ -58,4 +58,5 @@ export async function setLanguage(language: Language) {
 export { i18n }
 export { useErrorMessage } from './errors'
 export { useFormat } from './format'
+export { useRoleLabel } from './roles'
 export { useFieldError, vmsg } from './validation'

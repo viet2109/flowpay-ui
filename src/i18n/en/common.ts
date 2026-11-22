@@ -21,6 +21,7 @@ export const common = {
     next: 'Next page',
     pageSize: 'Rows per page',
   },
+  roles: { OWNER: 'Owner', ADMIN: 'Admin', DEVELOPER: 'Developer', FINANCE: 'Finance' },
   refreshFailed: 'Could not refresh. What you see may be out of date.',
   errorState: {
     title: 'Could not load this',

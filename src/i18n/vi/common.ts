@@ -23,6 +23,7 @@ export const common: Messages<typeof en> = {
     next: 'Trang sau',
     pageSize: 'Số dòng mỗi trang',
   },
+  roles: { OWNER: 'Chủ sở hữu', ADMIN: 'Quản trị', DEVELOPER: 'Lập trình viên', FINANCE: 'Tài chính' },
   refreshFailed: 'Không làm mới được. Dữ liệu đang hiển thị có thể đã cũ.',
   errorState: {
     title: 'Không tải được dữ liệu',

@@ -12,8 +12,8 @@ import { NavLink } from 'react-router'
 import { Logo } from '@/components/logo'
 import { useSession } from '@/features/auth'
 import { useMerchant } from '@/features/merchant'
+import { useRoleLabel } from '@/i18n'
 import { cn } from '@/lib/cn'
-import { humanize } from '@/lib/format'
 
 interface NavItem {
   to: string
@@ -69,6 +69,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useTranslation('shell')
   const { data: merchant } = useMerchant()
   const role = useSession((s) => s.user?.role)
+  const roleLabel = useRoleLabel()
   const initials = (merchant?.name ?? '··')
     .split(/\s+/)
     .slice(0, 2)
@@ -87,7 +88,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </span>
         <div className="min-w-0">
           <div className="truncate text-sm font-medium">{merchant?.name ?? 'Loading…'}</div>
-          <div className="text-xs text-ink-3">{role ? humanize(role) : ' '}</div>
+          <div className="text-xs text-ink-3">{role ? roleLabel(role) : ' '}</div>
         </div>
       </div>
 
