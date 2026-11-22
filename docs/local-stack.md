@@ -152,6 +152,11 @@ the top of `scripts/seed.ts`.
 checks every endpoint the dashboard calls against the frontend types in about
 5 seconds. Point it elsewhere with `CONTRACT_API_URL`.
 
+`npm run test:image` builds the production image and checks it
+(docs/deployment.md). With this stack running, the image checks also sign in to a
+new merchant in a real browser, through the image. They need Docker, and take
+about a minute after the first build.
+
 ### Webhook receiver
 
 A receiver that checks `FlowPay-Signature` with the exact code the endpoint page

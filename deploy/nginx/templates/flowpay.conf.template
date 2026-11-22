@@ -1,0 +1,59 @@
+# Rendered at container start by the image's envsubst step (only FLOWPAY_* variables).
+upstream flowpay { server ${FLOWPAY_API_UPSTREAM}; }
+
+server {
+    include /etc/flowpay/listen.conf;
+    root /usr/share/nginx/html;
+    add_header X-Request-Id $request_id always;
+
+    # --- API: same routes, limits and problem bodies as the backend's edge -----------
+    location ^~ /api/v1/auth/ {
+        limit_req zone=flowpay_auth burst=5 nodelay;
+        error_page 429 = @auth_limited;
+        include /etc/flowpay/proxy.conf;
+    }
+    location /api/v1/ {
+        limit_req zone=flowpay_mutations burst=20 nodelay;
+        error_page 429 = @mutation_limited;
+        include /etc/flowpay/proxy.conf;
+    }
+    # Nothing else under /api reaches the backend or falls back to the dashboard.
+    location ^~ /api/ { return 404; }
+
+    # --- Dashboard ---------------------------------------------------------------
+    # Hashed build output never changes under its name. A missing file is a 404, never
+    # index.html: after a deploy, an old tab asking for a removed chunk must fail
+    # visibly (the router shows its error page), not run HTML as JavaScript.
+    location ^~ /assets/ {
+        limit_except GET { deny all; }
+        include /etc/flowpay/static-headers.conf;
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        try_files $uri =404;
+    }
+    # Everything else is the app (client-side routes) or a file from public/.
+    # Revalidated on every visit, so a deploy is picked up on the next load.
+    location / {
+        limit_except GET { deny all; }
+        include /etc/flowpay/static-headers.conf;
+        add_header Cache-Control "no-cache" always;
+        try_files $uri /index.html;
+    }
+    location = /index.html {
+        limit_except GET { deny all; }
+        include /etc/flowpay/static-headers.conf;
+        add_header Cache-Control "no-cache" always;
+    }
+
+    location @auth_limited {
+        default_type application/problem+json;
+        add_header X-Request-Id $request_id always;
+        add_header Retry-After 60 always;
+        return 429 '{"type":"https://flowpay.dev/problems/rate-limit-exceeded","title":"Rate limit exceeded","status":429,"detail":"The request rate limit was exceeded.","instance":"/api/v1/auth","code":"RATE_LIMIT_EXCEEDED","requestId":"$request_id"}';
+    }
+    location @mutation_limited {
+        default_type application/problem+json;
+        add_header X-Request-Id $request_id always;
+        add_header Retry-After 1 always;
+        return 429 '{"type":"https://flowpay.dev/problems/rate-limit-exceeded","title":"Rate limit exceeded","status":429,"detail":"The request rate limit was exceeded.","instance":"/api/v1","code":"RATE_LIMIT_EXCEEDED","requestId":"$request_id"}';
+    }
+}

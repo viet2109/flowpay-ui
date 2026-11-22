@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from '@/lib/zod'
 import { vmsg } from '@/i18n'
 
 export const PASSWORD_MIN_LENGTH = 8

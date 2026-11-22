@@ -29,6 +29,7 @@ src/
 ├── lib/                  framework-light utilities: http client, errors, money, format…
 ├── styles/globals.css    design tokens (see docs/design-system.md)
 └── test/setup.ts
+deploy/nginx/             production edge config; Dockerfile builds the image (docs/deployment.md)
 ```
 
 ### Inside a feature
@@ -203,6 +204,10 @@ list offers the first page instead of claiming the list is empty.
 - **Comments:** explain _why_ (business rule, trade-off), cite the backend rule
   (`BR-REF-003`) when relevant. Don't narrate what the code does.
 - **Effects:** avoid syncing state in `useEffect`; derive, or adjust during render.
+- **Content-Security-Policy** (docs/deployment.md): no `eval` or `new Function` (import
+  `z` from `@/lib/zod`, which keeps zod jitless), no new inline scripts (the one in
+  `index.html` is allowed by hash), and no third-party origins for scripts, styles,
+  fonts, images or requests. Anything else needs a CSP change and `npm run test:image`.
 
 ### Copy and languages (`src/i18n`)
 

@@ -1,0 +1,18 @@
+# Build context: sources and configs only. No dependencies, outputs, secrets or
+# local tooling (the image installs its own node_modules with npm ci).
+.git
+node_modules
+dist
+coverage
+test-results
+playwright-report
+shots
+.env
+.env.*
+*.local
+.vscode
+.idea
+.claude
+AGENTS.md
+CLAUDE.md
+docs

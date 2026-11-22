@@ -19,6 +19,7 @@
     "e2e": "playwright test --project=e2e",
     "e2e:retries": "playwright test -c playwright.retries.config.ts",
     "shots": "playwright test --project=shots",
+    "test:image": "docker build -t flowpay-dashboard:check . && node scripts/image-check.ts",
     "seed": "node scripts/seed.ts",
     "receiver": "node scripts/webhook-receiver.ts"
   },

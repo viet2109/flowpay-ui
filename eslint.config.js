@@ -18,6 +18,9 @@ const LOCALE_FORMATTERS = [
   { name: '@/lib/money', importNames: ['formatMinor', 'formatNumber'], message: useFormatMessage },
 ]
 
+// Schemas take z from lib/zod, which keeps zod from probing eval under the production CSP.
+const ZOD = [{ name: 'zod', message: "Import { z } from '@/lib/zod'." }]
+
 export default tseslint.config(
   { ignores: ['dist', 'coverage', 'test-results', 'playwright-report', 'shots'] },
   {
@@ -32,7 +35,10 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       // Features talk to each other through their public files, never deep internals.
       // Display formatters come from useFormat(), which re-renders on a language change.
-      'no-restricted-imports': ['error', { patterns: FEATURE_INTERNALS, paths: LOCALE_FORMATTERS }],
+      'no-restricted-imports': [
+        'error',
+        { patterns: FEATURE_INTERNALS, paths: [...LOCALE_FORMATTERS, ...ZOD] },
+      ],
       // An effect may only return a cleanup function. Expression bodies return
       // whatever the call returns (window.scrollTo returns a Promise in Chromium),
       // which crashes React at unmount with "destroy is not a function".
