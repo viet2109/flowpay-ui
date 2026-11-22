@@ -15,7 +15,7 @@ import { refundStatus } from '../status'
 export function RefundDetailPage() {
   const { t } = useTranslation('payments')
   const { refundId = '' } = useParams()
-  const { data: refund, isPending, error, refetch } = useRefund(refundId)
+  const { data: refund, isPending, isFetching, error, refetch } = useRefund(refundId)
 
   if (isPending) {
     return (
@@ -55,7 +55,12 @@ export function RefundDetailPage() {
       <Panel className="max-w-2xl">
         <PanelHeader title={t('refundDetail.details')} />
         <div className="p-4">
-          <RefundDetails refund={refund} showAmount={false} />
+          <RefundDetails
+            refund={refund}
+            showAmount={false}
+            onCheckAgain={() => void refetch()}
+            checking={isFetching}
+          />
         </div>
       </Panel>
     </>

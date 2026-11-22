@@ -115,7 +115,7 @@ function RefundSheet({
   onClose: () => void
 }) {
   const { t } = useTranslation('payments')
-  const { data, error, refetch } = useRefund(refundId)
+  const { data, isFetching, error, refetch } = useRefund(refundId)
   const refund = data ?? fromList
 
   return (
@@ -137,7 +137,7 @@ function RefundSheet({
     >
       <div className="p-5">
         {refund ? (
-          <RefundDetails refund={refund} />
+          <RefundDetails refund={refund} onCheckAgain={() => void refetch()} checking={isFetching} />
         ) : error ? (
           // Asking again for a refund that does not exist cannot help.
           <ErrorState error={error} onRetry={isApiError(error, 'REFUND_NOT_FOUND') ? undefined : refetch} />

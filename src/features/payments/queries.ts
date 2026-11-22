@@ -88,11 +88,22 @@ export function usePaymentRefunds(id: string, page = 0) {
   })
 }
 
+/**
+ * A refund, read again while PROCESSING on the same schedule as a payment
+ * (pollDelay): a refund only stays PROCESSING when the provider outcome is unknown,
+ * and without reconciliation it does not change on its own.
+ */
 export function useRefund(refundId: string | null) {
   return useQuery({
     queryKey: paymentKeys.refund(refundId ?? ''),
     queryFn: ({ signal }) => paymentsApi.refund(refundId!, signal),
     enabled: Boolean(refundId),
+    refetchInterval: (q) => {
+      const refund = q.state.data
+      return refund?.status === 'PROCESSING'
+        ? pollDelay(q.state.dataUpdatedAt - Date.parse(refund.updatedAt))
+        : false
+    },
   })
 }
 

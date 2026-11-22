@@ -5,13 +5,25 @@ import { CopyableId } from '@/components/copyable-id'
 import { DescriptionList } from '@/components/description-list'
 import { Money } from '@/components/money'
 import { StatusBadge } from '@/components/status-badge'
+import { Button } from '@/components/ui/button'
 import { useFormat } from '@/i18n'
 import { useReasonLabel } from '../refund-reasons'
 import { refundStatus } from '../status'
 import type { Refund } from '../types'
 
 /** One refund's facts, shared by its page and the sheet on the payment page. */
-export function RefundDetails({ refund, showAmount = true }: { refund: Refund; showAmount?: boolean }) {
+export function RefundDetails({
+  refund,
+  showAmount = true,
+  onCheckAgain,
+  checking = false,
+}: {
+  refund: Refund
+  showAmount?: boolean
+  /** Reads the refund once more (it is only polled for two minutes while PROCESSING). */
+  onCheckAgain?: () => void
+  checking?: boolean
+}) {
   const { t } = useTranslation('payments')
   const fmt = useFormat()
   const reasonLabel = useReasonLabel()
@@ -33,7 +45,17 @@ export function RefundDetails({ refund, showAmount = true }: { refund: Refund; s
         </Callout>
       )}
       {refund.status === 'PROCESSING' && (
-        <Callout tone="warning" title={t('refundDetail.processingTitle')}>
+        <Callout
+          tone="warning"
+          title={t('refundDetail.processingTitle')}
+          action={
+            onCheckAgain && (
+              <Button size="sm" onClick={onCheckAgain} loading={checking}>
+                {t('detail.refresh')}
+              </Button>
+            )
+          }
+        >
           {t('refundDetail.processingBody')}
         </Callout>
       )}

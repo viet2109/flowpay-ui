@@ -165,3 +165,32 @@ describe('RefundDetailPage', () => {
     expect(screen.getByTitle('req_NOREFUND')).toBeInTheDocument()
   })
 })
+
+describe('a refund waiting on its provider', () => {
+  const reads = () =>
+    fetchMock.mock.calls.filter(([input]) =>
+      /\/merchant\/refunds\/re_1$/.test(new URL(String(input), 'http://x').pathname),
+    ).length
+
+  it('is read again while fresh, and checked again on request after that', async () => {
+    refunds = [refund('re_1', { status: 'PROCESSING', completedAt: null })]
+    renderAt('/refunds/re_1')
+    expect(await screen.findByText('Waiting for the provider’s outcome')).toBeInTheDocument()
+    await waitFor(() => expect(reads()).toBeGreaterThan(1), { timeout: 3500 })
+  }, 10_000)
+
+  it('is not read again when it has waited for long, until asked', async () => {
+    refunds = [
+      refund('re_1', {
+        status: 'PROCESSING',
+        completedAt: null,
+        updatedAt: new Date(Date.now() - 3_600_000).toISOString(),
+      }),
+    ]
+    const user = renderAt('/refunds/re_1')
+    expect(await screen.findByText('Waiting for the provider’s outcome')).toBeInTheDocument()
+    expect(reads()).toBe(1)
+    await user.click(screen.getByRole('button', { name: 'Check again' }))
+    await waitFor(() => expect(reads()).toBe(2))
+  })
+})

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -71,14 +71,21 @@ const posts = () =>
     }))
 
 /** The dialog with an "Open" button, as the payment page uses it. */
+/** What the page's next read of the payment returns ("Page refetched"). */
+let refetched: PaymentIntent = payment
+
 function Harness() {
   const [open, setOpen] = useState(true)
+  const [current, setCurrent] = useState(payment)
   return (
     <>
       <button type="button" onClick={() => setOpen(true)}>
         Open refund
       </button>
-      <RefundDialog payment={payment} open={open} onOpenChange={setOpen} />
+      <button type="button" onClick={() => setCurrent(refetched)}>
+        Page refetched
+      </button>
+      <RefundDialog payment={current} open={open} onOpenChange={setOpen} />
     </>
   )
 }
@@ -105,6 +112,7 @@ async function refundAmount(user: ReturnType<typeof userEvent.setup>, amount: st
 }
 
 beforeEach(() => {
+  refetched = payment
   toasts.calls = []
   fetchMock.mockClear()
   vi.stubGlobal('fetch', fetchMock)
@@ -158,17 +166,58 @@ describe('RefundDialog', () => {
     expect(posts()[1]!.key).toBe(posts()[0]!.key)
   })
 
-  it('keeps a capacity conflict in the dialog with its request ID', async () => {
+  it('keeps a capacity conflict on screen and states the new limit once the payment is read again', async () => {
     reply = () => ({
       status: 409,
       body: { status: 409, code: 'REFUND_AMOUNT_EXCEEDS_AVAILABLE', title: 'x', requestId: 'req_TAKEN' },
     })
     const user = renderDialog()
     await refundAmount(user, '100000')
+    expect(await within(dialog()).findByTitle('req_TAKEN')).toBeInTheDocument()
+
+    // Another refund took 460,000 VND; the page's refetch brings the new limit.
+    refetched = { ...payment, refundedAmount: 460000, refundableAmount: 40000 }
+    // The dialog is modal: the page behind it is outside the accessibility tree.
+    fireEvent.click(screen.getByRole('button', { name: 'Page refetched', hidden: true }))
     expect(
-      await within(dialog()).findByText('The amount is larger than what is still refundable.'),
+      within(dialog()).getByText(
+        'Another refund used part of the refundable amount meanwhile. Up to 40,000 VND can be refunded now.',
+      ),
     ).toBeInTheDocument()
-    expect(within(dialog()).getByTitle('req_TAKEN')).toBeInTheDocument()
+    // Same dialog, same typed amount, now checked against the new limit.
+    expect(within(dialog()).getByLabelText('Amount')).toHaveValue('100000')
+    expect(within(dialog()).getByText('At most 40,000 VND can be refunded.')).toBeInTheDocument()
+  })
+
+  it('opens at the refundable amount of the moment', async () => {
+    const user = renderDialog()
+    await user.click(within(dialog()).getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    refetched = { ...payment, refundedAmount: 300000, refundableAmount: 200000 }
+    await user.click(screen.getByRole('button', { name: 'Page refetched' }))
+    await user.click(screen.getByRole('button', { name: 'Open refund' }))
+    expect(within(dialog()).getByLabelText('Amount')).toHaveValue('200000')
+  })
+
+  it('explains a request still in progress and retries it with the same key', async () => {
+    let attempts = 0
+    reply = () =>
+      ++attempts === 1
+        ? {
+            status: 409,
+            body: { status: 409, code: 'IDEMPOTENCY_REQUEST_IN_PROGRESS', title: 'x', requestId: 'req_BUSY' },
+          }
+        : { status: 201, body: { data: refund('SUCCEEDED') }, headers: { 'Idempotency-Replayed': 'true' } }
+    const user = renderDialog()
+    await refundAmount(user, '100000')
+    expect(
+      await within(dialog()).findByText('The same request is still being processed. Try again in a moment.'),
+    ).toBeInTheDocument()
+    await user.click(within(dialog()).getByRole('button', { name: /^Refund/ }))
+    await waitFor(() => expect(posts()).toHaveLength(2))
+    expect(posts()[1]!.key).toBe(posts()[0]!.key)
+    await waitFor(() => expect(toasts.calls).toHaveLength(1))
+    expect(toasts.calls[0]!.description).toMatch(/no second one was made/)
   })
 
   it.each([

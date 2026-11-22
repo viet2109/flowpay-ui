@@ -213,13 +213,8 @@ function PaymentDetail({ id }: { id: string }) {
         </div>
       </div>
 
-      {/* Re-mount when capacity changes so the form starts from the current refundable amount. */}
-      <RefundDialog
-        key={payment.refundableAmount}
-        payment={payment}
-        open={refunding}
-        onOpenChange={setRefunding}
-      />
+      {/* Not keyed by the refundable amount: a capacity conflict must stay visible (RefundDialog). */}
+      <RefundDialog payment={payment} open={refunding} onOpenChange={setRefunding} />
     </>
   )
 }

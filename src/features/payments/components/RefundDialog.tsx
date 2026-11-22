@@ -6,6 +6,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
 import { Input, NativeSelect } from '@/components/ui/input'
 import { useFieldError, useFormat, vmsg } from '@/i18n'
+import { isApiError } from '@/lib/api/errors'
 import { cn } from '@/lib/cn'
 import { useIdempotencyKey } from '@/lib/idempotency'
 import { minorToInput, parseToMinor } from '@/lib/money'
@@ -40,6 +41,15 @@ export function RefundDialog({ payment, open, onOpenChange }: Props) {
   const [touched, setTouched] = useState(false)
   const idempotency = useIdempotencyKey('refund')
   const mutation = useCreateRefund(payment.id)
+
+  // Each open starts from the payment's current refundable amount. The dialog is not
+  // remounted when that amount changes, so a conflict can stay on screen next to the
+  // updated limit instead of the form silently resetting.
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) setAmountText(minorToInput(refundableAmount, currency))
+  }
 
   const amount = parseToMinor(amountText, currency)
   const amountError =
@@ -115,7 +125,18 @@ export function RefundDialog({ payment, open, onOpenChange }: Props) {
       >
         <form id="refund-form" onSubmit={submit} className="space-y-4" noValidate>
           {/* Server refusals (capacity taken by another refund, conflicts), with their requestId. */}
-          {mutation.isError && <ActionError error={mutation.error} />}
+          {mutation.isError && (
+            <ActionError
+              error={mutation.error}
+              // Another refund took capacity since this opened; the payment was read again,
+              // so the limit shown (and checked below) is the current one.
+              message={
+                isApiError(mutation.error, 'REFUND_AMOUNT_EXCEEDS_AVAILABLE')
+                  ? t('refund.capacityTaken', { amount: money(refundableAmount) })
+                  : undefined
+              }
+            />
+          )}
 
           <Field
             label={t('refund.amount')}
