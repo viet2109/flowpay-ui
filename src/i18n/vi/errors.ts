@@ -13,6 +13,7 @@ export const errors: Messages<typeof en> = {
   MERCHANT_SUSPENDED: 'Merchant này đang bị tạm ngưng.',
   PAYMENT_INVALID_STATE: 'Thanh toán không còn ở trạng thái cho phép thao tác này.',
   PAYMENT_NOT_FOUND: 'Tài khoản của bạn không có thanh toán nào với ID này.',
+  REFUND_NOT_FOUND: 'Tài khoản của bạn không có khoản hoàn tiền nào với ID này.',
   REFUND_AMOUNT_EXCEEDS_AVAILABLE: 'Số tiền lớn hơn phần còn có thể hoàn.',
   REFUND_INVALID_PAYMENT_STATE: 'Chỉ hoàn tiền được cho thanh toán thành công hoặc đã hoàn một phần.',
   IDEMPOTENCY_KEY_REUSED: 'Yêu cầu này đã được gửi với thông tin khác.',

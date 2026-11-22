@@ -59,6 +59,10 @@ export const router = createBrowserRouter([
                 lazy: async () => ({ Component: (await payments()).PaymentDetailPage }),
               },
               {
+                path: 'refunds/:refundId',
+                lazy: async () => ({ Component: (await payments()).RefundDetailPage }),
+              },
+              {
                 path: 'developers/api-keys',
                 lazy: async () => ({ Component: (await import('@/features/api-keys')).ApiKeysPage }),
               },

@@ -117,17 +117,19 @@ export function DeliverySheet({ deliveryId, onClose }: { deliveryId: string | nu
               { label: t('sheet.eventId'), value: <CopyableId value={data.eventId} truncate={false} /> },
               {
                 label: t('sheet.resource'),
-                value:
-                  data.resourceType === 'PAYMENT_INTENT' ? (
-                    <Link
-                      to={`/payments/${data.resourceId}`}
-                      className="font-mono text-xs text-accent hover:underline"
-                    >
-                      {data.resourceId}
-                    </Link>
-                  ) : (
-                    <CopyableId value={data.resourceId} truncate={false} />
-                  ),
+                value: (
+                  // PAYMENT_INTENT (pi_…) or REFUND (re_…): each has its own page.
+                  <Link
+                    to={
+                      data.resourceType === 'PAYMENT_INTENT'
+                        ? `/payments/${data.resourceId}`
+                        : `/refunds/${data.resourceId}`
+                    }
+                    className="font-mono text-xs break-all text-accent hover:underline"
+                  >
+                    {data.resourceId}
+                  </Link>
+                ),
               },
               {
                 label: t('sheet.endpoint'),

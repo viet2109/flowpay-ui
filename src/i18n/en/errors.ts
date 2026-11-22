@@ -14,6 +14,7 @@ export const errors = {
   MERCHANT_SUSPENDED: 'This merchant is suspended.',
   PAYMENT_INVALID_STATE: 'The payment is no longer in a state that allows this action.',
   PAYMENT_NOT_FOUND: 'There is no payment with this ID in your account.',
+  REFUND_NOT_FOUND: 'There is no refund with this ID in your account.',
   REFUND_AMOUNT_EXCEEDS_AVAILABLE: 'The amount is larger than what is still refundable.',
   REFUND_INVALID_PAYMENT_STATE: 'Only succeeded or partially refunded payments can be refunded.',
   IDEMPOTENCY_KEY_REUSED: 'This request was already sent with different details.',

@@ -6,6 +6,7 @@ const ULID = '01JD5Z8Q3W4X5Y6Z7A8B9C0D1E'
 describe('parseId', () => {
   it('maps each public ID prefix to its page', () => {
     expect(parseId(`pi_${ULID}`)).toEqual({ kind: 'payment', id: `pi_${ULID}`, to: `/payments/pi_${ULID}` })
+    expect(parseId(`re_${ULID}`)).toEqual({ kind: 'refund', id: `re_${ULID}`, to: `/refunds/re_${ULID}` })
     expect(parseId(`wep_${ULID}`)).toEqual({
       kind: 'endpoint',
       id: `wep_${ULID}`,
@@ -24,7 +25,7 @@ describe('parseId', () => {
 
   it('rejects text that is not a whole public ID', () => {
     expect(parseId('payments')).toBeNull()
-    expect(parseId(`re_${ULID}`)).toBeNull() // refunds have no page of their own
+    expect(parseId(`key_${ULID}`)).toBeNull() // API keys have no page of their own
     expect(parseId(`pi_${ULID.slice(1)}`)).toBeNull() // too short
     expect(parseId(`pi_${ULID.slice(1)}U`)).toBeNull() // U is not in the ULID alphabet
     expect(parseId(`see pi_${ULID}`)).toBeNull()

@@ -11,9 +11,9 @@ export function commandFilter(value: string, search: string, keywords?: string[]
 }
 
 /** Public IDs are a type prefix and a ULID (docs/api-contract.md). */
-const ID = /^(pi|wep|wdl)_[0-9A-HJKMNP-TV-Z]{26}$/
+const ID = /^(pi|re|wep|wdl)_[0-9A-HJKMNP-TV-Z]{26}$/
 
-export type IdTarget = { kind: 'payment' | 'endpoint' | 'delivery'; id: string; to: string }
+export type IdTarget = { kind: 'payment' | 'refund' | 'endpoint' | 'delivery'; id: string; to: string }
 
 /** A pasted public ID and where it opens, or null when the text is not one. */
 export function parseId(text: string): IdTarget | null {
@@ -27,6 +27,8 @@ export function parseId(text: string): IdTarget | null {
   switch (match[1]) {
     case 'pi':
       return { kind: 'payment', id, to: `/payments/${id}` }
+    case 're':
+      return { kind: 'refund', id, to: `/refunds/${id}` }
     case 'wep':
       return { kind: 'endpoint', id, to: `/developers/webhooks/${id}` }
     default:

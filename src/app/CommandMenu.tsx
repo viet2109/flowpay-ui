@@ -32,6 +32,7 @@ interface Entry {
 
 const ID_LABEL: Record<IdTarget['kind'], ParseKeys<'shell'>> = {
   payment: 'command.openPayment',
+  refund: 'command.openRefund',
   endpoint: 'command.openEndpoint',
   delivery: 'command.openDelivery',
 }

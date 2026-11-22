@@ -35,6 +35,7 @@ export const shell = {
     pages: 'Pages',
     preferences: 'Preferences',
     openPayment: 'Open payment',
+    openRefund: 'Open refund',
     openEndpoint: 'Open webhook endpoint',
     openDelivery: 'Open webhook delivery',
     recent: 'Recent',

@@ -104,6 +104,18 @@ const TARGETS: Target[] = [
     },
   },
   {
+    name: 'refund detail',
+    path: '/payments?orderId=ORD-1012',
+    auth: true,
+    ready: async (p) => {
+      await p.getByText('ORD-1012').filter({ visible: true }).first().click()
+      await p.getByText('Partial goodwill credit').click()
+      await p.getByRole('link', { name: 'Open full page' }).click()
+      await expect(p).toHaveURL(/\/refunds\/re_\w+$/)
+      await expect(p.locator('dl')).toHaveCount(1)
+    },
+  },
+  {
     name: 'api keys',
     path: '/developers/api-keys',
     auth: true,

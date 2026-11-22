@@ -1,34 +1,63 @@
-import { ArrowCounterClockwiseIcon } from '@phosphor-icons/react'
+import { ArrowCounterClockwiseIcon, ArrowSquareOutIcon } from '@phosphor-icons/react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Link, useSearchParams } from 'react-router'
 import { CopyableId } from '@/components/copyable-id'
-import { DescriptionList } from '@/components/description-list'
 import { Money } from '@/components/money'
+import { Pagination } from '@/components/pagination'
 import { RelativeTime } from '@/components/relative-time'
 import { EmptyState, ErrorState } from '@/components/states'
 import { StatusBadge } from '@/components/status-badge'
-import { Pagination } from '@/components/pagination'
+import { Button } from '@/components/ui/button'
 import { Sheet } from '@/components/ui/sheet'
-import { TableSkeleton } from '@/components/ui/skeleton'
+import { Skeleton, TableSkeleton } from '@/components/ui/skeleton'
 import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/table'
-import { useFormat } from '@/i18n'
-import { useReasonLabel } from '../refund-reasons'
+import { isApiError } from '@/lib/api/errors'
 import { usePaymentRefunds, useRefund } from '../queries'
+import { useReasonLabel } from '../refund-reasons'
 import { refundStatus } from '../status'
 import type { Refund } from '../types'
+import { RefundDetails } from './RefundDetails'
 
+/**
+ * A payment's refunds. A refund opens in a sheet addressed by the URL
+ * (?refund=re_…): opening adds a history entry so Back closes it; closing
+ * replaces it, so a shared link closes without leaving the payment.
+ */
 export function RefundsPanel({ paymentId }: { paymentId: string }) {
+  const { t } = useTranslation('payments')
   const [page, setPage] = useState(0)
   const reasonLabel = useReasonLabel()
-  const [selected, setSelected] = useState<Refund | null>(null)
+  const [params, setParams] = useSearchParams()
+  const openRefund = params.get('refund')
   const { data, isPending, isFetching, error, refetch } = usePaymentRefunds(paymentId, page)
+
+  function setOpen(id: string | null) {
+    const next = new URLSearchParams(params)
+    if (id) next.set('refund', id)
+    else next.delete('refund')
+    setParams(next, { replace: !id })
+  }
+
+  const sheet = (
+    <RefundSheet
+      refundId={openRefund}
+      // Row data shows at once; the refund's own request refreshes it.
+      fromList={data?.items.find((r) => r.id === openRefund)}
+      onClose={() => setOpen(null)}
+    />
+  )
 
   if (isPending) return <TableSkeleton rows={2} columns={4} />
   if (error) return <ErrorState error={error} onRetry={refetch} />
   if (data.items.length === 0) {
     return (
-      <EmptyState icon={<ArrowCounterClockwiseIcon />} title="No refunds" className="py-8">
-        Partial and full refunds for this payment will be listed here.
-      </EmptyState>
+      <>
+        <EmptyState icon={<ArrowCounterClockwiseIcon />} title={t('refunds.emptyTitle')} className="py-8">
+          {t('refunds.emptyBody')}
+        </EmptyState>
+        {sheet}
+      </>
     )
   }
 
@@ -37,11 +66,11 @@ export function RefundsPanel({ paymentId }: { paymentId: string }) {
       <Table>
         <THead>
           <tr>
-            <Th className="text-right">Amount</Th>
-            <Th>Status</Th>
-            <Th>Reason</Th>
-            <Th className="hidden sm:table-cell">Refund ID</Th>
-            <Th className="text-right">Created</Th>
+            <Th className="text-right">{t('refunds.columns.amount')}</Th>
+            <Th>{t('refunds.columns.status')}</Th>
+            <Th>{t('refunds.columns.reason')}</Th>
+            <Th className="hidden sm:table-cell">{t('refunds.columns.id')}</Th>
+            <Th className="text-right">{t('refunds.columns.created')}</Th>
           </tr>
         </THead>
         <TBody>
@@ -50,8 +79,8 @@ export function RefundsPanel({ paymentId }: { paymentId: string }) {
               key={refund.id}
               interactive
               tabIndex={0}
-              onClick={() => setSelected(refund)}
-              onKeyDown={(e) => e.key === 'Enter' && setSelected(refund)}
+              onClick={() => setOpen(refund.id)}
+              onKeyDown={(e) => e.key === 'Enter' && setOpen(refund.id)}
             >
               <Td className="w-0 text-right">
                 <Money amount={refund.amount} currency={refund.currency} size="sm" negative />
@@ -71,61 +100,51 @@ export function RefundsPanel({ paymentId }: { paymentId: string }) {
         </TBody>
       </Table>
       <Pagination meta={data.meta} onPageChange={setPage} pending={isFetching} />
-      <RefundSheet refund={selected} onClose={() => setSelected(null)} />
+      {sheet}
     </>
   )
 }
 
-function RefundSheet({ refund, onClose }: { refund: Refund | null; onClose: () => void }) {
-  const fmt = useFormat()
-  const reasonLabel = useReasonLabel()
-  // Row data renders instantly; the detail request refreshes it in the background.
-  const { data } = useRefund(refund?.id ?? null)
-  const current = data ?? refund
+function RefundSheet({
+  refundId,
+  fromList,
+  onClose,
+}: {
+  refundId: string | null
+  fromList?: Refund
+  onClose: () => void
+}) {
+  const { t } = useTranslation('payments')
+  const { data, error, refetch } = useRefund(refundId)
+  const refund = data ?? fromList
 
   return (
     <Sheet
-      open={Boolean(refund)}
+      open={Boolean(refundId)}
       onOpenChange={(open) => !open && onClose()}
-      eyebrow="Refund"
-      title={current ? current.id : ''}
+      eyebrow={t('refundDetail.eyebrow')}
+      title={refund ? <span className="font-mono text-sm">{refund.id}</span> : t('refundDetail.loading')}
+      actions={
+        refundId && (
+          <Button size="sm" asChild>
+            <Link to={`/refunds/${refundId}`}>
+              <ArrowSquareOutIcon />
+              {t('refundDetail.openPage')}
+            </Link>
+          </Button>
+        )
+      }
     >
-      {current && (
-        <div className="space-y-6 p-5">
-          <div className="space-y-2">
-            <Money amount={current.amount} currency={current.currency} size="xl" negative />
-            <StatusBadge {...refundStatus[current.status]} />
-          </div>
-          <DescriptionList
-            items={[
-              { label: 'Refund ID', value: <CopyableId value={current.id} truncate={false} /> },
-              { label: 'Payment', value: <CopyableId value={current.paymentId} truncate={false} /> },
-              { label: 'Reason', value: reasonLabel(current.reason) },
-              { label: 'Provider', value: current.provider },
-              {
-                label: 'Provider ref.',
-                value: current.providerRefundId && (
-                  <span className="font-mono text-xs">{current.providerRefundId}</span>
-                ),
-              },
-              {
-                label: 'Failure',
-                hidden: !current.failureCode,
-                value: (
-                  <span>
-                    <span className="font-mono text-xs text-danger">{current.failureCode}</span>
-                    {current.failureMessage && (
-                      <span className="block text-ink-2">{current.failureMessage}</span>
-                    )}
-                  </span>
-                ),
-              },
-              { label: 'Created', value: fmt.dateTime(current.createdAt) },
-              { label: 'Completed', value: fmt.dateTime(current.completedAt) },
-            ]}
-          />
-        </div>
-      )}
+      <div className="p-5">
+        {refund ? (
+          <RefundDetails refund={refund} />
+        ) : error ? (
+          // Asking again for a refund that does not exist cannot help.
+          <ErrorState error={error} onRetry={isApiError(error, 'REFUND_NOT_FOUND') ? undefined : refetch} />
+        ) : (
+          <Skeleton className="h-40 w-full" />
+        )}
+      </div>
     </Sheet>
   )
 }

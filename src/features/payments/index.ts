@@ -1,5 +1,6 @@
 export { PaymentsPage } from './pages/PaymentsPage'
 export { PaymentDetailPage } from './pages/PaymentDetailPage'
+export { RefundDetailPage } from './pages/RefundDetailPage'
 export { PaymentsTable } from './components/PaymentsTable'
 export { usePayments, usePaymentStatusCounts } from './queries'
 export { paymentStatus } from './status'

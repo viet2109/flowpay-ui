@@ -37,6 +37,7 @@ export const shell: Messages<typeof en> = {
     pages: 'Trang',
     preferences: 'Tùy chọn',
     openPayment: 'Mở thanh toán',
+    openRefund: 'Mở hoàn tiền',
     openEndpoint: 'Mở webhook endpoint',
     openDelivery: 'Mở lượt gửi webhook',
     recent: 'Gần đây',

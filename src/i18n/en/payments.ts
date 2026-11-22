@@ -72,6 +72,32 @@ export const payments = {
     submitEmpty: 'Refund',
   },
   /** Reasons this dashboard offers; the API stores any text, so unknown ones are shown as written. */
+  refunds: {
+    emptyTitle: 'No refunds',
+    emptyBody: 'Partial and full refunds for this payment will be listed here.',
+    columns: { amount: 'Amount', status: 'Status', reason: 'Reason', id: 'Refund ID', created: 'Created' },
+  },
+  refundDetail: {
+    eyebrow: 'Refund',
+    title: 'Refund',
+    back: 'Payment',
+    backToPayments: 'Payments',
+    loading: 'Loading refund',
+    details: 'Details',
+    refundId: 'Refund ID',
+    payment: 'Payment',
+    reason: 'Reason',
+    provider: 'Provider',
+    providerRef: 'Provider reference',
+    failure: 'Failure',
+    created: 'Created',
+    completed: 'Completed',
+    openPage: 'Open full page',
+    failedTitle: 'The provider did not complete the refund',
+    processingTitle: 'Waiting for the provider’s outcome',
+    processingBody:
+      'The provider did not answer in time. The amount stays reserved on the payment until the outcome is known; this version has no automatic reconciliation.',
+  },
   reasons: {
     CUSTOMER_REQUEST: 'Customer request',
     DUPLICATE: 'Duplicate charge',

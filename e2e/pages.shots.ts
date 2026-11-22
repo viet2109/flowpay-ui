@@ -88,6 +88,31 @@ const TARGETS: ShotTarget[] = [
     },
   },
   {
+    name: 'refund-sheet',
+    path: '/payments?orderId=ORD-1012',
+    auth: true,
+    fullPage: false,
+    // The seeded partial refund, opened from the payment's refunds table.
+    ready: async (page) => {
+      await page.getByText('ORD-1012').filter({ visible: true }).first().click()
+      await page.getByText('Partial goodwill credit').click()
+      await expect(page.getByRole('dialog').locator('dl')).toBeVisible()
+    },
+  },
+  {
+    name: 'refund',
+    path: '/payments?orderId=ORD-1012',
+    auth: true,
+    ready: async (page) => {
+      await page.getByText('ORD-1012').filter({ visible: true }).first().click()
+      await page.getByText('Partial goodwill credit').click()
+      await page.getByRole('link', { name: /^(Open full page|Mở trang đầy đủ)$/ }).click()
+      await expect(page).toHaveURL(/\/refunds\/re_\w+$/)
+      // Only the refund page's own list: the payment page and its sheet are gone.
+      await expect(page.locator('dl')).toHaveCount(1)
+    },
+  },
+  {
     name: 'payment-processing',
     path: '/payments?orderId=ORD-1006',
     auth: true,

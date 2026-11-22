@@ -28,6 +28,21 @@ const payment = {
   createdAt: now,
   updatedAt: now,
 }
+const refund = {
+  id: 're_01KTEST',
+  paymentId: payment.id,
+  amount: 200000,
+  currency: 'VND',
+  status: 'SUCCEEDED',
+  reason: 'CUSTOMER_REQUEST',
+  provider: 'SIMULATOR',
+  providerRefundId: 'sim_refund_1',
+  failureCode: null,
+  failureMessage: null,
+  createdAt: now,
+  updatedAt: now,
+  completedAt: now,
+}
 const delivery = {
   id: 'wdl_1',
   endpointId: 'wep_1',
@@ -67,6 +82,7 @@ const routes: [RegExp, unknown][] = [
   [/\/merchant\/payments\/pi_01KTEST\/refunds(\?.*)?$/, page([])],
   [/\/merchant\/payments\/pi_01KTEST$/, { data: payment }],
   [/\/merchant\/payments(\?.*)?$/, page([payment])],
+  [/\/merchant\/refunds\/re_01KTEST$/, { data: refund }],
 ]
 
 beforeAll(async () => {
@@ -111,6 +127,13 @@ describe('app routes', () => {
     expect(await screen.findByText('Refund capacity')).toBeInTheDocument()
     expect(screen.getByRole('list', { name: 'Payment lifecycle' })).toBeInTheDocument()
     expect(screen.getAllByText('500,000').length).toBeGreaterThan(0)
+  })
+
+  it('refund detail shows the refund and links back to its payment', async () => {
+    render(<App />)
+    await visit('/refunds/re_01KTEST')
+    expect(await screen.findByText('Customer request')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'pi_01KTEST' })).toHaveAttribute('href', '/payments/pi_01KTEST')
   })
 
   it('endpoint detail lists subscribed events and deliveries', async () => {
