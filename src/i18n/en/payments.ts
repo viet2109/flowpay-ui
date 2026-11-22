@@ -65,6 +65,8 @@ export const payments = {
     remaining: '{{amount}} will remain refundable',
     capacityTaken:
       'Another refund used part of the refundable amount meanwhile. Up to {{amount}} can be refunded now.',
+    capacityGone:
+      'Another refund used the rest of the refundable amount meanwhile. Nothing is left to refund.',
     reason: 'Reason',
     reasonHint: 'Stored with the refund and shown in its history.',
     otherReason: 'Describe the reason',

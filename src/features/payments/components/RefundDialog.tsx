@@ -17,6 +17,9 @@ import { useOutcomeToast } from '../use-outcome-toast'
 
 const REASON_MAX = 255
 
+const capacityConflict = (error: unknown) =>
+  isApiError(error, 'REFUND_AMOUNT_EXCEEDS_AVAILABLE') || isApiError(error, 'REFUND_INVALID_PAYMENT_STATE')
+
 interface Props {
   payment: PaymentIntent
   open: boolean
@@ -129,11 +132,16 @@ export function RefundDialog({ payment, open, onOpenChange }: Props) {
             <ActionError
               error={mutation.error}
               // Another refund took capacity since this opened; the payment was read again,
-              // so the limit shown (and checked below) is the current one.
+              // so the limit shown (and checked below) is the current one. When it took all
+              // of it the payment is REFUNDED, and the backend answers with the state error:
+              // this dialog only opens for a refundable payment, and REFUNDED is the only
+              // state it can move to, so that code means the same thing here.
               message={
-                isApiError(mutation.error, 'REFUND_AMOUNT_EXCEEDS_AVAILABLE')
-                  ? t('refund.capacityTaken', { amount: money(refundableAmount) })
-                  : undefined
+                !capacityConflict(mutation.error)
+                  ? undefined
+                  : refundableAmount > 0
+                    ? t('refund.capacityTaken', { amount: money(refundableAmount) })
+                    : t('refund.capacityGone')
               }
             />
           )}

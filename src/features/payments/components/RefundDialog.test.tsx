@@ -189,6 +189,28 @@ describe('RefundDialog', () => {
     expect(within(dialog()).getByText('At most 40,000 VND can be refunded.')).toBeInTheDocument()
   })
 
+  // A refund of the whole rest makes the payment REFUNDED: the backend then refuses the
+  // other one with the state error rather than the capacity one (seen in the refunds E2E).
+  it.each(['REFUND_AMOUNT_EXCEEDS_AVAILABLE', 'REFUND_INVALID_PAYMENT_STATE'])(
+    'says nothing is left when another refund took all of it (%s)',
+    async (code) => {
+      reply = () => ({
+        status: 409,
+        body: { status: 409, code, title: 'x', requestId: 'req_GONE' },
+      })
+      const user = renderDialog()
+      await refundAmount(user, '500000')
+      expect(await within(dialog()).findByTitle('req_GONE')).toBeInTheDocument()
+      refetched = { ...payment, status: 'REFUNDED', refundedAmount: 500000, refundableAmount: 0 }
+      fireEvent.click(screen.getByRole('button', { name: 'Page refetched', hidden: true }))
+      expect(
+        within(dialog()).getByText(
+          'Another refund used the rest of the refundable amount meanwhile. Nothing is left to refund.',
+        ),
+      ).toBeInTheDocument()
+    },
+  )
+
   it('opens at the refundable amount of the moment', async () => {
     const user = renderDialog()
     await user.click(within(dialog()).getByRole('button', { name: 'Cancel' }))

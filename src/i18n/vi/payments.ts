@@ -67,6 +67,7 @@ export const payments: Messages<typeof en> = {
     remaining: 'Còn hoàn được {{amount}}',
     capacityTaken:
       'Trong lúc đó một khoản hoàn khác đã dùng một phần số tiền còn hoàn được. Hiện chỉ còn hoàn được tối đa {{amount}}.',
+    capacityGone: 'Trong lúc đó một khoản hoàn khác đã dùng hết số tiền còn hoàn được. Không còn gì để hoàn.',
     reason: 'Lý do',
     reasonHint: 'Lưu cùng khoản hoàn tiền và hiện trong lịch sử của nó.',
     otherReason: 'Mô tả lý do',
