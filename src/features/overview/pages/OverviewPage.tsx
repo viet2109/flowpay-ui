@@ -11,6 +11,7 @@ import { Panel, PanelHeader } from '@/components/ui/panel'
 import { ActionError, ErrorState } from '@/components/states'
 import { Button } from '@/components/ui/button'
 import { useApiKeys } from '@/features/api-keys'
+import { useCanRunPayments } from '@/features/auth'
 import { useMerchant } from '@/features/merchant'
 import {
   PaymentsTable,
@@ -46,29 +47,45 @@ export function OverviewPage() {
   )
 }
 
-/** Only shown until the first-run steps are done. */
+/**
+ * First-run steps, shown until they are all done. It only appears once every
+ * step's state is known: while loading it would flash for a merchant who is set
+ * up, and a failed request is not "not done" (the guide is optional, so it hides).
+ * Creating payments is OWNER only (useCanRunPayments), so other roles do not get
+ * a step they cannot take.
+ */
 function SetupChecklist() {
+  const { t } = useTranslation('overview')
   const keys = useApiKeys()
   const endpoints = useEndpoints()
   const payments = usePayments({ size: 1 })
+  const canRunPayments = useCanRunPayments()
 
-  if (keys.isPending || endpoints.isPending) return null
+  const sources = [keys, endpoints, ...(canRunPayments ? [payments] : [])]
+  if (sources.some((q) => q.isPending || q.error)) return null
   const steps = [
     {
+      key: 'apiKey',
       done: keys.data?.some((k) => k.status === 'ACTIVE') ?? false,
-      label: 'Create an API key',
+      label: t('setup.apiKey'),
       to: '/developers/api-keys',
     },
     {
+      key: 'endpoint',
       done: endpoints.data?.some((e) => e.status === 'ACTIVE') ?? false,
-      label: 'Add a webhook endpoint',
+      label: t('setup.endpoint'),
       to: '/developers/webhooks',
     },
-    {
-      done: (payments.data?.meta.totalElements ?? 0) > 0,
-      label: 'Create your first test payment',
-      to: '/payments',
-    },
+    ...(canRunPayments
+      ? [
+          {
+            key: 'payment',
+            done: (payments.data?.meta.totalElements ?? 0) > 0,
+            label: t('setup.payment'),
+            to: '/payments',
+          },
+        ]
+      : []),
   ]
   if (steps.every((s) => s.done)) return null
   const doneCount = steps.filter((s) => s.done).length
@@ -76,21 +93,26 @@ function SetupChecklist() {
   return (
     <Panel>
       <PanelHeader
-        title="Get set up"
-        description="See the full payment, ledger and webhook flow against the simulator."
+        title={t('setup.title')}
+        description={t('setup.description')}
         actions={
           <span className="num text-sm text-ink-3">
-            {doneCount}/{steps.length}
+            {t('setup.progress', { done: doneCount, total: steps.length })}
           </span>
         }
       />
-      <ol className="grid divide-y divide-line sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-3 lg:divide-x">
+      <ol
+        className={cn(
+          'grid divide-y divide-line sm:divide-x sm:divide-y-0',
+          steps.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2',
+        )}
+      >
         {steps.map((step, i) => (
-          <li key={step.label}>
+          <li key={step.key}>
             <Link
               to={step.to}
               className={cn(
-                'flex items-start gap-2.5 px-4 py-3 text-sm hover:bg-surface-hover',
+                'flex h-full items-start gap-2.5 px-4 py-3 text-sm hover:bg-surface-hover',
                 step.done && 'text-ink-3',
               )}
             >

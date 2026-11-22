@@ -5,6 +5,14 @@ import type { Messages } from '../types'
 export const overview: Messages<typeof en> = {
   title: 'Tổng quan',
   description: 'Những việc cần chú ý tại {{name}}.',
+  setup: {
+    title: 'Bắt đầu',
+    description: 'Xem trọn luồng thanh toán, sổ cái và webhook với trình mô phỏng.',
+    progress: 'Đã xong {{done}}/{{total}}',
+    apiKey: 'Tạo khóa API cho backend của bạn',
+    endpoint: 'Thêm một webhook endpoint',
+    payment: 'Tạo thanh toán test đầu tiên',
+  },
   attention: {
     title: 'Cần chú ý',
     allClear: 'Không có gì cần xử lý',

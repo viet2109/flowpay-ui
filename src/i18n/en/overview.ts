@@ -2,6 +2,14 @@
 export const overview = {
   title: 'Overview',
   description: 'What needs your attention at {{name}}.',
+  setup: {
+    title: 'Get set up',
+    description: 'See the full payment, ledger and webhook flow against the simulator.',
+    progress: '{{done}} of {{total}} done',
+    apiKey: 'Create an API key for your backend',
+    endpoint: 'Add a webhook endpoint',
+    payment: 'Create your first test payment',
+  },
   attention: {
     title: 'Needs attention',
     allClear: 'All clear',
