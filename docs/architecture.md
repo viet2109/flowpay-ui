@@ -271,6 +271,17 @@ first view does not need out of it:
 - If the budget fails, find what grew with a sourcemap build
   (`vite build --sourcemap`) before raising a limit, and say why when you do.
 
+**Lighthouse target:** performance ≥ 90 on desktop, which is where this
+operations dashboard is used. Measured 2026-11-22 on a production build served
+gzipped (cold cache, signed in): sign-in 99, Overview 96, Payments 98.
+Accessibility is 100 on every page. Phones are supported, but they are not
+held to that score. A cold load on Lighthouse's simulated phone (slow 4G, 4×
+CPU) scores 60–80, because an SPA loads in sequence: shell, then session
+refresh, then the page chunk and its messages, then the API. A repeat visit
+scores 83–93. To raise it, the options are a static shell prerendered in
+`index.html`, or a lighter validation library on the sign-in page. Do not
+chase the score with tricks that change nothing for users.
+
 ## 8. Testing
 
 - `vitest` + Testing Library + jsdom.
