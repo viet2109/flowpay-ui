@@ -20,6 +20,7 @@
     "e2e:retries": "playwright test -c playwright.retries.config.ts",
     "shots": "playwright test --project=shots",
     "test:image": "docker build -t flowpay-dashboard:check . && node scripts/image-check.ts",
+    "scan:image": "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock anchore/grype:v0.120.1@sha256:e4a44ef45d285b829ce6efe2642980329661bd2d18eab5fc539138d4adaebbbe flowpay-dashboard:check --only-fixed --fail-on high",
     "seed": "node scripts/seed.ts",
     "receiver": "node scripts/webhook-receiver.ts"
   },

@@ -142,7 +142,8 @@ descriptions, one without an order ID), refunds succeeded/failed/processing,
 one active and one revoked API key, three webhook endpoints (healthy, failing,
 disabled) and deliveries DELIVERED/RETRYING/DEAD. It checks each state as it
 goes and stops with the request ID on the first surprise. At the end it prints
-the sign-in details and the test API key to connect in the dashboard.
+the sign-in details and a test API key for calling the Merchant API directly
+(the dashboard itself does not use one).
 
 Each run creates a separate merchant, so it is safe to run again. The local
 receiver uses port `4242` (`SEED_RECEIVER_PORT`); other options are listed at

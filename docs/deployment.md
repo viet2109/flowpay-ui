@@ -31,6 +31,15 @@ The build stage runs `npm ci` and `npm run build`, so typecheck failures stop th
 image. Base images are pinned by version and digest in the `Dockerfile`. Update both
 together, and rerun the checks below.
 
+**Vulnerabilities.** The runtime image is NGINX mainline, because the stable image
+lagged behind NGINX's security releases. The build applies Alpine package updates
+(`apk upgrade`) and removes `curl`, which nothing in the image uses. Packages can
+therefore differ between two builds of the same commit. The scan below, rerun on
+every CI build, is the check for that. `npm run scan:image` runs Grype, pinned, with a
+fresh database, against `flowpay-dashboard:check`. It fails on any HIGH or CRITICAL
+finding that has a fix. When it fails, update the base image digest. When the fix is
+only in Alpine packages, rebuilding is enough.
+
 **Upstream address.** Every address the upstream name resolves to must serve the API.
 A failed request is not retried on another address (`proxy_next_upstream off`, as on
 the backend's edge, so a payment is never sent twice). A name with an address nothing
@@ -134,3 +143,10 @@ Docker.
 - **The app in a real browser, through the image, against the local backend**
   (`docs/local-stack.md`), when one is running: sign in, reload (refresh cookie through
   the edge), every page, a form validation, then no CSP violation and no console error.
+
+```sh
+npm run scan:image
+```
+
+Run it after `test:image`. It scans the built image for vulnerabilities (see
+"Vulnerabilities" above). CI runs both checks on every push.

@@ -376,7 +376,8 @@ Sign in at http://localhost:5173
   email     ${EMAIL}
   password  ${PASSWORD}
 
-Test API key for "Connect a test key" (shown once, local simulator only):
+Test API key, for calling the Merchant API directly (curl, a sample backend).
+Shown once, local simulator only; the dashboard itself never needs it:
   ${apiKey}
 
 The failing endpoint keeps retrying on the backend's schedule (10s … 1h) and

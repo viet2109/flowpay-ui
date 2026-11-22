@@ -218,7 +218,7 @@ feature with its status maps and own components (`PaymentsGallery`,
 | Need                         | Use                                                                                                     |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Action                       | `Button` — `primary` (one per view), `secondary` (default), `ghost`, `danger`, `danger-outline`, `link` |
-| Form field                   | `Field` + `Input` / `NativeSelect` / `Textarea` / `Checkbox`                                            |
+| Form field                   | `Field` + `Input` / `PasswordInput` / `NativeSelect` / `Textarea` / `Checkbox`                          |
 | Single-choice filter         | `Segmented`                                                                                             |
 | Modal task                   | `Dialog` + `DialogContent` (title, description, footer)                                                 |
 | Inspect a record from a list | `Sheet` (right drawer); keep the list visible                                                           |
@@ -230,6 +230,11 @@ feature with its status maps and own components (`PaymentsGallery`,
 | Data                         | `Table`/`Th`/`Tr interactive`/`Td`, `Pagination`, `DescriptionList`                                     |
 | Loading                      | `TableSkeleton`, `Skeleton` shaped like the content                                                     |
 | Empty / error                | `EmptyState`, `ErrorState` (shows `requestId`); `ActionError` for a failed action inside its dialog     |
+| Failed background refresh    | `RefreshFailed` above what is still shown                                                               |
+| Status                       | `StatusBadge {...statusMap[status]}`, maps in the feature (`status.ts` / `catalog.ts`)                  |
+| Time in a list               | `RelativeTime` (absolute time on hover); detail pages show `fmt.dateTime`                               |
+| Code and samples             | `CodeBlock` (copy button, scrolls in its own box)                                                       |
+| Hint on an icon or shortcut  | `Tooltip`, `Kbd`                                                                                        |
 
 Choosing between toast, callout and dialog:
 
@@ -267,7 +272,10 @@ Every data view handles all of these:
 - [ ] Empty, filtered: say nothing matches and offer "Clear filters"
 - [ ] Error: specific message + `requestId` + retry
 - [ ] Stale while refetching: keep previous rows (`placeholderData`), dim slightly
-- [ ] Moving states auto-refresh (PROCESSING payments, RETRYING deliveries)
+- [ ] Moving states auto-refresh (PROCESSING payments and refunds, moving deliveries).
+      Polling has a time limit: after about 2 minutes it stops and offers "Check again".
+- [ ] A value that could not be loaded shows "—", never 0. A status built from
+      several requests ("All clear") is claimed only when every one of them answered.
 - [ ] A failed background refresh keeps what is on screen and adds `RefreshFailed`
       (may be out of date + retry); `ErrorState` only when there is nothing to show
 - [ ] A link past the last page offers the first page, not the empty state

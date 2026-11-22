@@ -59,8 +59,8 @@ refresh token as an `HttpOnly; SameSite=Lax; Path=/api/v1/auth` cookie. The
 dashboard therefore must be served **from the same origin** as `/api`:
 
 - **Dev:** Vite proxies `/api` to `FLOWPAY_API_TARGET` (default `http://localhost:8080`).
-- **Prod:** serve `dist/` and proxy `/api` from the same host (e.g. the existing
-  NGINX edge). Do not enable wildcard CORS.
+- **Prod:** the Docker image serves `dist/` and proxies `/api/v1/` from one origin, with
+  the backend's edge policy (docs/deployment.md). Do not enable CORS.
 
 ### HTTP client (`lib/api/http.ts`)
 
@@ -70,7 +70,9 @@ dashboard therefore must be served **from the same origin** as `/api`:
   **Branch on `error.code`, never on `detail`.** Copy for codes is in the `errors`
   namespace; components show it with `useErrorMessage()` (`src/i18n`).
 - Adds `X-FlowPay-CSRF: 1` to every auth POST (BR-AUTH-012).
-- Three auth modes per request: `dashboard` (JWT), `merchant` (API key), `none`.
+- Two auth modes per request: `dashboard` (the session's JWT, the default) and `none`
+  (sign-in, register, refresh, logout: cookie based). There is no API-key mode; see
+  "Payments and roles".
 - On a dashboard 401 it refreshes **once** for all concurrent requests (refresh
   tokens rotate; parallel refreshes would revoke each other), then retries. Only a
   refused refresh (401/403) signs out; a network failure, 429 or 5xx while
@@ -138,6 +140,15 @@ merchant API key. Every role may read. Creating, confirming and refunding are
 OWNER only (`403 ACCESS_DENIED` otherwise, before anything is written), so the UI
 offers those actions only when `useCanRunPayments()` (`features/auth`) is true.
 
+**Why the dashboard holds no API key.** An earlier version had people paste a
+merchant test key into the dashboard to create payments and refunds. That meant a
+long-lived secret sat in browser storage, and access was tied to whoever held the
+key rather than to a role. The backend now accepts those commands on the dashboard
+routes with the session JWT, under the same idempotency scope and rules as the
+Merchant API. The dashboard creates and revokes keys, and shows each one once
+(`SecretReveal`), but never uses or stores one. API keys are for the merchant's
+backend only.
+
 ## 3. Server state (TanStack Query)
 
 - Each feature owns a key factory (`paymentKeys`, `webhookKeys`, …). Mutations
@@ -145,8 +156,11 @@ offers those actions only when `useCanRunPayments()` (`features/auth`) is true.
 - Defaults (`app/query-client.ts`): `staleTime` 15s; no retry for 4xx; mutations
   never auto-retry (financial commands are retried by the person, with the same key).
 - Lists use `placeholderData: keepPreviousData` so paging doesn't flash.
-- Records in moving states poll: PROCESSING payment (5s), deliveries that are
-  PENDING/DELIVERING/RETRYING (3–5s).
+- Records in moving states poll. A PROCESSING payment or refund follows `pollDelay`
+  (`features/payments/queries.ts`): every 2 s for the first 10 s, then every 5 s up to
+  30 s, then every 15 s up to 2 min, then it stops and offers "Check again". The clock
+  is the record's `updatedAt`, so a reload does not restart it. Deliveries that are
+  PENDING, DELIVERING or RETRYING refresh every 3 s (sheet) or 5 s (list).
 - Counts come from `meta.totalElements` of `size=1` pages (no aggregate API).
   The endpoint list shows each active endpoint's health from three of them
   (`useEndpointHealth`: DEAD and RETRYING counts, and the latest delivery, since

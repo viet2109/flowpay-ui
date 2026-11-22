@@ -60,6 +60,10 @@ jobs:
       - run: npm ci --no-audit --no-fund
       # No backend in this job: the browser part of the checks reports itself skipped.
       - run: npm run test:image
+      # Fresh vulnerability database each run: fails on a HIGH or CRITICAL finding that
+      # has a fix (update the base image digest, or rebuild for Alpine fixes).
+      - name: Image vulnerability scan
+        run: npm run scan:image
 
   e2e:
     name: Contract, E2E and accessibility against the real backend
