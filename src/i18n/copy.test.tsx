@@ -11,11 +11,11 @@ afterEach(async () => {
 
 describe('plural forms', () => {
   it('picks singular and plural in English', () => {
-    expect(i18n.t('attention.unknownOutcome', { ns: 'overview', count: 1 })).toBe(
-      'payment waiting on an unknown provider outcome',
+    expect(i18n.t('attention.processing', { ns: 'overview', count: 1 })).toBe(
+      'payment awaiting the provider’s outcome',
     )
-    expect(i18n.t('attention.unknownOutcome', { ns: 'overview', count: 3 })).toBe(
-      'payments waiting on an unknown provider outcome',
+    expect(i18n.t('attention.processing', { ns: 'overview', count: 3 })).toBe(
+      'payments awaiting the provider’s outcome',
     )
   })
 

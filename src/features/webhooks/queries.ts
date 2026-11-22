@@ -62,6 +62,11 @@ export function useRetryableDeadCount() {
       }))
       return {
         isPending: endpoints.isPending || results.some((r) => r.isPending),
+        error: endpoints.error ?? results.find((r) => r.error)?.error ?? null,
+        refetch: () => {
+          void endpoints.refetch()
+          results.forEach((r) => void r.refetch())
+        },
         count: counts.reduce((sum, c) => sum + c.count, 0),
         /** Active endpoints that have dead deliveries. */
         endpointIds: counts.filter((c) => c.count > 0).map((c) => c.endpointId),
@@ -108,6 +113,7 @@ export function useDeliveryCounts(
       counts: Object.fromEntries(
         statuses.map((s, i) => [s, results[i]?.data?.meta.totalElements ?? 0]),
       ) as Record<DeliveryStatus, number>,
+      refetch: () => results.forEach((r) => void r.refetch()),
     }),
   })
 }

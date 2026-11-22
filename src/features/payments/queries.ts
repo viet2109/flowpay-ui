@@ -124,6 +124,7 @@ export function usePaymentStatusCounts() {
       counts: Object.fromEntries(
         PAYMENT_STATUSES.map((status, i) => [status, results[i]?.data?.meta.totalElements ?? 0]),
       ) as Record<(typeof PAYMENT_STATUSES)[number], number>,
+      refetch: () => results.forEach((r) => void r.refetch()),
     }),
   })
 }

@@ -24,7 +24,7 @@ const TARGETS: ShotTarget[] = [
     path: '/',
     auth: true,
     ready: async (page) => {
-      await expect(page.getByRole('heading', { level: 1, name: 'Overview' })).toBeVisible()
+      await expect(page.getByRole('heading', { level: 1, name: /^(Overview|Tổng quan)$/ })).toBeVisible()
       await expect(page.getByText('ORD-1012').filter({ visible: true }).first()).toBeVisible()
     },
   },

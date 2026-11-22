@@ -8,7 +8,8 @@ import { Link } from 'react-router'
 import { PageHeader } from '@/components/page-header'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Panel, PanelHeader } from '@/components/ui/panel'
-import { ErrorState } from '@/components/states'
+import { ActionError, ErrorState } from '@/components/states'
+import { Button } from '@/components/ui/button'
 import { useApiKeys } from '@/features/api-keys'
 import { useMerchant } from '@/features/merchant'
 import {
@@ -23,13 +24,14 @@ import { cn } from '@/lib/cn'
 import { useFormat } from '@/i18n'
 
 export function OverviewPage() {
+  const { t } = useTranslation('overview')
   const { data: merchant } = useMerchant()
 
   return (
     <>
       <PageHeader
-        title="Overview"
-        description={merchant ? `What needs your attention at ${merchant.name}.` : ' '}
+        title={t('title')}
+        description={merchant ? t('description', { name: merchant.name }) : ' '}
       />
       <div className="space-y-5">
         <SetupChecklist />
@@ -115,7 +117,8 @@ function AttentionRow({
   to,
   pending,
 }: {
-  count: number
+  /** null when this count could not be loaded: shown as "—", never as 0. */
+  count: number | null
   children: ReactNode
   to: string
   pending?: boolean
@@ -125,8 +128,8 @@ function AttentionRow({
       {pending ? (
         <Skeleton className="h-6 w-8" />
       ) : (
-        <span className={cn('num w-8 text-xl font-medium', count > 0 ? 'text-ink' : 'text-ink-3')}>
-          {count}
+        <span className={cn('num w-8 text-xl font-medium', count ? 'text-ink' : 'text-ink-3')}>
+          {count ?? '—'}
         </span>
       )}
       <span className="flex-1 text-sm text-ink-2">{children}</span>
@@ -144,10 +147,20 @@ function AttentionPanel() {
     dead.endpointIds.length === 1
       ? `/developers/webhooks/deliveries?status=DEAD&endpointId=${dead.endpointIds[0]}`
       : '/developers/webhooks/deliveries?status=DEAD'
-  const processing = payments.counts.PROCESSING
-  const total = processing + dead.count + deliveries.counts.RETRYING
-  const pending = deliveries.isPending || dead.isPending || payments.isPending
   const { t } = useTranslation('overview')
+  // A count that failed is unknown, not zero: it never adds up to "All clear".
+  const processing = payments.error ? null : payments.counts.PROCESSING
+  const retrying = deliveries.error ? null : deliveries.counts.RETRYING
+  const deadCount = dead.error ? null : dead.count
+  const error = payments.error ?? deliveries.error ?? dead.error
+  const total = (processing ?? 0) + (deadCount ?? 0) + (retrying ?? 0)
+  const pending = deliveries.isPending || dead.isPending || payments.isPending
+
+  function retry() {
+    if (payments.error) payments.refetch()
+    if (deliveries.error) deliveries.refetch()
+    if (dead.error) dead.refetch()
+  }
 
   return (
     <Panel>
@@ -155,7 +168,9 @@ function AttentionPanel() {
         title={t('attention.title')}
         actions={
           !pending &&
-          (total === 0 ? (
+          (error ? (
+            <WarningIcon className="size-4 text-warning" />
+          ) : total === 0 ? (
             <span className="flex items-center gap-1 text-xs text-success">
               <CheckCircleIcon weight="fill" className="size-3.5" />
               {t('attention.allClear')}
@@ -167,19 +182,27 @@ function AttentionPanel() {
       />
       <div className="divide-y divide-line">
         <AttentionRow count={processing} pending={payments.isPending} to="/payments?status=PROCESSING">
-          {t('attention.unknownOutcome', { count: processing })}
+          {t('attention.processing', { count: processing ?? 0 })}
         </AttentionRow>
-        <AttentionRow count={dead.count} pending={dead.isPending} to={deadLink}>
-          {t('attention.deadDeliveries', { count: dead.count })}
+        <AttentionRow count={deadCount} pending={dead.isPending} to={deadLink}>
+          {t('attention.deadDeliveries', { count: deadCount ?? 0 })}
         </AttentionRow>
         <AttentionRow
-          count={deliveries.counts.RETRYING}
+          count={retrying}
           pending={deliveries.isPending}
           to="/developers/webhooks/deliveries?status=RETRYING"
         >
-          {t('attention.retrying', { count: deliveries.counts.RETRYING })}
+          {t('attention.retrying', { count: retrying ?? 0 })}
         </AttentionRow>
       </div>
+      {error && !pending && (
+        <div className="border-t border-line p-4">
+          <ActionError error={error} message={t('attention.someFailed')} />
+          <Button size="sm" className="mt-3" onClick={retry}>
+            {t('attention.retry')}
+          </Button>
+        </div>
+      )}
     </Panel>
   )
 }
@@ -207,8 +230,9 @@ function DistributionBar<S extends string>({
 }) {
   const { t: tStatus } = useTranslation('status')
   const fmt = useFormat()
+  const { t } = useTranslation('overview')
   const total = order.reduce((sum, s) => sum + counts[s], 0)
-  if (total === 0) return <p className="text-sm text-ink-3">Nothing here yet.</p>
+  if (total === 0) return <p className="text-sm text-ink-3">{t('empty')}</p>
 
   return (
     <div>
@@ -243,15 +267,16 @@ function DistributionBar<S extends string>({
 }
 
 function WebhookHealthPanel() {
-  const { counts, isPending, error } = useDeliveryCounts()
+  const { t } = useTranslation('overview')
+  const { counts, isPending, error, refetch } = useDeliveryCounts()
   return (
     <Panel>
-      <PanelHeader title="Webhook deliveries" description="All time, by current status." />
+      <PanelHeader title={t('deliveries.title')} description={t('deliveries.description')} />
       <div className="p-4">
         {isPending ? (
           <Skeleton className="h-16 w-full" />
         ) : error ? (
-          <p className="text-sm text-danger">Could not load delivery counts.</p>
+          <ErrorState error={error} onRetry={refetch} />
         ) : (
           <DistributionBar
             counts={counts}
@@ -266,7 +291,8 @@ function WebhookHealthPanel() {
 }
 
 function PaymentMixPanel() {
-  const { counts, isPending, error } = usePaymentStatusCounts()
+  const { t } = useTranslation('overview')
+  const { counts, isPending, error, refetch } = usePaymentStatusCounts()
   const order: PaymentStatus[] = [
     'SUCCEEDED',
     'PARTIALLY_REFUNDED',
@@ -277,12 +303,12 @@ function PaymentMixPanel() {
   ]
   return (
     <Panel>
-      <PanelHeader title="Payments by status" description="All payments of this merchant." />
+      <PanelHeader title={t('payments.title')} description={t('payments.description')} />
       <div className="p-4">
         {isPending ? (
           <Skeleton className="h-16 w-full" />
         ) : error ? (
-          <ErrorState error={error} />
+          <ErrorState error={error} onRetry={refetch} />
         ) : (
           <DistributionBar
             counts={counts}
@@ -297,14 +323,15 @@ function PaymentMixPanel() {
 }
 
 function RecentPaymentsPanel() {
+  const { t } = useTranslation('overview')
   const { data, isPending, error, refetch } = usePayments({ size: 6 })
   return (
     <Panel>
       <PanelHeader
-        title="Recent payments"
+        title={t('recent.title')}
         actions={
           <Link to="/payments" className="text-sm text-ink-2 hover:text-ink">
-            View all
+            {t('recent.viewAll')}
           </Link>
         }
       />
@@ -315,7 +342,7 @@ function RecentPaymentsPanel() {
       ) : error ? (
         <ErrorState error={error} onRetry={refetch} />
       ) : data.items.length === 0 ? (
-        <p className="px-4 py-6 text-sm text-ink-3">No payments yet.</p>
+        <p className="px-4 py-6 text-sm text-ink-3">{t('recent.empty')}</p>
       ) : (
         <PaymentsTable payments={data.items} compact />
       )}
