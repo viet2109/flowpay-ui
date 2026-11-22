@@ -24,18 +24,32 @@ export function currencyDigits(currency: string): number {
   return digits
 }
 
+// Building an Intl.NumberFormat costs far more than formatting with one, and a table
+// formats every row's amount on each render: one formatter per locale and precision.
+const numberFormatCache = new Map<string, Intl.NumberFormat>()
+
+function numberFormat(locale: string, digits?: number): Intl.NumberFormat {
+  const key = `${locale}|${digits ?? ''}`
+  let format = numberFormatCache.get(key)
+  if (!format) {
+    format = new Intl.NumberFormat(
+      locale,
+      digits === undefined ? undefined : { minimumFractionDigits: digits, maximumFractionDigits: digits },
+    )
+    numberFormatCache.set(key, format)
+  }
+  return format
+}
+
 /** 500000 VND -> "500,000" (en) / "500.000" (vi); 12345 USD -> "123.45" / "123,45" */
 export function formatMinor(amount: number, currency: string, locale = formatLocale()): string {
   const digits = currencyDigits(currency)
-  return new Intl.NumberFormat(locale, {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  }).format(amount / 10 ** digits)
+  return numberFormat(locale, digits).format(amount / 10 ** digits)
 }
 
 /** Plain counts: 1234 -> "1,234" / "1.234". */
 export function formatNumber(value: number, locale = formatLocale()): string {
-  return new Intl.NumberFormat(locale).format(value)
+  return numberFormat(locale).format(value)
 }
 
 const separatorCache = new Map<string, { group: string; decimal: string }>()

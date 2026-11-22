@@ -2,7 +2,7 @@ import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import { setFormatLocale } from '@/lib/locale'
 import { isLanguage, type Language } from './language'
-import { NAMESPACES, resources } from './resources'
+import { CORE_NAMESPACES, coreEn, NAMESPACES, type Namespace } from './resources'
 
 export { isLanguage, LANGUAGE_NAMES, LANGUAGES, useLanguage, type Language } from './language'
 
@@ -26,15 +26,54 @@ function readStored(): string | null {
   }
 }
 
+/** Every message file, one chunk each; English core files are also bundled (resources.ts). */
+const FILES: Record<Language, Record<string, () => Promise<Record<string, object>>>> = {
+  en: import.meta.glob<Record<string, object>>('./en/*.ts'),
+  vi: import.meta.glob<Record<string, object>>('./vi/*.ts'),
+}
+
+/**
+ * Loads these namespaces in this language unless they already are. Feature routes
+ * call it with their namespaces (app/routes.ts), the app with the core ones at start.
+ */
+export async function ensureMessages(language: Language, namespaces: readonly Namespace[]) {
+  const missing = namespaces.filter((ns) => !i18n.hasResourceBundle(language, ns))
+  await Promise.all(
+    missing.map(async (ns) => {
+      const load = FILES[language][`./${language}/${ns}.ts`]
+      if (!load) throw new Error(`No ${language} messages for ${ns}`)
+      const module = await load()
+      i18n.addResourceBundle(language, ns, module[ns]!, true, true)
+    }),
+  )
+}
+
+/** The namespaces loaded so far in the active language (what the screens on show use). */
+const loadedNamespaces = () => NAMESPACES.filter((ns) => i18n.hasResourceBundle(i18n.language, ns))
+
+/** The active UI language. */
+export const currentLanguage = (): Language => (isLanguage(i18n.language) ? i18n.language : 'en')
+
+const initial = detectLanguage(
+  readStored(),
+  navigator.languages?.length ? navigator.languages : [navigator.language],
+)
+
 void i18n.use(initReactI18next).init({
-  resources,
-  lng: detectLanguage(readStored(), navigator.languages?.length ? navigator.languages : [navigator.language]),
+  resources: { en: coreEn },
+  lng: initial,
   fallbackLng: 'en',
-  ns: NAMESPACES,
+  ns: CORE_NAMESPACES,
   defaultNS: 'shell',
-  // Resources are bundled, so init is synchronous and the first render is translated.
+  // English core is bundled, so init is synchronous; main.tsx awaits i18nReady before
+  // the first render, so a Vietnamese reader never sees English flash.
   initAsync: false,
   interpolation: { escapeValue: false }, // React already escapes
+})
+
+/** Resolves once the detected language's core messages are loaded. */
+export const i18nReady: Promise<void> = ensureMessages(initial, CORE_NAMESPACES).then(async () => {
+  if (initial !== 'en') await i18n.changeLanguage(initial)
 })
 
 /** Keeps <html lang> and the number/date locale in step with the UI language. */
@@ -52,6 +91,8 @@ export async function setLanguage(language: Language) {
   } catch {
     /* not persisted, still applied */
   }
+  // Whatever is on screen now must exist in the new language before switching.
+  await ensureMessages(language, [...new Set([...CORE_NAMESPACES, ...loadedNamespaces()])])
   await i18n.changeLanguage(language)
 }
 

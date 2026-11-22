@@ -1,7 +1,7 @@
 /** Overview feature. In attention rows the count is rendered separately, before the phrase. */
 export const overview = {
   title: 'Overview',
-  description: 'What needs your attention at {{name}}.',
+  description: 'What needs your attention, and how payments and webhooks are doing.',
   setup: {
     title: 'Get set up',
     description: 'See the full payment, ledger and webhook flow against the simulator.',

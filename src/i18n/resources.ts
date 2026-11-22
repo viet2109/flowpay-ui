@@ -1,53 +1,33 @@
-import { apiKeys as enApiKeys } from './en/apiKeys'
-import { auth as enAuth } from './en/auth'
-import { common as enCommon } from './en/common'
-import { errors as enErrors } from './en/errors'
-import { merchant as enMerchant } from './en/merchant'
-import { overview as enOverview } from './en/overview'
-import { payments as enPayments } from './en/payments'
-import { shell as enShell } from './en/shell'
-import { status as enStatus } from './en/status'
-import { validation as enValidation } from './en/validation'
-import { webhooks as enWebhooks } from './en/webhooks'
-import { apiKeys as viApiKeys } from './vi/apiKeys'
-import { auth as viAuth } from './vi/auth'
-import { common as viCommon } from './vi/common'
-import { errors as viErrors } from './vi/errors'
-import { merchant as viMerchant } from './vi/merchant'
-import { overview as viOverview } from './vi/overview'
-import { payments as viPayments } from './vi/payments'
-import { shell as viShell } from './vi/shell'
-import { status as viStatus } from './vi/status'
-import { validation as viValidation } from './vi/validation'
-import { webhooks as viWebhooks } from './vi/webhooks'
+import { auth } from './en/auth'
+import { common } from './en/common'
+import { errors } from './en/errors'
+import { shell } from './en/shell'
+import { status } from './en/status'
+import { validation } from './en/validation'
+import type { apiKeys } from './en/apiKeys'
+import type { merchant } from './en/merchant'
+import type { overview } from './en/overview'
+import type { payments } from './en/payments'
+import type { webhooks } from './en/webhooks'
 
-/** English is the source of truth for keys; every other language must match it (see Messages). */
-export const en = {
-  common: enCommon,
-  errors: enErrors,
-  shell: enShell,
-  status: enStatus,
-  validation: enValidation,
-  auth: enAuth,
-  merchant: enMerchant,
-  overview: enOverview,
-  webhooks: enWebhooks,
-  apiKeys: enApiKeys,
-  payments: enPayments,
-}
-export const vi = {
-  common: viCommon,
-  errors: viErrors,
-  shell: viShell,
-  status: viStatus,
-  validation: viValidation,
-  auth: viAuth,
-  merchant: viMerchant,
-  overview: viOverview,
-  webhooks: viWebhooks,
-  apiKeys: viApiKeys,
-  payments: viPayments,
-}
+/**
+ * English is the source of truth for keys. The namespaces every screen needs (the
+ * shell, sign-in, errors, statuses) are bundled in English; feature namespaces and
+ * every other language are chunks loaded with the route that uses them
+ * (./index.ts ensureMessages), so a visit only downloads what it shows.
+ */
+export const coreEn = { common, errors, shell, status, validation, auth }
 
-export const resources = { en, vi }
-export const NAMESPACES = Object.keys(en) as (keyof typeof en)[]
+/** Every namespace's English messages: the type all languages are checked against. */
+export type Source = typeof coreEn & {
+  merchant: typeof merchant
+  overview: typeof overview
+  webhooks: typeof webhooks
+  apiKeys: typeof apiKeys
+  payments: typeof payments
+}
+export type Namespace = keyof Source
+
+export const CORE_NAMESPACES = Object.keys(coreEn) as Namespace[]
+export const FEATURE_NAMESPACES: Namespace[] = ['merchant', 'overview', 'webhooks', 'apiKeys', 'payments']
+export const NAMESPACES: Namespace[] = [...CORE_NAMESPACES, ...FEATURE_NAMESPACES]

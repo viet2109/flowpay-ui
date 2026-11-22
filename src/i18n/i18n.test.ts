@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { detectLanguage, i18n, setLanguage } from '.'
-import { en, resources } from './resources'
+import { detectLanguage, ensureMessages, i18n, setLanguage } from '.'
+import { NAMESPACES, type Source } from './resources'
+
+/** All messages of a language, as loaded by the test setup (every namespace). */
+const bundle = (language: string) =>
+  Object.fromEntries(NAMESPACES.map((ns) => [ns, i18n.getResourceBundle(language, ns) as object]))
+const en = bundle('en')
+const resources = { en, vi: bundle('vi') }
 import type { Messages } from './types'
 
 afterEach(async () => {
@@ -55,12 +61,28 @@ describe('resources', () => {
 
   it('makes a missing or unknown key a compile error', () => {
     // @ts-expect-error: a translation without the `settings` namespace keys
-    const incomplete: Messages<typeof en.merchant> = {}
+    const incomplete: Messages<Source['merchant']> = {}
     // @ts-expect-error: a key that does not exist
     const unknown = i18n.t('nav.doesNotExist')
     // Plural forms other than `_other` are optional (Vietnamese has one form).
     const plural: Messages<{ items_one: string; items_other: string }> = { items_other: '{{count}} mục' }
 
     expect([incomplete, unknown, plural]).toHaveLength(3)
+  })
+})
+
+describe('ensureMessages', () => {
+  it('loads a namespace that is not loaded yet, once', async () => {
+    i18n.removeResourceBundle('vi', 'payments')
+    expect(i18n.hasResourceBundle('vi', 'payments')).toBe(false)
+    await ensureMessages('vi', ['payments'])
+    expect(i18n.getResource('vi', 'payments', 'title')).toBe('Thanh toán')
+  })
+
+  it('brings the namespaces on screen along when the language changes', async () => {
+    i18n.removeResourceBundle('vi', 'webhooks')
+    await setLanguage('vi')
+    expect(i18n.hasResourceBundle('vi', 'webhooks')).toBe(true)
+    expect(i18n.t('title', { ns: 'webhooks' })).toBe('Webhook')
   })
 })

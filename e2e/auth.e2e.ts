@@ -10,7 +10,10 @@ test.describe('sign in', () => {
     await page.getByRole('button', { name: 'Sign in' }).click()
 
     await expect(page.getByRole('heading', { level: 1, name: 'Overview' })).toBeVisible()
-    await expect(page.getByText(`What needs your attention at ${merchantName}.`)).toBeVisible()
+    // The signed-in business, named on the sidebar's merchant card.
+    await expect(
+      page.getByText(merchantName, { exact: true }).filter({ visible: true }).first(),
+    ).toBeVisible()
   })
 
   test('wrong password shows the mapped server message', async ({ page }) => {

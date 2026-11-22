@@ -214,6 +214,15 @@ The dashboard ships in Vietnamese and English (`i18next` + `react-i18next`).
   labels), `validation`, then one per feature.
   English is the source of keys: each Vietnamese file is typed `Messages<typeof en>`,
   so a missing or extra key fails typecheck, and `t('…')` only accepts existing keys.
+- Loading: the core namespaces (`common`, `shell`, `errors`, `status`, `validation`,
+  `auth`) are bundled in English. Every feature namespace, and every Vietnamese file,
+  is a separate chunk. Each page in `app/routes.ts` names the namespaces it reads
+  and loads them in the active language alongside its code, via
+  `ensureMessages(language, namespaces)`. `main.tsx` waits for the start-up
+  language's core before rendering. `setLanguage()` loads the new language for
+  every namespace already in use before switching. A new feature namespace goes in
+  `FEATURE_NAMESPACES` (`i18n/resources.ts`) and in its page's entry in `app/routes.ts`.
+  A namespace that a page reads but does not list shows raw keys.
 - Read strings with `const { t } = useTranslation('<namespace>')`. Don't build
   sentences from fragments; use interpolation (`{{name}}`) and plural keys
   (`_one` / `_other`; Vietnamese only needs `_other`).
@@ -239,19 +248,25 @@ The dashboard ships in Vietnamese and English (`i18next` + `react-i18next`).
 
 `npm run budget` (part of `npm run verify`) checks the production build:
 
-| Limit                                      | Budget   | Today (2026-11-19) |
+| Limit                                      | Budget   | Today (2026-11-22) |
 | ------------------------------------------ | -------- | ------------------ |
-| Initial JS: entry + preloaded chunks, gzip | ≤ 230 kB | 223 kB             |
+| Initial JS: entry + preloaded chunks, gzip | ≤ 230 kB | 195 kB             |
 | Any chunk loaded on demand, gzip           | ≤ 45 kB  | 36 kB (`form`)     |
 
 Initial JS is what every visit downloads before the first page: React DOM, the
-router, i18next, TanStack Query, icons, toasts, the app shell. Keep anything a
+router, i18next, TanStack Query, icons, toasts, the session. Keep anything a
 first view does not need out of it:
 
-- Feature pages are lazy routes. A feature that the shell imports eagerly (auth's
-  session store, merchant's `useMerchant`) exposes its pages as a loader
+- Feature pages are lazy routes, and so is the dashboard frame (`AppLayout`: sidebar,
+  top bar, menus), which the sign-in page does not need. The router loads the frame and
+  the page of a match in parallel. A feature whose index is in the main bundle (auth's
+  session store, merchant's via the route table) exposes its pages as a loader
   (`loadAuthPages`, `loadMerchantPages`) instead of exporting them from its index,
   so the pages and the form libraries (react-hook-form, zod) stay out.
+- Feature messages and the Vietnamese files load with their page, not up front
+  (see "Copy and languages").
+- Sidebar links prefetch their page (code and messages) on hover or keyboard focus
+  (`prefetch()` in `app/routes.ts`), so a click rarely waits on the network.
 - Animation features load after first paint (`<LazyMotion features={…}>`).
 - If the budget fails, find what grew with a sourcemap build
   (`vite build --sourcemap`) before raising a limit, and say why when you do.
@@ -284,8 +299,9 @@ first view does not need out of it:
 3. `queries.ts` with a key factory and hooks.
 4. Components and pages using `components/ui` primitives (see design system).
 5. `index.ts` exporting the pages (and anything another feature needs).
-6. Route in `app/router.tsx` (lazy), nav entry in `app/layouts/Sidebar.tsx`,
-   command entry in `app/CommandMenu.tsx`.
+6. Page loader with its namespaces in `app/routes.ts` (plus `BY_PATH` for a nav
+   link), route in `app/router.tsx` (lazy, via `pages.*`), nav entry in
+   `app/layouts/Sidebar.tsx`, command entry in `app/CommandMenu.tsx`.
 7. Handle every state in design-system §8.
 8. Add the routes to the smoke test; unit-test any non-trivial logic.
 9. Status maps and feature components go in the `/dev/ui` gallery: a

@@ -9,6 +9,7 @@ import {
 import type { ParseKeys } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router'
+import { prefetch } from '../routes'
 import { Logo } from '@/components/logo'
 import { useSession } from '@/features/auth'
 import { useMerchant } from '@/features/merchant'
@@ -45,6 +46,9 @@ function NavRow({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }
       to={item.to}
       end={item.end}
       onClick={onNavigate}
+      // Load the page's code and messages as soon as it is likely to be opened.
+      onMouseEnter={() => prefetch(item.to)}
+      onFocus={() => prefetch(item.to)}
       className={({ isActive }) =>
         cn(
           'relative flex h-8 items-center gap-2.5 rounded-md px-2.5 text-sm transition-colors',

@@ -1,8 +1,12 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import { afterEach } from 'vitest'
-import { i18n } from '@/i18n'
+import { ensureMessages, i18n } from '@/i18n'
+import { NAMESPACES } from '@/i18n/resources'
 
+// In the app, routes load their messages; components are tested outside routes, so
+// every namespace is loaded up front, in both languages.
+await Promise.all([ensureMessages('en', NAMESPACES), ensureMessages('vi', NAMESPACES)])
 // Tests assert English copy whatever the machine's language is.
 await i18n.changeLanguage('en')
 

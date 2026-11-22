@@ -12,7 +12,6 @@ import { ActionError, ErrorState } from '@/components/states'
 import { Button } from '@/components/ui/button'
 import { useApiKeys } from '@/features/api-keys'
 import { useCanRunPayments } from '@/features/auth'
-import { useMerchant } from '@/features/merchant'
 import {
   PaymentsTable,
   paymentStatus,
@@ -26,14 +25,12 @@ import { useFormat } from '@/i18n'
 
 export function OverviewPage() {
   const { t } = useTranslation('overview')
-  const { data: merchant } = useMerchant()
 
   return (
     <>
-      <PageHeader
-        title={t('title')}
-        description={merchant ? t('description', { name: merchant.name }) : ' '}
-      />
+      {/* The description does not wait on the merchant: the header (the largest text on a
+          phone) paints with the page, and the sidebar already names the business. */}
+      <PageHeader title={t('title')} description={t('description')} />
       <div className="space-y-5">
         <SetupChecklist />
         <div className="grid gap-5 lg:grid-cols-2">

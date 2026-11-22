@@ -4,7 +4,7 @@ import type { Messages } from '../types'
 // Vietnamese has one plural form, so only the `_other` keys are needed.
 export const overview: Messages<typeof en> = {
   title: 'Tổng quan',
-  description: 'Những việc cần chú ý tại {{name}}.',
+  description: 'Việc cần chú ý và tình hình thanh toán, webhook.',
   setup: {
     title: 'Bắt đầu',
     description: 'Xem trọn luồng thanh toán, sổ cái và webhook với trình mô phỏng.',
