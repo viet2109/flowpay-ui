@@ -307,6 +307,17 @@ chase the score with tricks that change nothing for users.
   state between tests: refresh tokens rotate and would revoke each other. jsdom
   hides real-browser behaviour (a Promise from `scrollTo()` crashed every
   authenticated page while the smoke test stayed green), so UI tasks run both.
+- CI (`.github/workflows/ci.yml`, on pushes to main and on pull requests):
+  - `verify`: `npm run verify`.
+  - `image`: `npm run test:image`, edge checks only.
+  - `e2e`: Postgres and RabbitMQ run as service containers, and the backend is built
+    from its public repository (`BACKEND_REF`: the branch that carries the dashboard
+    API; override it with the `FLOWPAY_BACKEND_REF` repository variable or the
+    run's input). The job runs `test:contract`, `e2e` (including the a11y suite) and
+    `test:image` with the browser checks. It then restarts the backend with short
+    webhook retry delays and runs `e2e:retries`.
+  - On failure, traces, screenshots and the backend log are uploaded for 7 days.
+  - Tests are not retried: a flaky test is a bug to fix.
 
 ## 9. Adding a feature (checklist)
 

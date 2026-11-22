@@ -101,7 +101,7 @@ describe('EndpointFormDialog', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
-  it('shows a URL-policy rejection (no field list, F10) on the URL field', async () => {
+  it('shows a URL-policy rejection (no field list) on the URL field', async () => {
     reply = { status: 400, body: { status: 400, code: 'VALIDATION_ERROR', requestId: 'req_2' } }
     const user = open()
     await user.type(urlInput(), 'https://10.0.0.5/hooks')

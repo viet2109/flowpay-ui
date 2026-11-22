@@ -1,0 +1,160 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      backend-ref:
+        description: Backend branch, tag or commit for the E2E job (default below)
+        required: false
+
+# Read-only: no deployment, registry, PR mutation or OIDC credentials.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  NODE_VERSION: '24.18.1'
+  # The backend the E2E job runs against (a public repository). The dashboard API
+  # lives on this branch until it is merged into the backend's main; the repository
+  # variable FLOWPAY_BACKEND_REF, or the run's backend-ref input, overrides it.
+  BACKEND_REPOSITORY: viet2109/flowpay
+  BACKEND_REF: ${{ inputs.backend-ref || vars.FLOWPAY_BACKEND_REF || 'feature/phase-9-dashboard-api' }}
+
+jobs:
+  verify:
+    name: Format, types, lint, unit tests, build, bundle budget
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # No dependency cache: nothing a pull request writes is reused by main.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm ci --no-audit --no-fund
+      - run: npm run verify
+
+  image:
+    name: Production image (edge checks)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm ci --no-audit --no-fund
+      # No backend in this job: the browser part of the checks reports itself skipped.
+      - run: npm run test:image
+
+  e2e:
+    name: Contract, E2E and accessibility against the real backend
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16.15-alpine
+        env:
+          POSTGRES_DB: flowpay
+          POSTGRES_USER: flowpay
+          POSTGRES_PASSWORD: flowpay
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U flowpay -d flowpay"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+      rabbitmq:
+        image: rabbitmq:4.3-management-alpine
+        env:
+          RABBITMQ_DEFAULT_USER: flowpay
+          RABBITMQ_DEFAULT_PASS: flowpay
+        ports: ['5672:5672']
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 10s --health-timeout 5s --health-retries 12
+    env:
+      # The E2E seed and tests run local webhook receivers on localhost.
+      WEBHOOK_ALLOW_INSECURE_LOCALHOST: 'true'
+      E2E_BROWSER_CHANNEL: chromium
+      BACKEND_LOG: ${{ github.workspace }}/backend.log
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ env.BACKEND_REPOSITORY }}
+          ref: ${{ env.BACKEND_REF }}
+          path: backend-src
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Build the backend
+        working-directory: backend-src
+        run: |
+          # mvnw is not executable in the backend repository.
+          bash ./mvnw -B -q -DskipTests package
+          jar=""
+          for f in target/*.jar; do
+            case "$f" in *-plain.jar) ;; *) jar=$f; break ;; esac
+          done
+          test -n "$jar"
+          echo "Backend $(git rev-parse --short HEAD) -> $jar"
+          echo "BACKEND_JAR=$PWD/$jar" >> "$GITHUB_ENV"
+      # A fresh random key per run: the dev profile has no default, and nothing is stored.
+      - name: Webhook secret encryption key for this run
+        run: |
+          key=$(openssl rand -base64 32)
+          echo "::add-mask::$key"
+          echo "WEBHOOK_SECRET_ENCRYPTION_KEY=$key" >> "$GITHUB_ENV"
+      - name: Start the backend (default webhook retry schedule)
+        run: bash scripts/ci-backend.sh start
+
+      - run: npm ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+
+      - name: Contract tests (every endpoint the dashboard calls)
+        run: npm run test:contract
+      - name: E2E and accessibility
+        run: npm run e2e
+      - name: Production image in a browser, through the edge
+        run: npm run test:image
+
+      - name: Restart the backend with short webhook retry delays
+        env:
+          WEBHOOK_DELIVERY_RETRY_DELAYS: 1s,1s,1s,1s,1s
+        run: |
+          bash scripts/ci-backend.sh stop
+          bash scripts/ci-backend.sh start
+      - name: Webhook retry E2E
+        run: npm run e2e:retries
+
+      - name: Failure evidence (traces, screenshots, backend log)
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            test-results/
+            backend.log
+          if-no-files-found: ignore
+          retention-days: 7
