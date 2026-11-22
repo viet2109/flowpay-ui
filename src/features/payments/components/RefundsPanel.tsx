@@ -10,14 +10,15 @@ import { Pagination } from '@/components/pagination'
 import { Sheet } from '@/components/ui/sheet'
 import { TableSkeleton } from '@/components/ui/skeleton'
 import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/table'
-import { humanize } from '@/lib/format'
 import { useFormat } from '@/i18n'
+import { useReasonLabel } from '../refund-reasons'
 import { usePaymentRefunds, useRefund } from '../queries'
 import { refundStatus } from '../status'
 import type { Refund } from '../types'
 
 export function RefundsPanel({ paymentId }: { paymentId: string }) {
   const [page, setPage] = useState(0)
+  const reasonLabel = useReasonLabel()
   const [selected, setSelected] = useState<Refund | null>(null)
   const { data, isPending, isFetching, error, refetch } = usePaymentRefunds(paymentId, page)
 
@@ -58,9 +59,7 @@ export function RefundsPanel({ paymentId }: { paymentId: string }) {
               <Td className="w-0">
                 <StatusBadge {...refundStatus[refund.status]} />
               </Td>
-              <Td className="max-w-44 truncate text-ink-2">
-                {refund.reason ? humanize(refund.reason) : '—'}
-              </Td>
+              <Td className="max-w-44 truncate text-ink-2">{reasonLabel(refund.reason) ?? '—'}</Td>
               <Td className="hidden sm:table-cell">
                 <CopyableId value={refund.id} />
               </Td>
@@ -79,6 +78,7 @@ export function RefundsPanel({ paymentId }: { paymentId: string }) {
 
 function RefundSheet({ refund, onClose }: { refund: Refund | null; onClose: () => void }) {
   const fmt = useFormat()
+  const reasonLabel = useReasonLabel()
   // Row data renders instantly; the detail request refreshes it in the background.
   const { data } = useRefund(refund?.id ?? null)
   const current = data ?? refund
@@ -100,7 +100,7 @@ function RefundSheet({ refund, onClose }: { refund: Refund | null; onClose: () =
             items={[
               { label: 'Refund ID', value: <CopyableId value={current.id} truncate={false} /> },
               { label: 'Payment', value: <CopyableId value={current.paymentId} truncate={false} /> },
-              { label: 'Reason', value: current.reason ? humanize(current.reason) : null },
+              { label: 'Reason', value: reasonLabel(current.reason) },
               { label: 'Provider', value: current.provider },
               {
                 label: 'Provider ref.',

@@ -1,24 +1,20 @@
 import { useState, type FormEvent } from 'react'
-import { toast } from 'sonner'
-import { Callout } from '@/components/callout'
+import { Trans, useTranslation } from 'react-i18next'
+import { ActionError } from '@/components/states'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
 import { Input, NativeSelect } from '@/components/ui/input'
-import { useErrorMessage, useFieldError, useFormat, vmsg } from '@/i18n'
+import { useFieldError, useFormat, vmsg } from '@/i18n'
 import { cn } from '@/lib/cn'
 import { useIdempotencyKey } from '@/lib/idempotency'
 import { minorToInput, parseToMinor } from '@/lib/money'
 import { useCreateRefund } from '../queries'
+import { REFUND_REASONS, type RefundReasonChoice } from '../refund-reasons'
 import type { PaymentIntent } from '../types'
+import { useOutcomeToast } from '../use-outcome-toast'
 
-const REASONS = [
-  { value: 'CUSTOMER_REQUEST', label: 'Customer request' },
-  { value: 'DUPLICATE', label: 'Duplicate charge' },
-  { value: 'ORDER_CANCELLED', label: 'Order cancelled' },
-  { value: 'FRAUDULENT', label: 'Suspected fraud' },
-  { value: 'OTHER', label: 'Other…' },
-]
+const REASON_MAX = 255
 
 interface Props {
   payment: PaymentIntent
@@ -26,13 +22,20 @@ interface Props {
   onOpenChange: (open: boolean) => void
 }
 
+/**
+ * One open of this dialog is one refund intent: sending the same values again
+ * (double click, retry after a timeout) reuses the idempotency key, so nothing is
+ * refunded twice. Closing the dialog ends the intent, so a second identical refund
+ * made on purpose gets its own key instead of replaying the first.
+ */
 export function RefundDialog({ payment, open, onOpenChange }: Props) {
-  const errorMessage = useErrorMessage()
+  const { t } = useTranslation('payments')
   const { currency, refundableAmount } = payment
   const fmt = useFormat()
   const fieldError = useFieldError()
+  const outcome = useOutcomeToast()
   const [amountText, setAmountText] = useState(() => minorToInput(refundableAmount, currency))
-  const [reason, setReason] = useState('CUSTOMER_REQUEST')
+  const [reason, setReason] = useState<RefundReasonChoice>('CUSTOMER_REQUEST')
   const [otherReason, setOtherReason] = useState('')
   const [touched, setTouched] = useState(false)
   const idempotency = useIdempotencyKey('refund')
@@ -71,58 +74,51 @@ export function RefundDialog({ payment, open, onOpenChange }: Props) {
       { input, idempotencyKey: idempotency.keyFor(input) },
       {
         onSuccess: (result) => {
-          const refund = result.data
-          const label = `${fmt.money(refund.amount, refund.currency)} ${refund.currency}`
-          if (refund.status === 'SUCCEEDED') toast.success(`Refunded ${label}`)
-          else if (refund.status === 'PROCESSING')
-            toast.warning('Refund outcome unknown', {
-              description:
-                'The provider did not answer. The amount stays reserved until the outcome is known.',
-            })
-          else
-            toast.error('Refund failed', {
-              description: refund.failureMessage ?? refund.failureCode ?? undefined,
-            })
+          outcome.refunded(result)
           close(false)
         },
       },
     )
   }
 
+  const money = (minor: number) => fmt.moneyWithCode(minor, currency)
   const quick = [
-    { label: 'Full', value: refundableAmount },
-    { label: 'Half', value: Math.floor(refundableAmount / 2) },
+    { label: t('refund.full'), value: refundableAmount },
+    { label: t('refund.half'), value: Math.floor(refundableAmount / 2) },
   ].filter((q) => q.value > 0)
 
   return (
     <Dialog open={open} onOpenChange={close}>
       <DialogContent
-        title="Refund payment"
+        title={t('refund.title')}
         description={
-          <>
-            Up to{' '}
-            <strong className="num font-medium text-ink">
-              {fmt.money(refundableAmount, currency)} {currency}
-            </strong>{' '}
-            is refundable. Multiple partial refunds are allowed.
-          </>
+          <Trans
+            t={t}
+            i18nKey="refund.description"
+            components={{
+              amount: <strong className="num font-medium text-ink">{money(refundableAmount)}</strong>,
+            }}
+          />
         }
         footer={
           <>
             <Button variant="ghost" onClick={() => close(false)} disabled={mutation.isPending}>
-              Cancel
+              {t('refund.cancel')}
             </Button>
             <Button variant="primary" type="submit" form="refund-form" loading={mutation.isPending}>
-              Refund {amount && !amountError ? `${fmt.money(amount, currency)} ${currency}` : ''}
+              {amount && !amountError
+                ? t('refund.submit', { amount: money(amount) })
+                : t('refund.submitEmpty')}
             </Button>
           </>
         }
       >
         <form id="refund-form" onSubmit={submit} className="space-y-4" noValidate>
-          {mutation.isError && <Callout tone="danger">{errorMessage(mutation.error)}</Callout>}
+          {/* Server refusals (capacity taken by another refund, conflicts), with their requestId. */}
+          {mutation.isError && <ActionError error={mutation.error} />}
 
           <Field
-            label="Amount"
+            label={t('refund.amount')}
             error={
               touched
                 ? fieldError(amountError, {
@@ -151,9 +147,7 @@ export function RefundDialog({ payment, open, onOpenChange }: Props) {
             }
             hint={
               remaining !== null ? (
-                <span className="num">
-                  {fmt.money(remaining, currency)} {currency} will remain refundable
-                </span>
+                <span className="num">{t('refund.remaining', { amount: money(remaining) })}</span>
               ) : undefined
             }
           >
@@ -168,21 +162,30 @@ export function RefundDialog({ payment, open, onOpenChange }: Props) {
             />
           </Field>
 
-          <Field label="Reason" hint="Stored with the refund and visible in its history.">
-            <NativeSelect value={reason} onChange={(e) => setReason(e.target.value)}>
-              {REASONS.map((r) => (
-                <option key={r.value} value={r.value}>
-                  {r.label}
+          <Field label={t('refund.reason')} hint={t('refund.reasonHint')}>
+            <NativeSelect value={reason} onChange={(e) => setReason(e.target.value as RefundReasonChoice)}>
+              {REFUND_REASONS.map((r) => (
+                <option key={r} value={r}>
+                  {t(`reasons.${r}`)}
                 </option>
               ))}
             </NativeSelect>
           </Field>
           {reason === 'OTHER' && (
             <Field
-              label="Describe the reason"
-              aside={<span className="text-xs text-ink-3">{otherReason.length}/255</span>}
+              label={t('refund.otherReason')}
+              aside={
+                <span className="num text-xs text-ink-3">
+                  {otherReason.length}/{REASON_MAX}
+                </span>
+              }
             >
-              <Input value={otherReason} maxLength={255} onChange={(e) => setOtherReason(e.target.value)} />
+              <Input
+                value={otherReason}
+                maxLength={REASON_MAX}
+                placeholder={t('refund.otherPlaceholder')}
+                onChange={(e) => setOtherReason(e.target.value)}
+              />
             </Field>
           )}
         </form>

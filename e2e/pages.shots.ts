@@ -76,6 +76,18 @@ const TARGETS: ShotTarget[] = [
     },
   },
   {
+    name: 'payment-refund',
+    path: '/payments?orderId=ORD-1012',
+    auth: true,
+    fullPage: false,
+    // The refund dialog, prefilled with the refundable amount. Not submitted.
+    ready: async (page) => {
+      await page.getByText('ORD-1012').filter({ visible: true }).first().click()
+      await page.getByRole('button', { name: /^(Refund|Hoàn tiền)$/ }).click()
+      await expect(page.getByRole('dialog').locator('input[inputmode=decimal]')).toBeVisible()
+    },
+  },
+  {
     name: 'payment-processing',
     path: '/payments?orderId=ORD-1006',
     auth: true,

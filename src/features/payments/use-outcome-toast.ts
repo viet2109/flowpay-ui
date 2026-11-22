@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { useFormat } from '@/i18n'
 import type { HttpResult } from '@/lib/api/http'
-import type { ConfirmResult, CreatedPaymentIntent } from './types'
+import type { ConfirmResult, CreatedPaymentIntent, Refund } from './types'
 
 type Money = Pick<CreatedPaymentIntent, 'amount' | 'currency'>
 
@@ -43,6 +43,23 @@ export function useOutcomeToast() {
         toast.error(t('outcome.failed', { amount: amountOf(payment) }), {
           description: [reason, replayNote].filter(Boolean).join(' — ') || undefined,
           action,
+        })
+      }
+    },
+    /** 201 with SUCCEEDED or FAILED, or 202 with PROCESSING when the outcome is unknown (contract §12). */
+    refunded(result: HttpResult<Refund>) {
+      const refund = result.data
+      const replayNote = result.replayed ? t('outcome.refundReplayed') : undefined
+      if (refund.status === 'SUCCEEDED') {
+        toast.success(t('outcome.refunded', { amount: amountOf(refund) }), { description: replayNote })
+      } else if (refund.status === 'PROCESSING') {
+        toast.warning(t('outcome.refundUnknown'), {
+          description: replayNote ?? t('outcome.refundUnknownBody'),
+        })
+      } else {
+        const reason = [refund.failureCode, refund.failureMessage].filter(Boolean).join(' · ')
+        toast.error(t('outcome.refundFailed', { amount: amountOf(refund) }), {
+          description: [reason, replayNote].filter(Boolean).join(' — ') || undefined,
         })
       }
     },
