@@ -24,11 +24,11 @@ defaults:
 
 env:
   NODE_VERSION: '24.18.1'
-  # The backend the E2E job runs against (a public repository). The dashboard API
-  # lives on this branch until it is merged into the backend's main; the repository
-  # variable FLOWPAY_BACKEND_REF, or the run's backend-ref input, overrides it.
+  # The backend the E2E job runs against (a public repository): its main by default.
+  # To test against a backend branch first, set the repository variable
+  # FLOWPAY_BACKEND_REF, or the run's backend-ref input.
   BACKEND_REPOSITORY: viet2109/flowpay
-  BACKEND_REF: ${{ inputs.backend-ref || vars.FLOWPAY_BACKEND_REF || 'feature/phase-9-dashboard-api' }}
+  BACKEND_REF: ${{ inputs.backend-ref || vars.FLOWPAY_BACKEND_REF || 'main' }}
 
 jobs:
   verify:
